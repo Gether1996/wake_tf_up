@@ -1,0 +1,307 @@
+{
+  "common": {
+    "no_image": "No Image",
+    "retry": "Retry",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "brand": {
+    "name": "WAKE TF UP",
+    "motto": "Reworked. Reclaimed. One of one.",
+    "tagline": "Unique streetwear from recycled materials"
+  },
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "blog": "Blog",
+    "about": "About",
+    "cart": "Cart",
+    "profile": "Profile",
+    "orders": "Orders",
+    "login": "Login",
+    "logout": "Logout",
+    "all_products": "All Products",
+    "limited_drops": "Limited Drops",
+    "recycled": "Recycled",
+    "preorders": "Pre-orders",
+    "change_language": "Change Language",
+    "toggle_theme": "Toggle Theme"
+  },
+  "newsletter": {
+    "title": "Stay Updated",
+    "description": "Get notified about new drops and restocks",
+    "email_placeholder": "Enter your email",
+    "subscribe": "Subscribe",
+    "success": "Thanks for subscribing!",
+    "error": "Something went wrong. Please try again."
+  },
+  "badges": {
+    "drop": "DROP",
+    "recycled": "RECYCLED",
+    "preorder": "PRE-ORDER",
+    "lowStock": "LOW STOCK",
+    "soldOut": "SOLD OUT",
+    "oneOfOne": "1/1"
+  },
+  "home": {
+    "hero": {
+      "title": "Reworked. Reclaimed. One of one.",
+      "subtitle": "Unique streetwear pieces crafted from recycled materials. Limited drops, conscious fashion.",
+      "cta_shop": "Shop Now",
+      "cta_learn": "Our Story"
+    },
+    "featured": {
+      "title": "Latest Drops",
+      "subtitle": "Fresh arrivals, limited quantities",
+      "view_all": "View All"
+    },
+    "drops": {
+      "title": "Limited Edition",
+      "subtitle": "Exclusive pieces, once they're gone, they're gone",
+      "view_all": "See All Drops"
+    },
+    "about": {
+      "title": "Why WAKE TF UP?",
+      "description": "We believe in giving clothing a second life. Every piece is carefully sourced, reworked, and transformed into something unique. No mass production. No waste. Just conscious fashion.",
+      "stat1": "Recycled Materials",
+      "stat2": "Unique Pieces",
+      "stat3": "Impact"
+    },
+    "newsletter": {
+      "title": "Stay Updated",
+      "subtitle": "Get notified about new drops and restocks",
+      "placeholder": "Enter your email",
+      "button": "Subscribe",
+      "success": "Thanks for subscribing!",
+      "error": "Something went wrong. Please try again."
+    }
+  },
+  "shop": {
+    "title": "Shop",
+    "products": "products",
+    "noProducts": "No products found",
+    "filters": {
+      "category": "Category",
+      "color": "Color",
+      "price": "Price",
+      "stock": "Availability",
+      "special": "Special",
+      "inStock": "In Stock",
+      "preOrder": "Pre-order",
+      "all": "All",
+      "clear": "Clear Filters"
+    },
+    "sort": {
+      "newest": "Newest First",
+      "priceAsc": "Price: Low to High",
+      "priceDesc": "Price: High to Low",
+      "nameAsc": "Name: A-Z"
+    }
+  },
+  "product": {
+    "details": "Details",
+    "addToCart": "Add to Cart",
+    "preorderInfo": "This piece will ship in 2-4 weeks",
+    "stockLeft": "Only {{count}} left",
+    "soldOutInfo": "This drop is sold out. Join our newsletter for restocks.",
+    "reviews": "Reviews",
+    "writeReview": "Write a Review",
+    "noReviews": "No reviews yet. Be the first!",
+    "relatedProducts": "You May Also Like",
+    "out_of_stock": "Out of Stock",
+    "low_stock": "Low Stock",
+    "left": "left",
+    "preorder_available": "Pre-Order Available",
+    "in_stock": "In Stock",
+    "quantity": "Quantity",
+    "description": "Description",
+    "color": "Color"
+  },
+  "cart": {
+    "title": "Cart",
+    "empty": "Your cart is empty",
+    "empty_description": "Looks like you haven't added anything yet",
+    "continueShopping": "Continue Shopping",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "total": "Total",
+    "checkout": "Proceed to Checkout",
+    "remove": "Remove",
+    "add_to_cart": "Add to Cart",
+    "added": "Added!",
+    "preorder": "Pre-Order Now",
+    "order_summary": "Order Summary",
+    "free": "FREE",
+    "free_shipping_remaining": "Add {{ amount }} more for free shipping",
+    "max_quantity": "Maximum quantity reached"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "shipping_method": "Shipping Method",
+    "pickup": "Personal Pickup",
+    "pickup_desc": "Pick up in person at our location",
+    "packeta": "Packeta Z-Box",
+    "packeta_desc": "Delivery to Packeta pickup point",
+    "courier": "Courier Delivery",
+    "courier_desc": "Delivery to your address",
+    "free": "FREE",
+    "shipping": "Shipping Information",
+    "name": "Full Name",
+    "email": "Email",
+    "email_required": "Valid email is required",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "postalCode": "Postal Code",
+    "country": "Country",
+    "notes": "Order Notes",
+    "notes_placeholder": "Any special instructions? (optional)",
+    "company_purchase": "Company Purchase",
+    "billing_company": "Company Name",
+    "billing_ico": "Company ID (ÍCO)",
+    "billing_dic": "Tax ID (DIČ)",
+    "billing_ic_dph": "VAT ID (ÍČ DPH)",
+    "order_summary": "Order Summary",
+    "qty": "Qty",
+    "place_order": "Place Order",
+    "secure_checkout": "🔒 Secure checkout",
+    "payment": "Payment Method"
+  },
+  "auth": {
+    "_login": "Login",
+    "_register": "Register",
+    "_logout": "Logout",
+    "login": {
+      "title": "Login",
+      "subtitle": "Welcome back to WAKE TF UP",
+      "email": "Email",
+      "email_invalid": "Please enter a valid email",
+      "password": "Password",
+      "submit": "Login",
+      "noAccount": "Don't have an account?",
+      "register": "Register"
+    },
+    "register": {
+      "title": "Register",
+      "subtitle": "Join the movement",
+      "required_section": "Required Information",
+      "optional_section": "Optional Information",
+      "first_name": "First Name",
+      "last_name": "Last Name",
+      "email": "Email",
+      "email_invalid": "Please enter a valid email",
+      "phone": "Phone",
+      "street": "Street Address",
+      "city": "City",
+      "postal_code": "Postal Code",
+      "country": "Country",
+      "password": "Password",
+      "password_min": "Password must be at least 8 characters",
+      "confirmPassword": "Confirm Password",
+      "password_mismatch": "Passwords do not match",
+      "show_password": "Show password",
+      "hide_password": "Hide password",
+      "submit": "Register",
+      "hasAccount": "Already have an account?",
+      "login": "Login"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "account": "Account",
+    "orders": "My Orders",
+    "account_info": "Account Information",
+    "name": "Name",
+    "email": "Email",
+    "preferences": "Preferences",
+    "theme": "Theme",
+    "theme_hint": "Toggle dark/light mode from the header",
+    "language": "Language",
+    "language_hint": "Change language from the header",
+    "recent_orders": "Recent Orders",
+    "view_all": "View All",
+    "order_number": "Order #{{ id }}",
+    "items": "items",
+    "not_logged_in": "Please log in to view your profile"
+  },
+  "orders": {
+    "title": "My Orders",
+    "no_orders": "No orders yet",
+    "no_orders_description": "Start shopping to see your orders here",
+    "start_shopping": "Start Shopping",
+    "order_number": "Order #{{ number }}",
+    "status": "Status",
+    "quantity": "Qty",
+    "shipping_method": "Shipping Method",
+    "shipping_address": "Shipping Address",
+    "total": "Total",
+    "track": "Track Order",
+    "status_created": "Created",
+    "status_paid": "Paid",
+    "status_shipped": "Shipped",
+    "status_delivered": "Delivered",
+    "status_cancelled": "Cancelled",
+    "status_refunded": "Refunded",
+    "status_unknown": "Unknown"
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Stories, updates, and insights from WAKE TF UP",
+    "no_posts": "No posts yet",
+    "no_posts_description": "Check back soon for updates",
+    "read_more": "Read More",
+    "back": "Back to Blog",
+    "all_posts": "All Posts",
+    "share": "Share this post",
+    "copy_link": "Copy Link",
+    "copied": "Copied!"
+  },
+  "about": {
+    "title": "Made Different",
+    "sustainability": {
+      "title": "Sustainability First",
+      "body": "Every piece is reworked from reclaimed materials. No mass production. Just unique streetwear that lasts."
+    },
+    "unique": {
+      "title": "One of One",
+      "body": "Each item is unique. When it's gone, it's gone. Limited drops, no restocks."
+    },
+    "quality": {
+      "title": "Built to Last",
+      "body": "We don't do fast fashion. Every piece is crafted to be worn for years, not seasons."
+    },
+    "story": {
+      "title": "Our Story",
+      "p1": "WAKE TF UP was born from frustration with throwaway fashion. We saw landfills full of clothes and decided to do something different.",
+      "p2": "We source discarded materials, reclaim them, and transform them into one-of-a-kind streetwear pieces. Each item tells a story of transformation and renewal.",
+      "p3": "This isn't just about clothes. It's about making conscious choices, supporting sustainable practices, and standing out from the crowd with pieces that truly matter."
+    },
+    "stats": {
+      "recycled": "Recycled Materials",
+      "unique": "Unique Pieces",
+      "impact": "Lasting Impact"
+    },
+    "cta": {
+      "title": "Ready to Join?",
+      "subtitle": "Explore our latest drops and find your unique piece",
+      "button": "Shop Now"
+    }
+  },
+  "footer": {
+    "tagline": "Reworked. Reclaimed. One of one.",
+    "mission": "Unique streetwear from recycled materials",
+    "newsletter": "Newsletter",
+    "newsletterText": "Get notified about new drops",
+    "about": "About",
+    "shop": "Shop",
+    "blog": "Blog",
+    "contact": "Contact",
+    "sustainability": "Sustainability",
+    "rights": "All rights reserved",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  }
+}

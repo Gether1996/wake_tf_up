@@ -1,0 +1,34 @@
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { provideTransloco } from '@jsverse/transloco';
+
+import { routes } from './app.routes';
+import { authInterceptor } from './core/auth/auth.interceptor';
+import { TranslocoHttpLoader } from './transloco-loader';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideRouter(routes),
+    provideClientHydration(withEventReplay()),
+    provideHttpClient(
+      withInterceptors([authInterceptor]),
+      withFetch()
+    ),
+    provideTransloco({
+      config: {
+        availableLangs: ['en', 'sk'],
+        defaultLang: 'en',
+        reRenderOnLangChange: true,
+        prodMode: !isDevMode(),
+        fallbackLang: 'en',
+        missingHandler: {
+          useFallbackTranslation: true
+        }
+      },
+      loader: TranslocoHttpLoader
+    })
+  ]
+};

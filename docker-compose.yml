@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend_django
+    container_name: wake_tf_up_backend
+    volumes:
+      - ./backend_django:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend_django/.env
+    networks:
+      - wake_tf_up_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend_angular
+    container_name: wake_tf_up_frontend
+    volumes:
+      - ./frontend_angular:/app
+      - /app/node_modules
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+    networks:
+      - wake_tf_up_network
+    restart: unless-stopped
+
+networks:
+  wake_tf_up_network:
+    driver: bridge

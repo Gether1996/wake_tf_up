@@ -1,0 +1,305 @@
+{
+  "common": {
+    "no_image": "Žiadny obrázok",
+    "retry": "Skúsiť znova",
+    "loading": "Načítava sa...",
+    "error": "Niečo sa pokazilo",
+    "close": "Zavrieť",
+    "save": "Uložiť",
+    "cancel": "Zrušiť"
+  },
+  "brand": {
+    "name": "WAKE TF UP",
+    "motto": "Prepracované. Obnovené. Jeden z jedného.",
+    "tagline": "Unikátne streetwear z recyklovaných materiálov"
+  },
+  "nav": {
+    "home": "Domov",
+    "shop": "Obchod",
+    "blog": "Blog",
+    "about": "O nás",
+    "cart": "Košík",
+    "profile": "Profil",
+    "orders": "Objednávky",
+    "login": "Prihlásenie",
+    "logout": "Odhlásenie",
+    "all_products": "Všetky Produkty",
+    "limited_drops": "Limitované Dropy",
+    "recycled": "Recyklované",
+    "preorders": "Predobjednávky",
+    "change_language": "Zmeniť Jazyk",
+    "toggle_theme": "Prepnúť Tému"
+  },
+  "newsletter": {
+    "title": "Buďte v obraze",
+    "description": "Dostávajte info o nových dropoch a doplneniach",
+    "email_placeholder": "Zadajte email",
+    "subscribe": "Prihlásiť sa",
+    "success": "Ďakujeme za prihlásenie!",
+    "error": "Niečo sa pokazilo. Skúste prosím znova."
+  },
+  "badges": {
+    "drop": "DROP",
+    "recycled": "RECYKLOVANÉ",
+    "preorder": "PREDOBJ.",
+    "lowStock": "NÍZKY SKLAD",
+    "soldOut": "VYPREDANÉ",
+    "oneOfOne": "1/1"
+  },
+  "home": {
+    "hero": {
+      "title": "Prepracované. Obnovené. Jeden z jedného.",
+      "subtitle": "Unikátne streetwear kusy vyrobené z recyklovaných materiálov. Limitované edície, uvedomelá móda.",
+      "cta_shop": "Nakupovať",
+      "cta_learn": "Náš Príbeh"
+    },
+    "featured": {
+      "title": "Najnovšie Dropy",
+      "subtitle": "Čerstvé prírastky, limitované množstvá",
+      "view_all": "Zobraziť Všetko"
+    },
+    "drops": {
+      "title": "Limitovaná Edícia",
+      "subtitle": "Exkluzívne kusy, keď zmiznú, zmiznú navždy",
+      "view_all": "Všetky Dropy"
+    },
+    "about": {
+      "title": "Prečo WAKE TF UP?",
+      "description": "Veríme v druhú šancu pre oblečenie. Každý kus je starostlivo vybraný, prepracovaný a premenený na niečo jedinečné. Žiadna masová výroba. Žiadny odpad. Len uvedomelá móda.",
+      "stat1": "Recyklované Materiály",
+      "stat2": "Unikátne Kusy",
+      "stat3": "Vplyv"
+    },
+    "newsletter": {
+      "title": "Buďte v obraze",
+      "subtitle": "Dostávajte info o nových dropoch a doplneniach",
+      "placeholder": "Zadajte email",
+      "button": "Prihlásiť sa",
+      "success": "Ďakujeme za prihlásenie!",
+      "error": "Niečo sa pokazilo. Skúste prosím znova."
+    }
+  },
+  "shop": {
+    "title": "Obchod",
+    "products": "produktov",
+    "noProducts": "Žiadne produkty nenájdené",
+    "filters": {
+      "category": "Kategória",
+      "color": "Farba",
+      "price": "Cena",
+      "stock": "Dostupnosť",
+      "special": "Špeciálne",
+      "inStock": "Na sklade",
+      "preOrder": "Predobjednávka",
+      "all": "Všetko",
+      "clear": "Vymazať Filtre"
+    },
+    "sort": {
+      "newest": "Najnovšie",
+      "priceAsc": "Cena: Od najnižšej",
+      "priceDesc": "Cena: Od najvyššej",
+      "nameAsc": "Názov: A-Z"
+    }
+  },
+  "product": {
+    "details": "Detaily",
+    "addToCart": "Pridať do košíka",
+    "preorderInfo": "Tento kus bude odoslaný za 2-4 týždne",
+    "stockLeft": "Už len {{count}} kusov",
+    "soldOutInfo": "Tento drop je vypredaný. Prihláste sa do newslettera.",
+    "reviews": "Recenzie",
+    "writeReview": "Napísať recenziu",
+    "noReviews": "Zatiaľ žiadne recenzie. Buďte prvý!",
+    "relatedProducts": "Mohlo by sa vám páčiť",
+    "out_of_stock": "Vypredané",
+    "low_stock": "Nízky sklad",
+    "left": "zostáva",
+    "preorder_available": "Dostupné na predobjednávku",
+    "in_stock": "Skladom",
+    "quantity": "Množstvo",
+    "description": "Popis",
+    "color": "Farba"
+  },
+  "cart": {
+    "title": "Košík",
+    "empty": "Váš košík je prázdny",
+    "empty_description": "Vyzerá to, že ste ešte nič nepridali",
+    "continueShopping": "Pokračovať v nákupe",
+    "subtotal": "Medzisúčet",
+    "shipping": "Doprava",
+    "total": "Celkom",
+    "checkout": "Pokračovať k pokladni",
+    "remove": "Odstrániť",
+    "add_to_cart": "Pridať do košíka",
+    "added": "Pridané!",
+    "preorder": "Predobjednať teraz",
+    "order_summary": "Súhrn objednávky",
+    "free": "ZDARMA",
+    "free_shipping_remaining": "Pridajte ešte {{ amount }} pre dopravu zadarmo",
+    "max_quantity": "Maximálne množstvo dosiahnuté"
+  },
+  "checkout": {
+    "title": "Pokladňa",
+    "shipping_method": "Spôsob doručenia",
+    "pickup": "Osobný odber",
+    "pickup_desc": "Vyzdvihnutie osobne na našej pobočke",
+    "packeta": "Packeta Z-Box",
+    "packeta_desc": "Doručenie na Packeta výdajné miesto",
+    "courier": "Kuriérska služba",
+    "courier_desc": "Doručenie na vašu adresu",
+    "free": "ZDARMA",
+    "shipping": "Doručovacie informácie",
+    "name": "Celé meno",
+    "email": "Email",
+    "email_required": "Platný email je povinný",
+    "phone": "Telefón",
+    "address": "Adresa",
+    "city": "Mesto",
+    "postalCode": "PSČ",
+    "country": "Krajina",
+    "notes": "Poznámky k objednávke",
+    "notes_placeholder": "Nejaké špeciálne inštrukcie? (voliteľné)",
+    "company_purchase": "Nákup na firmu",
+    "billing_company": "Názov firmy",
+    "billing_ico": "IČO",
+    "billing_dic": "DIČ",
+    "billing_ic_dph": "IČ DPH",
+    "order_summary": "Súhrn objednávky",
+    "qty": "Mn.",
+    "place_order": "Dokončiť objednávku",
+    "secure_checkout": "🔒 Bezpečná pokladňa",
+    "payment": "Spôsob platby"
+  },
+  "auth": {
+    "_login": "Prihlásenie",
+    "_register": "Registrácia",
+    "_logout": "Odhlásenie",
+    "login": {
+      "title": "Prihlásenie",
+      "subtitle": "Vítajte späť v WAKE TF UP",
+      "email": "Email",
+      "email_invalid": "Zadajte platný email",
+      "password": "Heslo",
+      "submit": "Prihlásiť sa",
+      "noAccount": "Nemáte účet?",
+      "register": "Registrovať"
+    },
+    "register": {
+      "title": "Registrácia",
+      "subtitle": "Pridajte sa k nám",
+      "required_section": "Povinné údaje",
+      "optional_section": "Voliteľné údaje",
+      "first_name": "Meno",
+      "last_name": "Priezvisko",
+      "email": "Email",
+      "email_invalid": "Zadajte platný email",
+      "phone": "Telefón",
+      "street": "Ulica a číslo",
+      "city": "Mesto",
+      "postal_code": "PSČ",
+      "country": "Štát",
+      "password": "Heslo",
+      "password_min": "Heslo musí mať aspoň 8 znakov",
+      "confirmPassword": "Potvrdiť heslo",
+      "password_mismatch": "Heslá sa nezhodujú",
+      "show_password": "Zobraziť heslo",
+      "hide_password": "Skryť heslo",
+      "submit": "Registrovať",
+      "hasAccount": "Už máte účet?",
+      "login": "Prihlásiť sa"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "account": "Účet",
+    "orders": "Moje objednávky",
+    "account_info": "Informácie o účte",
+    "name": "Meno",
+    "email": "Email",
+    "preferences": "Predvoľby",
+    "theme": "Téma",
+    "theme_hint": "Prepnite tmavý/svetlý režim v hlavičke",
+    "language": "Jazyk",
+    "language_hint": "Zmeňte jazyk v hlavičke",
+    "recent_orders": "Nedávne objednávky",
+    "view_all": "Zobraziť všetky",
+    "order_number": "Objednávka #{{ id }}",
+    "items": "položiek",
+    "not_logged_in": "Prosím prihláste sa pre zobrazenie profilu"
+  },
+  "orders": {
+    "title": "Moje objednávky",
+    "no_orders": "Zatiaľ žiadne objednávky",
+    "no_orders_description": "Začnite nakupovať, aby ste tu videli svoje objednávky",
+    "start_shopping": "Začať nakupovať",
+    "order_number": "Objednávka #{{ number }}",
+    "status": "Stav",
+    "quantity": "Mn.",    "shipping_method": "Spôsob doručenia",    "shipping_address": "Doručovacia adresa",
+    "total": "Celkom",
+    "track": "Sledovať objednávku",
+    "status_created": "Vytvorená",
+    "status_paid": "Zaplatenná",
+    "status_shipped": "Odoslaná",
+    "status_delivered": "Doručená",
+    "status_cancelled": "Zrušená",
+    "status_refunded": "Vrátená",
+    "status_unknown": "Neznáme"
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Príbehy, aktuality a poznatky z WAKE TF UP",
+    "no_posts": "Zatiaľ žiadne články",
+    "no_posts_description": "Vráťte sa čoskoro pre aktuality",
+    "read_more": "Čítať viac",
+    "back": "Späť na blog",
+    "all_posts": "Všetky články",
+    "share": "Zdieľať tento článok",
+    "copy_link": "Kopírovať odkaz",
+    "copied": "Skopírované!"
+  },
+  "about": {
+    "title": "Inak vyrobené",
+    "sustainability": {
+      "title": "Udržateľnosť na prvom mieste",
+      "body": "Každý kus je prepracovaný z obnovených materiálov. Žiadna masová výroba. Len unikátne streetwear, ktoré vydrží."
+    },
+    "unique": {
+      "title": "Jeden z jedného",
+      "body": "Každý kus je unikátny. Keď sa vypredá, je preč. Limitované dropy, žiadne doplnenia."
+    },
+    "quality": {
+      "title": "Vyrobené natrvalo",
+      "body": "Nerobíme rýchlu módu. Každý kus je vytvorený, aby vydržal roky, nie sezóny."
+    },
+    "story": {
+      "title": "Náš príbeh",
+      "p1": "WAKE TF UP sa zrodil z frustrácie s rýchlou módou. Videli sme skládky plné oblečenia a rozhodli sme sa urobiť niečo inak.",
+      "p2": "Získavame vyradené materiály, obnovujeme ich a transformujeme na jedinečné streetwear kusy. Každý kus rozpráva príbeh transformácie a obnovy.",
+      "p3": "Nie je to len o oblečení. Je to o vedomých rozhodnutiach, podpore udržateľných praktík a vyniknutí z davu s kusmi, ktoré naozaj znamenajú."
+    },
+    "stats": {
+      "recycled": "Recyklované materiály",
+      "unique": "Unikátne kusy",
+      "impact": "Trvalý dopad"
+    },
+    "cta": {
+      "title": "Pripravený pripojiť sa?",
+      "subtitle": "Preskúmajte naše najnovšie dropy a nájdite svoj unikátny kus",
+      "button": "Nakupovať"
+    }
+  },
+  "footer": {
+    "tagline": "Prepracované. Obnovené. Jeden z jedného.",
+    "mission": "Unikátne streetwear z recyklovaných materiálov",
+    "newsletter": "Newsletter",
+    "newsletterText": "Dostávajte info o nových dropoch",
+    "about": "O nás",
+    "shop": "Obchod",
+    "blog": "Blog",
+    "contact": "Kontakt",
+    "sustainability": "Udržateľnosť",
+    "rights": "Všetky práva vyhradené",
+    "privacy": "Ochrana súkromia",
+    "terms": "Obchodné podmienky"
+  }
+}
