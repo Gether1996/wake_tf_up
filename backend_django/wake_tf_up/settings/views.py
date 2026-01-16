@@ -44,3 +44,11 @@ class MainSettingsViewSet(viewsets.ReadOnlyModelViewSet):
             'free_shipping_threshold': settings.free_shipping_threshold,
             'standard_shipping_cost': settings.standard_shipping_cost,
         })
+    
+    @action(detail=False, methods=['get'])
+    def packeta_key(self, request):
+        """Get Packeta API key from environment"""
+        from django.conf import settings as django_settings
+        return Response({
+            'api_key': django_settings.PACKETA_API_KEY
+        })

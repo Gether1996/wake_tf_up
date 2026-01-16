@@ -90,7 +90,7 @@ export interface CartItem {
 export interface Order {
   id: number;
   status: string;
-  shipping_method: 'pickup' | 'packeta' | 'courier';
+  shipping_method: 'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier';
   total_amount: string;
   shipping_name: string;
   shipping_address: string;
@@ -98,6 +98,11 @@ export interface Order {
   shipping_postal_code: string;
   shipping_country: string;
   phone: string;
+  packeta_point_id?: string;
+  packeta_point_name?: string;
+  packeta_point_address?: string;
+  tracking_number?: string;
+  carrier_tracking_url?: string;
   is_company_purchase: boolean;
   billing_company?: string;
   billing_ico?: string;

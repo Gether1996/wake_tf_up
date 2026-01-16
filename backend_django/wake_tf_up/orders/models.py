@@ -17,8 +17,9 @@ class Order(models.Model):
     
     SHIPPING_METHOD_CHOICES = [
         ('pickup', 'Personal Pickup'),
-        ('packeta', 'Packeta Z-Box'),
-        ('courier', 'Courier'),
+        ('dpd_courier', 'DPD Courier'),
+        ('packeta_box', 'Packeta Z-Box'),
+        ('packeta_courier', 'Packeta Courier'),
     ]
     
     user = models.ForeignKey(
@@ -36,8 +37,40 @@ class Order(models.Model):
     shipping_method = models.CharField(
         max_length=20,
         choices=SHIPPING_METHOD_CHOICES,
-        default='courier',
+        default='dpd_courier',
         help_text="Delivery method selected by customer"
+    )
+    
+    # Packeta pickup point details (for packeta_box method)
+    packeta_point_id = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Packeta pickup point ID"
+    )
+    packeta_point_name = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Packeta pickup point name"
+    )
+    packeta_point_address = models.TextField(
+        blank=True,
+        help_text="Packeta pickup point address"
+    )
+    
+    # Tracking information
+    tracking_number = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Carrier tracking number"
+    )
+    carrier_tracking_url = models.URLField(
+        blank=True,
+        help_text="URL to track shipment"
+    )
+    packeta_packet_id = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Packeta internal packet ID"
     )
     
     # Address (basic skeleton)
@@ -74,6 +107,15 @@ class Order(models.Model):
     
     def __str__(self):
         return f"Order #{self.id} - {self.user.email} - {self.status}"
+    
+    def clean(self):
+        """Validate Packeta point selection for packeta_box shipping method"""
+        super().clean()
+        if self.shipping_method == 'packeta_box':
+            if not self.packeta_point_id or not self.packeta_point_name:
+                raise ValidationError(
+                    "Packeta pickup point must be selected for packeta_box shipping method"
+                )
     
     @property
     def is_pre_order(self):
@@ -137,7 +179,11 @@ class OrderItem(models.Model):
     def save(self, *args, **kwargs):
         # Store current price if not set
         if not self.price_at_purchase:
-            self.price_at_purchase = self.product.price
+            if self.product and self.product.price:
+                # Use discount price if available, otherwise regular price
+                self.price_at_purchase = self.product.discount_price or self.product.price
+            else:
+                raise ValidationError("Product must have a price set")
         
         # Run validation
         self.clean()
@@ -146,6 +192,8 @@ class OrderItem(models.Model):
     
     @property
     def subtotal(self):
+        if self.price_at_purchase is None or self.quantity is None:
+            return 0
         return self.price_at_purchase * self.quantity
 
 

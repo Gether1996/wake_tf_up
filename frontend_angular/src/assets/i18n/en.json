@@ -6,7 +6,9 @@
     "error": "Something went wrong",
     "close": "Close",
     "save": "Save",
-    "cancel": "Cancel"
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "send": "Send"
   },
   "brand": {
     "name": "WAKE TF UP",
@@ -127,26 +129,47 @@
     "continueShopping": "Continue Shopping",
     "subtotal": "Subtotal",
     "shipping": "Shipping",
+    "calculated_at_checkout": "Calculated at checkout",
     "total": "Total",
     "checkout": "Proceed to Checkout",
     "remove": "Remove",
     "add_to_cart": "Add to Cart",
     "added": "Added!",
+    "in_cart": "In Cart",
     "preorder": "Pre-Order Now",
     "order_summary": "Order Summary",
     "free": "FREE",
+    "free_shipping_info": "Free shipping on orders over {{ amount }}",
+    "free_shipping_unlocked": "You've unlocked free shipping!",
     "free_shipping_remaining": "Add {{ amount }} more for free shipping",
     "max_quantity": "Maximum quantity reached"
   },
   "checkout": {
     "title": "Checkout",
+    "step_cart": "Cart",
+    "step_shipping": "Shipping",
+    "step_contact": "Contact",
+    "step_review": "Review",
+    "step_checkout": "Checkout",
+    "step_complete": "Complete",
+    "next_step": "Next",
+    "previous_step": "Back",
+    "review_order": "Review Order",
+    "order_items": "Order Items",
+    "contact_info": "Contact Information",
+    "shipping_address": "Shipping Address",
+    "company_info": "Company Information",
     "shipping_method": "Shipping Method",
     "pickup": "Personal Pickup",
     "pickup_desc": "Pick up in person at our location",
-    "packeta": "Packeta Z-Box",
-    "packeta_desc": "Delivery to Packeta pickup point",
-    "courier": "Courier Delivery",
-    "courier_desc": "Delivery to your address",
+    "packeta_box": "Packeta Z-Box",
+    "packeta_box_desc": "Delivery to Packeta pickup point",
+    "packeta_courier": "Packeta Courier",
+    "packeta_courier_desc": "Home delivery via Packeta courier",
+    "dpd_courier": "DPD Courier",
+    "dpd_courier_desc": "Fast delivery to your address via DPD",
+    "select_pickup_point": "Select Pickup Point",
+    "change_pickup_point": "Change Pickup Point",
     "free": "FREE",
     "shipping": "Shipping Information",
     "name": "Full Name",
@@ -168,7 +191,8 @@
     "qty": "Qty",
     "place_order": "Place Order",
     "secure_checkout": "🔒 Secure checkout",
-    "payment": "Payment Method"
+    "payment": "Payment Method",
+    "total": "Total"
   },
   "auth": {
     "_login": "Login",
@@ -182,7 +206,15 @@
       "password": "Password",
       "submit": "Login",
       "noAccount": "Don't have an account?",
-      "register": "Register"
+      "register": "Register",
+      "email_verified": "Account successfully verified. You can now log in.",
+      "email_not_verified": "Please verify your email before logging in. Check your inbox for the verification link.",
+      "no_email": "Didn't receive the email?",
+      "resend_button": "Resend",
+      "resend_success": "Verification email has been sent successfully. Please check your inbox.",
+      "forgot_password": "Forgot password?",
+      "forgot_password_description": "Enter your email and we'll send you a password reset link.",
+      "reset_email_sent": "Password reset email has been sent. Please check your inbox."
     },
     "register": {
       "title": "Register",
@@ -206,7 +238,37 @@
       "hide_password": "Hide password",
       "submit": "Register",
       "hasAccount": "Already have an account?",
-      "login": "Login"
+      "login": "Login",
+      "success_title": "Registration Successful!",
+      "success_message": "We've sent a verification link to your email:",
+      "success_instructions": "Please check your inbox and click the verification link to complete your registration.",
+      "go_to_login": "Go to Login"
+    },
+    "verify": {
+      "verifying": "Verifying your email...",
+      "please_wait": "Please wait",
+      "success_title": "Email Verified!",
+      "success_message": "Your account has been successfully verified. You can now log in.",
+      "go_to_login": "Log In",
+      "error_title": "Verification Failed",
+      "go_to_register": "Register Again"
+    },
+    "reset_password": {
+      "title": "Reset Password",
+      "subtitle": "Enter a new password for your account",
+      "password": "New Password",
+      "confirm_password": "Confirm Password",
+      "password_min_length": "Password must be at least 8 characters",
+      "passwords_not_match": "Passwords do not match",
+      "submit": "Reset Password",
+      "validating": "Validating token...",
+      "please_wait": "Please wait",
+      "success_title": "Password Changed!",
+      "success_message": "Your password has been successfully changed. You can now log in with your new password.",
+      "go_to_login": "Log In",
+      "error_title": "Password Reset Failed",
+      "back_to_login": "Back to Login",
+      "go_to_register": "Register"
     }
   },
   "profile": {
@@ -215,7 +277,14 @@
     "orders": "My Orders",
     "account_info": "Account Information",
     "name": "Name",
+    "first_name": "First Name",
+    "last_name": "Last Name",
     "email": "Email",
+    "phone": "Phone",
+    "shipping_address": "Shipping Address",
+    "no_address": "You don't have an address saved yet. Click edit to add one.",
+    "edit": "Edit",
+    "cancel": "Cancel",
     "preferences": "Preferences",
     "theme": "Theme",
     "theme_hint": "Toggle dark/light mode from the header",
@@ -236,6 +305,9 @@
     "status": "Status",
     "quantity": "Qty",
     "shipping_method": "Shipping Method",
+    "pickup_point": "Pickup Point",
+    "tracking_number": "Tracking Number",
+    "track_shipment": "Track Shipment",
     "shipping_address": "Shipping Address",
     "total": "Total",
     "track": "Track Order",
@@ -303,5 +375,207 @@
     "rights": "All rights reserved",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "effective_date": "Effective date",
+    "date": "January 16, 2026",
+    "back_home": "Back to home",
+    "section1": {
+      "title": "1. Introduction",
+      "content": "WAKE TF UP respects your privacy and is committed to protecting your personal data in accordance with GDPR (General Data Protection Regulation) and Slovak Act No. 18/2018 Coll. on Personal Data Protection. This policy informs you about how we process your personal data when you visit our website or make a purchase."
+    },
+    "section2": {
+      "title": "2. Data Controller",
+      "content": "<p><strong>WAKE TF UP</strong><br>Address: [Company Address]<br>Company ID: [ID]<br>Email: info@waketfup.com<br>Phone: [Phone]</p>"
+    },
+    "section3": {
+      "title": "3. Data We Collect",
+      "intro": "We may collect, use, store, and transfer different types of personal data:",
+      "personal": {
+        "title": "Identity Data",
+        "content": "first name, last name, email, phone number"
+      },
+      "order": {
+        "title": "Order Data",
+        "content": "delivery address, billing details (company ID, tax ID, VAT ID for business purchases)"
+      },
+      "technical": {
+        "title": "Technical Data",
+        "content": "IP address, browser type, time zone, operating system"
+      },
+      "payment": {
+        "title": "Payment Data",
+        "content": "payment information (processed through secure payment gateways)"
+      }
+    },
+    "section4": {
+      "title": "4. How We Use Your Data",
+      "item1": "Process and fulfill your orders",
+      "item2": "Communicate with you about orders and delivery",
+      "item3": "Provide customer support",
+      "item4": "Send marketing communications (with consent only)",
+      "item5": "Improve our services and website"
+    },
+    "section5": {
+      "title": "5. Legal Basis for Processing (GDPR)",
+      "contract": {
+        "title": "Contract Performance",
+        "content": "we process data necessary to fulfill your order"
+      },
+      "consent": {
+        "title": "Consent",
+        "content": "newsletter and marketing communications (you can withdraw anytime)"
+      },
+      "legitimate": {
+        "title": "Legitimate Interest",
+        "content": "fraud prevention, service improvement"
+      },
+      "legal": {
+        "title": "Legal Obligation",
+        "content": "retention of accounting documents as required by law"
+      }
+    },
+    "section6": {
+      "title": "6. Data Sharing",
+      "intro": "We may share your data with the following parties:",
+      "shipping": {
+        "title": "Shipping Companies",
+        "content": "Packeta, DPD (only data necessary for delivery)"
+      },
+      "payment": {
+        "title": "Payment Gateways",
+        "content": "secure payment processing"
+      },
+      "services": {
+        "title": "Service Providers",
+        "content": "hosting, analytics (with data protection agreements)"
+      }
+    },
+    "section7": {
+      "title": "7. Your Rights (GDPR)",
+      "intro": "Under GDPR, you have the following rights:",
+      "access": "Right to access your personal data",
+      "rectification": "Right to rectification of inaccurate data",
+      "erasure": "Right to erasure ('right to be forgotten')",
+      "restriction": "Right to restriction of processing",
+      "portability": "Right to data portability",
+      "objection": "Right to object to processing",
+      "complaint": "Right to lodge a complaint with Slovak Data Protection Authority (dataprotection.gov.sk)"
+    },
+    "section8": {
+      "title": "8. Data Retention",
+      "content": "We retain your personal data only as long as necessary for the purposes for which it was collected. Order data is retained for at least 10 years in accordance with accounting regulations. Marketing consents remain valid until withdrawn."
+    },
+    "section9": {
+      "title": "9. Security",
+      "content": "We have implemented appropriate technical and organizational measures to protect your personal data against unauthorized access, loss, or misuse. We use SSL/TLS encryption, secure servers, and regularly update our security protocols."
+    },
+    "section10": {
+      "title": "10. Cookies",
+      "content": "Our website uses cookies to improve your user experience. We only use essential cookies for cart functionality and authentication. We do not use third-party tracking or marketing cookies."
+    },
+    "section11": {
+      "title": "11. Changes to This Policy",
+      "content": "We may update this policy from time to time. We will notify you of significant changes by email or website notice. We recommend checking this page regularly."
+    },
+    "section12": {
+      "title": "12. Contact",
+      "content": "<p>If you have questions about data protection or wish to exercise your rights, contact us:</p><p><strong>Email:</strong> privacy@waketfup.com<br><strong>Phone:</strong> [Phone]<br><strong>Mail:</strong> WAKE TF UP, [Address]</p>"
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "effective_date": "Effective date",
+    "date": "January 16, 2026",
+    "back_home": "Back to home",
+    "section1": {
+      "title": "1. Introduction",
+      "content": "These Terms of Service ('Terms') govern the rights and obligations of the seller and buyer when purchasing goods through the online store at waketfup.com. These Terms are issued in accordance with Slovak Civil Code Act No. 40/1964 Coll., Consumer Protection Act No. 250/2007 Coll., and Distance Selling Act No. 102/2014 Coll."
+    },
+    "section2": {
+      "title": "2. Definitions",
+      "seller": "Seller: WAKE TF UP, [Company ID], registered at [Address]",
+      "buyer": "Buyer: individual or legal entity entering into a purchase contract",
+      "goods": "Goods: streetwear clothing from recycled materials presented in the online store",
+      "contract": "Purchase Contract: distance contract between seller and buyer"
+    },
+    "section3": {
+      "title": "3. Account Registration",
+      "content": "Buyer may create a user account by registration. During registration, the buyer must provide truthful information. Buyer is responsible for protecting their password. Buyer may cancel their account at any time."
+    },
+    "section4": {
+      "title": "4. Orders and Contract Formation",
+      "intro": "Order process:",
+      "step1": "Buyer adds goods to cart and proceeds to checkout",
+      "step2": "Fills in delivery and billing details",
+      "step3": "Selects delivery method and pays for the order",
+      "step4": "Purchase contract is concluded by submitting the order and its confirmation by seller via email"
+    },
+    "section5": {
+      "title": "5. Prices and Payment Terms",
+      "item1": "All prices are stated in EUR including VAT",
+      "item2": "Prices are valid at the time of order submission",
+      "item3": "Delivery cost is added to the goods price according to selected delivery method",
+      "item4": "Payment is possible by online payment card or bank transfer"
+    },
+    "section6": {
+      "title": "6. Delivery",
+      "content": "We deliver goods through contracted carriers (Packeta, DPD). Standard delivery time is 3-5 business days. You will be notified by email about shipment with tracking number. Ownership of goods transfers to buyer upon receipt and full payment of purchase price."
+    },
+    "section7": {
+      "title": "7. Right of Withdrawal (Slovak Act No. 102/2014)",
+      "intro": "Buyer has the right to withdraw from the contract within 14 days from receipt of goods without stating a reason.",
+      "period": "Withdrawal period: 14 calendar days",
+      "form": "Form: you can use our form or send an email",
+      "return": "Goods return: within 14 days of withdrawal, in original packaging, unused",
+      "refund": "Money return: within 14 days from receipt of returned goods",
+      "exceptions_title": "Exceptions from right of withdrawal",
+      "exception1": "Custom-made or personalized goods",
+      "exception2": "Goods that have been opened and cannot be returned for hygienic reasons",
+      "exception3": "Limited edition items (if marked as non-returnable)"
+    },
+    "section8": {
+      "title": "8. Warranty and Complaints",
+      "content": "Goods are covered by a 24-month legal warranty. You can file a complaint at the seller's address or by email at complaints@waketfup.com. We will process the complaint within 30 days. Rights from liability for defects are governed by the Civil Code and Consumer Protection Act."
+    },
+    "section9": {
+      "title": "9. Intellectual Property",
+      "content": "All website content (design, photos, texts, logos) is protected by copyright and is the property of the seller. Any use without written consent is prohibited."
+    },
+    "section10": {
+      "title": "10. Limitation of Liability",
+      "content": "Seller is not liable for damage caused by improper use of goods or failure to follow care instructions. Seller is not responsible for delivery delays caused by carrier or force majeure."
+    },
+    "section11": {
+      "title": "11. Dispute Resolution",
+      "content": "<p>If a dispute arises between seller and buyer, we will attempt extrajudicial resolution. Buyer has the right to contact alternative dispute resolution body:</p><p><strong>Slovak Trade Inspection</strong><br>Prievozská 32, 827 99 Bratislava<br>Tel: 02/58 27 21 72<br>www.soi.sk</p><p>EU Online Dispute Resolution Platform: <a href='https://ec.europa.eu/consumers/odr' target='_blank' class='text-accent hover:underline'>ec.europa.eu/consumers/odr</a></p>"
+    },
+    "section12": {
+      "title": "12. Final Provisions",
+      "content": "These Terms become effective on January 16, 2026. Seller reserves the right to change these Terms. Current Terms are always available on this page. Relationships not covered by Terms are governed by Slovak law."
+    },
+    "section13": {
+      "title": "13. Contact",
+      "content": "<p><strong>WAKE TF UP</strong><br>Address: [Company Address]<br>Company ID: [ID]<br>Tax ID: [Tax ID]<br>Email: info@waketfup.com<br>Phone: [Phone]</p>"
+    }
+  },
+  "cookies": {
+    "title": "We Use Cookies",
+    "description": "We use essential cookies to ensure the website functions properly. Analytics and marketing cookies are only used with your consent.",
+    "learn_more": "Learn more",
+    "accept_all": "Accept All",
+    "reject": "Reject",
+    "settings": "Settings",
+    "settings_title": "Cookie Settings",
+    "settings_description": "You can choose which types of cookies you want to enable. Essential cookies are always active.",
+    "essential_title": "Essential Cookies",
+    "essential_description": "These cookies are necessary for basic website functionality (login, cart, security). They cannot be disabled.",
+    "analytics_title": "Analytics Cookies",
+    "analytics_description": "Help us understand how visitors use the website so we can improve user experience.",
+    "marketing_title": "Marketing Cookies",
+    "marketing_description": "Used to display relevant ads and track the effectiveness of marketing campaigns.",
+    "always_active": "Always Active",
+    "save_preferences": "Save Preferences"
   }
 }

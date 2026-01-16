@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -7,14 +7,76 @@ import { CartService } from '../../core/api/cart.service';
 import { OrderService, CreateOrderRequest } from '../../core/api/order.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { LanguageService } from '../../core/services/language.service';
+import { SettingsService } from '../../core/api/settings.service';
 import { ButtonComponent } from '../../shared/button/button.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-checkout',
   imports: [CommonModule, RouterModule, ReactiveFormsModule, TranslocoModule, ButtonComponent],
   template: `
     <div class="container mx-auto px-4 py-8">
-      <h1 class="text-3xl md:text-4xl font-bold mb-8">{{ 'checkout.title' | transloco }}</h1>
+      <!-- Progress Steps -->
+      <div class="max-w-3xl mx-auto mb-12">
+        <div class="flex items-center justify-center gap-2">
+          <!-- Step 1: Cart (completed) -->
+          <div class="flex items-center">
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-success text-success-foreground font-mono font-bold">
+              ✓
+            </div>
+            <div class="ml-2 text-xs hidden md:block">
+              <div class="font-mono uppercase font-bold text-success">{{ 'checkout.step_cart' | transloco }}</div>
+            </div>
+          </div>
+
+          <!-- Connector -->
+          <div [class]="'w-8 md:w-16 h-0.5 mx-1 ' + (currentStep() >= 2 ? 'bg-foreground' : 'bg-border')"></div>
+
+          <!-- Step 2: Shipping -->
+          <div 
+            class="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+            (click)="goToStep(1)">
+            <div [class]="'flex items-center justify-center w-10 h-10 rounded-full font-mono font-bold ' + (currentStep() >= 2 ? 'bg-success text-success-foreground' : currentStep() === 1 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground')">
+              @if (currentStep() > 1) { ✓ } @else { 1 }
+            </div>
+            <div class="ml-2 text-xs hidden md:block">
+              <div [class]="'font-mono uppercase font-bold ' + (currentStep() >= 1 ? '' : 'text-muted-foreground')">{{ 'checkout.step_shipping' | transloco }}</div>
+            </div>
+          </div>
+
+          <!-- Connector -->
+          <div [class]="'w-8 md:w-16 h-0.5 mx-1 ' + (currentStep() >= 3 ? 'bg-foreground' : 'bg-border')"></div>
+
+          <!-- Step 3: Contact -->
+          <div 
+            [class]="'flex items-center transition-opacity ' + (currentStep() >= 2 ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-60')"
+            (click)="goToStep(2)">
+            <div [class]="'flex items-center justify-center w-10 h-10 rounded-full font-mono font-bold ' + (currentStep() >= 3 ? 'bg-success text-success-foreground' : currentStep() === 2 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground')">
+              @if (currentStep() > 2) { ✓ } @else { 2 }
+            </div>
+            <div class="ml-2 text-xs hidden md:block">
+              <div [class]="'font-mono uppercase font-bold ' + (currentStep() >= 2 ? '' : 'text-muted-foreground')">{{ 'checkout.step_contact' | transloco }}</div>
+            </div>
+          </div>
+
+          <!-- Connector -->
+          <div [class]="'w-8 md:w-16 h-0.5 mx-1 ' + (currentStep() >= 3 ? 'bg-foreground' : 'bg-border')"></div>
+
+          <!-- Step 4: Review -->
+          <div 
+            [class]="'flex items-center transition-opacity ' + (currentStep() >= 3 ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-60')"
+            (click)="goToStep(3)">
+            <div [class]="'flex items-center justify-center w-10 h-10 rounded-full font-mono font-bold ' + (currentStep() === 3 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground')">
+              3
+            </div>
+            <div class="ml-2 text-xs hidden md:block">
+              <div [class]="'font-mono uppercase font-bold ' + (currentStep() >= 3 ? '' : 'text-muted-foreground')">{{ 'checkout.step_review' | transloco }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center">{{ 'checkout.title' | transloco }}</h1>
 
       @if (cartService.items().length === 0) {
         <div class="text-center py-16">
@@ -28,7 +90,9 @@ import { ButtonComponent } from '../../shared/button/button.component';
           <!-- Checkout Form -->
           <div class="lg:col-span-2">
             <form [formGroup]="checkoutForm" (ngSubmit)="onSubmit()">
-              <!-- Shipping Method -->
+              
+              <!-- STEP 1: Shipping Method -->
+              @if (currentStep() === 1) {
               <div class="border border-border p-6 mb-6">
                 <h2 class="text-xl font-bold mb-6">{{ 'checkout.shipping_method' | transloco }}</h2>
                 
@@ -42,36 +106,82 @@ import { ButtonComponent } from '../../shared/button/button.component';
                       <div class="font-mono uppercase font-bold">{{ 'checkout.pickup' | transloco }}</div>
                       <div class="text-sm text-muted-foreground">{{ 'checkout.pickup_desc' | transloco }}</div>
                     </div>
-                    <div class="font-mono font-bold">{{ 'checkout.free' | transloco }}</div>
+                    <div class="font-mono font-bold">
+                      @if (pickupCost() === 0) {
+                        {{ 'checkout.free' | transloco }}
+                      } @else {
+                        {{ pickupCost() | currency: 'EUR' }}
+                      }
+                    </div>
                   </label>
 
                   <!-- Packeta Z-Box -->
                   <label class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
-                         [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'packeta'"
-                         [class.bg-muted]="checkoutForm.get('shippingMethod')?.value === 'packeta'">
-                    <input type="radio" formControlName="shippingMethod" value="packeta" class="mr-3">
+                         [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'packeta_box'"
+                         [class.bg-muted]="checkoutForm.get('shippingMethod')?.value === 'packeta_box'">
+                    <input type="radio" formControlName="shippingMethod" value="packeta_box" class="mr-3">
                     <div class="flex-1">
-                      <div class="font-mono uppercase font-bold">{{ 'checkout.packeta' | transloco }}</div>
-                      <div class="text-sm text-muted-foreground">{{ 'checkout.packeta_desc' | transloco }}</div>
+                      <div class="font-mono uppercase font-bold">{{ 'checkout.packeta_box' | transloco }}</div>
+                      <div class="text-sm text-muted-foreground">{{ 'checkout.packeta_box_desc' | transloco }}</div>
+                      @if (checkoutForm.get('shippingMethod')?.value === 'packeta_box' && selectedPacketaPoint()) {
+                        <div class="mt-2 text-sm bg-success/10 border border-success text-success p-2 rounded">
+                          <strong>✓ {{ selectedPacketaPoint()?.name }}</strong><br>
+                          <span class="text-xs">{{ selectedPacketaPoint()?.address }}</span>
+                        </div>
+                      }
                     </div>
-                    <div class="font-mono font-bold">€3.50</div>
+                    <div class="font-mono font-bold">{{ packetaBoxCost() | currency: 'EUR' }}</div>
                   </label>
 
-                  <!-- Courier -->
-                  <label class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
-                         [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'courier'"
-                         [class.bg-muted]="checkoutForm.get('shippingMethod')?.value === 'courier'">
-                    <input type="radio" formControlName="shippingMethod" value="courier" class="mr-3">
-                    <div class="flex-1">
-                      <div class="font-mono uppercase font-bold">{{ 'checkout.courier' | transloco }}</div>
-                      <div class="text-sm text-muted-foreground">{{ 'checkout.courier_desc' | transloco }}</div>
+                  @if (checkoutForm.get('shippingMethod')?.value === 'packeta_box') {
+                    <div class="pl-10">
+                      <app-button 
+                        [variant]="'secondary'"
+                        [size]="'sm'"
+                        (clicked)="openPacketaWidget()">
+                        {{ selectedPacketaPoint() ? ('checkout.change_pickup_point' | transloco) : ('checkout.select_pickup_point' | transloco) }}
+                      </app-button>
                     </div>
-                    <div class="font-mono font-bold">€5.99</div>
+                  }
+
+                  <!-- DPD Courier -->
+                  <label class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
+                         [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'dpd_courier'"
+                         [class.bg-muted]="checkoutForm.get('shippingMethod')?.value === 'dpd_courier'">
+                    <input type="radio" formControlName="shippingMethod" value="dpd_courier" class="mr-3">
+                    <div class="flex-1">
+                      <div class="font-mono uppercase font-bold">{{ 'checkout.dpd_courier' | transloco }}</div>
+                      <div class="text-sm text-muted-foreground">{{ 'checkout.dpd_courier_desc' | transloco }}</div>
+                    </div>
+                    <div class="font-mono font-bold">{{ dpdCourierCost() | currency: 'EUR' }}</div>
+                  </label>
+
+                  <!-- Packeta Courier -->
+                  <label class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
+                         [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'packeta_courier'"
+                         [class.bg-muted]="checkoutForm.get('shippingMethod')?.value === 'packeta_courier'">
+                    <input type="radio" formControlName="shippingMethod" value="packeta_courier" class="mr-3">
+                    <div class="flex-1">
+                      <div class="font-mono uppercase font-bold">{{ 'checkout.packeta_courier' | transloco }}</div>
+                      <div class="text-sm text-muted-foreground">{{ 'checkout.packeta_courier_desc' | transloco }}</div>
+                    </div>
+                    <div class="font-mono font-bold">{{ packetaCourierCost() | currency: 'EUR' }}</div>
                   </label>
                 </div>
               </div>
 
-              <!-- Shipping Information -->
+              <!-- Step 1 Navigation -->
+              <div class="flex justify-end">
+                <app-button 
+                  [type]="'button'"
+                  (clicked)="nextStep()">
+                  {{ 'checkout.next_step' | transloco }}
+                </app-button>
+              </div>
+              }
+
+              <!-- STEP 2: Contact & Shipping Information -->
+              @if (currentStep() === 2) {
               <div class="border border-border p-6 mb-6">
                 <h2 class="text-xl font-bold mb-6">{{ 'checkout.shipping' | transloco }}</h2>
                 
@@ -256,6 +366,147 @@ import { ButtonComponent } from '../../shared/button/button.component';
                 }
               </div>
 
+              <!-- Step 2 Navigation -->
+              <div class="flex gap-4 mt-6">
+                <app-button 
+                  [type]="'button'"
+                  [variant]="'secondary'"
+                  (clicked)="previousStep()">
+                  {{ 'checkout.previous_step' | transloco }}
+                </app-button>
+                <app-button 
+                  [type]="'button'"
+                  (clicked)="nextStep()">
+                  {{ 'checkout.next_step' | transloco }}
+                </app-button>
+              </div>
+              }
+
+              <!-- STEP 3: Review Order -->
+              @if (currentStep() === 3) {
+              <div class="border border-border p-6 mb-6">
+                <h2 class="text-xl font-bold mb-6">{{ 'checkout.review_order' | transloco }}</h2>
+
+                <!-- Order Items -->
+                <div class="mb-6">
+                  <h3 class="font-mono uppercase font-bold text-sm mb-4">{{ 'checkout.order_items' | transloco }}</h3>
+                  <div class="space-y-4">
+                    @for (item of cartService.items(); track item.product.id) {
+                      <div class="flex gap-4 pb-4 border-b border-border last:border-0">
+                        <div class="w-20 h-24 bg-muted overflow-hidden flex-shrink-0">
+                          @if (item.product.images && item.product.images.length > 0) {
+                            <img 
+                              [src]="getImageUrl(item.product.images[0].image)" 
+                              [alt]="item.product.name"
+                              class="w-full h-full object-cover">
+                          } @else if (item.product.primary_image) {
+                            <img 
+                              [src]="getImageUrl(item.product.primary_image)" 
+                              [alt]="item.product.name"
+                              class="w-full h-full object-cover">
+                          }
+                        </div>
+                        <div class="flex-1">
+                          <p class="font-medium">{{ item.product.name }}</p>
+                          <p class="text-sm text-muted-foreground">{{ 'checkout.qty' | transloco }}: {{ item.quantity }}</p>
+                          <p class="font-medium mt-2">
+                            {{ (+(item.product.discount_price ?? item.product.price)) * item.quantity | currency: 'EUR' }}
+                          </p>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Shipping Method -->
+                <div class="mb-6 pb-6 border-b border-border">
+                  <h3 class="font-mono uppercase font-bold text-sm mb-3">{{ 'checkout.shipping_method' | transloco }}</h3>
+                  <div class="bg-muted p-4">
+                    <p class="font-medium">{{ getShippingMethodName() }}</p>
+                    @if (selectedShippingMethod() === 'packeta_box' && selectedPacketaPoint()) {
+                      <p class="text-sm text-muted-foreground mt-2">
+                        <strong>{{ selectedPacketaPoint()?.name }}</strong><br>
+                        {{ selectedPacketaPoint()?.address }}
+                      </p>
+                    }
+                    <p class="font-medium mt-2">{{ selectedShippingCost() | currency: 'EUR' }}</p>
+                  </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="mb-6 pb-6 border-b border-border">
+                  <h3 class="font-mono uppercase font-bold text-sm mb-3">{{ 'checkout.contact_info' | transloco }}</h3>
+                  <div class="bg-muted p-4 text-sm space-y-1">
+                    <p><strong>{{ 'checkout.email' | transloco }}:</strong> {{ checkoutForm.get('email')?.value }}</p>
+                    <p><strong>{{ 'checkout.name' | transloco }}:</strong> {{ checkoutForm.get('fullName')?.value }}</p>
+                    <p><strong>{{ 'checkout.phone' | transloco }}:</strong> {{ checkoutForm.get('phone')?.value }}</p>
+                  </div>
+                </div>
+
+                <!-- Shipping Address -->
+                @if (selectedShippingMethod() !== 'packeta_box') {
+                <div class="mb-6 pb-6 border-b border-border">
+                  <h3 class="font-mono uppercase font-bold text-sm mb-3">{{ 'checkout.shipping_address' | transloco }}</h3>
+                  <div class="bg-muted p-4 text-sm space-y-1">
+                    <p>{{ checkoutForm.get('address')?.value }}</p>
+                    <p>{{ checkoutForm.get('city')?.value }}, {{ checkoutForm.get('postalCode')?.value }}</p>
+                    <p>{{ checkoutForm.get('country')?.value }}</p>
+                  </div>
+                </div>
+                }
+
+                <!-- Company Info (if applicable) -->
+                @if (isCompanyPurchase()) {
+                <div class="mb-6 pb-6 border-b border-border">
+                  <h3 class="font-mono uppercase font-bold text-sm mb-3">{{ 'checkout.company_info' | transloco }}</h3>
+                  <div class="bg-muted p-4 text-sm space-y-1">
+                    <p><strong>{{ 'checkout.billing_company' | transloco }}:</strong> {{ checkoutForm.get('billingCompany')?.value }}</p>
+                    <p><strong>{{ 'checkout.billing_ico' | transloco }}:</strong> {{ checkoutForm.get('billingIco')?.value }}</p>
+                    @if (checkoutForm.get('billingDic')?.value) {
+                      <p><strong>{{ 'checkout.billing_dic' | transloco }}:</strong> {{ checkoutForm.get('billingDic')?.value }}</p>
+                    }
+                    @if (checkoutForm.get('billingIcDph')?.value) {
+                      <p><strong>{{ 'checkout.billing_ic_dph' | transloco }}:</strong> {{ checkoutForm.get('billingIcDph')?.value }}</p>
+                    }
+                  </div>
+                </div>
+                }
+
+                <!-- Additional Notes -->
+                @if (checkoutForm.get('notes')?.value) {
+                <div class="mb-6">
+                  <h3 class="font-mono uppercase font-bold text-sm mb-3">{{ 'checkout.notes' | transloco }}</h3>
+                  <div class="bg-muted p-4 text-sm">
+                    <p>{{ checkoutForm.get('notes')?.value }}</p>
+                  </div>
+                </div>
+                }
+
+                <!-- Total Summary -->
+                <div class="bg-foreground text-background p-4">
+                  <div class="flex justify-between items-center">
+                    <span class="font-mono uppercase font-bold">{{ 'checkout.total' | transloco }}</span>
+                    <span class="text-2xl font-bold">{{ total() | currency: 'EUR' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 3 Navigation -->
+              <div class="flex gap-4">
+                <app-button 
+                  [type]="'button'"
+                  [variant]="'secondary'"
+                  (clicked)="previousStep()">
+                  {{ 'checkout.previous_step' | transloco }}
+                </app-button>
+                <app-button 
+                  [type]="'submit'"
+                  [loading]="submitting()">
+                  {{ 'checkout.place_order' | transloco }}
+                </app-button>
+              </div>
+              }
+
               @if (error()) {
                 <div class="bg-danger/10 border border-danger text-danger px-4 py-3 mb-6">
                   {{ error() }}
@@ -276,7 +527,12 @@ import { ButtonComponent } from '../../shared/button/button.component';
                     <div class="w-16 h-20 bg-muted overflow-hidden flex-shrink-0">
                       @if (item.product.images && item.product.images.length > 0) {
                         <img 
-                          [src]="item.product.images[0].image" 
+                          [src]="getImageUrl(item.product.images[0].image)" 
+                          [alt]="item.product.name"
+                          class="w-full h-full object-cover">
+                      } @else if (item.product.primary_image) {
+                        <img 
+                          [src]="getImageUrl(item.product.primary_image)" 
                           [alt]="item.product.name"
                           class="w-full h-full object-cover">
                       }
@@ -302,33 +558,19 @@ import { ButtonComponent } from '../../shared/button/button.component';
                 <div class="flex justify-between">
                   <span class="text-muted-foreground">{{ 'cart.shipping' | transloco }}</span>
                   <span class="font-medium">
-                    @if (cartService.subtotal() >= freeShippingThreshold) {
+                    @if (cartService.subtotal() >= freeShippingThreshold()) {
                       <span class="text-success">{{ 'cart.free' | transloco }}</span>
                     } @else {
-                      {{ shippingCost | currency: 'EUR' }}
+                      {{ selectedShippingCost() | currency: 'EUR' }}
                     }
                   </span>
                 </div>
               </div>
 
-              <div class="flex justify-between text-lg font-bold mb-6">
+              <div class="flex justify-between text-lg font-bold">
                 <span>{{ 'cart.total' | transloco }}</span>
                 <span>{{ total() | currency: 'EUR' }}</span>
               </div>
-
-              <app-button 
-                [variant]="'primary'"
-                [size]="'lg'"
-                [fullWidth]="true"
-                [loading]="submitting()"
-                [disabled]="checkoutForm.invalid"
-                (clicked)="onSubmit()">
-                {{ 'checkout.place_order' | transloco }}
-              </app-button>
-
-              <p class="text-xs text-muted-foreground text-center mt-4">
-                {{ 'checkout.secure_checkout' | transloco }}
-              </p>
             </div>
           </div>
         </div>
@@ -348,22 +590,60 @@ export class CheckoutComponent implements OnInit {
   private orderService = inject(OrderService);
   private authService = inject(AuthService);
   private languageService = inject(LanguageService);
+  private settingsService = inject(SettingsService);
 
   currentLang = this.languageService.currentLang;
   shopLink = computed(() => `/${this.currentLang()}/shop`);
 
   submitting = signal(false);
   error = signal('');
+  currentStep = signal(1); // 1=shipping, 2=contact, 3=review
   isCompanyPurchase = signal(false);
+  selectedShippingMethod = signal<'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier'>('dpd_courier');
+  selectedPacketaPoint = signal<{ id: string; name: string; address: string } | null>(null);
   
-  freeShippingThreshold = 50;
-  shippingCost = 5.99;
+  // Shipping costs from settings
+  freeShippingThreshold = computed(() => {
+    const threshold = this.settingsService.settings()?.free_shipping_threshold;
+    return threshold ? Number(threshold) : 50;
+  });
+  
+  pickupCost = computed(() => {
+    const cost = this.settingsService.settings()?.pickup_cost;
+    return cost ? Number(cost) : 0;
+  });
+  
+  dpdCourierCost = computed(() => {
+    const cost = this.settingsService.settings()?.dpd_courier_cost;
+    return cost ? Number(cost) : 5.99;
+  });
+  
+  packetaBoxCost = computed(() => {
+    const cost = this.settingsService.settings()?.packeta_box_cost;
+    return cost ? Number(cost) : 3.99;
+  });
+  
+  packetaCourierCost = computed(() => {
+    const cost = this.settingsService.settings()?.packeta_courier_cost;
+    return cost ? Number(cost) : 4.99;
+  });
+  
+  selectedShippingCost = computed(() => {
+    const method = this.selectedShippingMethod();
+    switch(method) {
+      case 'pickup': return this.pickupCost();
+      case 'dpd_courier': return this.dpdCourierCost();
+      case 'packeta_box': return this.packetaBoxCost();
+      case 'packeta_courier': return this.packetaCourierCost();
+      default: return 0;
+    }
+  });
 
   checkoutForm: FormGroup;
 
   constructor() {
     this.checkoutForm = this.fb.group({
-      shippingMethod: ['courier', Validators.required],
+      shippingMethod: ['dpd_courier', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       fullName: ['', Validators.required],
       phone: ['', Validators.required],
@@ -378,30 +658,42 @@ export class CheckoutComponent implements OnInit {
       billingDic: [''],
       billingIcDph: ['']
     });
+
+    // Auto-fill form when user data becomes available
+    effect(() => {
+      const currentUser = this.authService.user();
+      if (currentUser && !this.checkoutForm.get('email')?.value) {
+        const nameParts = [currentUser.first_name, currentUser.last_name].filter(Boolean);
+        const fullName = nameParts.join(' ');
+        
+        this.checkoutForm.patchValue({
+          email: currentUser.email || '',
+          fullName: fullName || '',
+          phone: currentUser.phone || '',
+          address: currentUser.street || '',
+          city: currentUser.city || '',
+          postalCode: currentUser.postal_code || '',
+          country: currentUser.country || 'SK'
+        });
+      }
+    });
   }
 
   ngOnInit() {
     if (this.cartService.items().length === 0) {
-      this.router.navigate(['/cart']);
+      const lang = this.languageService.currentLang();
+      this.router.navigate([lang, 'cart']);
       return;
     }
     
-    // Pre-fill address from user profile if available
-    const currentUser = this.authService.user();
-    if (currentUser) {
-      const nameParts = [currentUser.first_name, currentUser.last_name].filter(Boolean);
-      const fullName = nameParts.join(' ');
-      
-      this.checkoutForm.patchValue({
-        email: currentUser.email || '',
-        fullName: fullName || '',
-        phone: currentUser.phone || '',
-        address: currentUser.street || '',
-        city: currentUser.city || '',
-        postalCode: currentUser.postal_code || '',
-        country: currentUser.country || 'SK'
-      });
-    }
+    // Subscribe to shipping method changes
+    this.checkoutForm.get('shippingMethod')?.valueChanges.subscribe(value => {
+      this.selectedShippingMethod.set(value);
+      // Reset Packeta point when changing shipping method
+      if (value !== 'packeta_box') {
+        this.selectedPacketaPoint.set(null);
+      }
+    });
   }
 
   toggleCompanyPurchase() {
@@ -422,17 +714,157 @@ export class CheckoutComponent implements OnInit {
     }
   }
 
+  openPacketaWidget() {
+    // @ts-ignore - Packeta widget is loaded via external script
+    if (typeof Packeta !== 'undefined') {
+      // Load API key from backend
+      this.settingsService.getPacketaApiKey().subscribe({
+        next: (response) => {
+          const apiKey = response.api_key || '9dbc4fa2f90c9113';
+          // @ts-ignore
+          Packeta.Widget.pick(apiKey, (point: any) => {
+            if (point) {
+              this.selectedPacketaPoint.set({
+                id: point.id,
+                name: point.name,
+                address: `${point.street}, ${point.city}, ${point.zip}`
+              });
+            }
+          }, {
+            country: 'sk',
+            language: this.currentLang() === 'sk' ? 'sk' : 'en'
+          });
+        },
+        error: (err) => {
+          console.error('Failed to load Packeta API key:', err);
+          // Fallback to default test key
+          const apiKey = '9dbc4fa2f90c9113';
+          // @ts-ignore
+          Packeta.Widget.pick(apiKey, (point: any) => {
+            if (point) {
+              this.selectedPacketaPoint.set({
+                id: point.id,
+                name: point.name,
+                address: `${point.street}, ${point.city}, ${point.zip}`
+              });
+            }
+          }, {
+            country: 'sk',
+            language: this.currentLang() === 'sk' ? 'sk' : 'en'
+          });
+        }
+      });
+    } else {
+      console.error('Packeta widget not loaded');
+    }
+  }
+
   total(): number {
     const subtotal = this.cartService.subtotal();
-    const shipping = subtotal >= this.freeShippingThreshold ? 0 : this.shippingCost;
+    const shipping = subtotal >= this.freeShippingThreshold() ? 0 : this.selectedShippingCost();
     return subtotal + shipping;
   }
 
+  getImageUrl(imagePath: string): string {
+    if (!imagePath) return '';
+    // If already absolute URL, return as is
+    if (imagePath.startsWith('http')) return imagePath;
+    // If relative path, prepend base URL
+    return `${environment.apiBaseUrl}${imagePath}`;
+  }
+
+  nextStep() {
+    // Validate current step before proceeding
+    if (this.currentStep() === 1) {
+      // Validate shipping method and Packeta point if needed
+      if (this.selectedShippingMethod() === 'packeta_box' && !this.selectedPacketaPoint()) {
+        this.error.set(this.currentLang() === 'sk' 
+          ? 'Prosím vyberte výdajné miesto Packeta' 
+          : 'Please select a Packeta pickup point');
+        return;
+      }
+      this.error.set('');
+      this.currentStep.set(2);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (this.currentStep() === 2) {
+      // Validate contact and address fields
+      const requiredFields = ['email', 'fullName', 'phone', 'address', 'city', 'postalCode', 'country'];
+      let isValid = true;
+      
+      requiredFields.forEach(field => {
+        const control = this.checkoutForm.get(field);
+        if (!control?.value) {
+          control?.markAsTouched();
+          isValid = false;
+        }
+      });
+
+      if (!isValid) {
+        this.error.set(this.currentLang() === 'sk' 
+          ? 'Prosím vyplňte všetky povinné polia' 
+          : 'Please fill in all required fields');
+        return;
+      }
+
+      if (this.checkoutForm.invalid) {
+        Object.keys(this.checkoutForm.controls).forEach(key => {
+          this.checkoutForm.get(key)?.markAsTouched();
+        });
+        return;
+      }
+
+      this.error.set('');
+      this.currentStep.set(3);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  previousStep() {
+    if (this.currentStep() > 1) {
+      this.currentStep.set(this.currentStep() - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  goToStep(step: number) {
+    // Allow going back to any previous step or current step
+    // Don't allow skipping forward
+    if (step <= this.currentStep() && step >= 1) {
+      this.currentStep.set(step);
+      this.error.set('');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  getShippingMethodName(): string {
+    const method = this.selectedShippingMethod();
+    const names: Record<string, string> = {
+      'pickup': this.currentLang() === 'sk' ? 'Osobný odber' : 'Personal Pickup',
+      'dpd_courier': this.currentLang() === 'sk' ? 'DPD Kuriér' : 'DPD Courier',
+      'packeta_box': this.currentLang() === 'sk' ? 'Packeta Z-Box' : 'Packeta Z-Box',
+      'packeta_courier': this.currentLang() === 'sk' ? 'Packeta Kuriér' : 'Packeta Courier'
+    };
+    return names[method] || method;
+  }
+
   onSubmit() {
+    // This should only be called from step 3 (review)
+    if (this.currentStep() !== 3) {
+      return;
+    }
+
     if (this.checkoutForm.invalid || this.submitting()) {
       Object.keys(this.checkoutForm.controls).forEach(key => {
         this.checkoutForm.get(key)?.markAsTouched();
       });
+      return;
+    }
+
+    // Validate Packeta point selection
+    if (this.checkoutForm.value.shippingMethod === 'packeta_box' && !this.selectedPacketaPoint()) {
+      this.error.set(this.currentLang() === 'sk' 
+        ? 'Prosím vyberte výdajné miesto Packeta' 
+        : 'Please select a Packeta pickup point');
       return;
     }
 
@@ -449,6 +881,11 @@ export class CheckoutComponent implements OnInit {
       shipping_postal_code: formValue.postalCode,
       shipping_country: formValue.country,
       phone: formValue.phone,
+      ...(formValue.shippingMethod === 'packeta_box' && this.selectedPacketaPoint() && {
+        packeta_point_id: this.selectedPacketaPoint()!.id,
+        packeta_point_name: this.selectedPacketaPoint()!.name,
+        packeta_point_address: this.selectedPacketaPoint()!.address
+      }),
       is_company_purchase: this.isCompanyPurchase(),
       ...(this.isCompanyPurchase() && {
         billing_company: formValue.billingCompany,
@@ -465,7 +902,7 @@ export class CheckoutComponent implements OnInit {
     this.orderService.createOrder(orderData).subscribe({
       next: (order) => {
         this.cartService.clearCart();
-        this.router.navigate(['/orders', order.id]);
+        this.router.navigate([`/${this.currentLang()}/orders`]);
       },
       error: (err) => {
         this.error.set(err.error?.message || 'Failed to place order. Please try again.');

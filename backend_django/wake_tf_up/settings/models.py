@@ -14,11 +14,39 @@ class MainSettings(models.Model):
         default=50.00,
         help_text="Minimum cart value for free shipping (EUR)"
     )
+    
+    # Shipping Method Costs
+    pickup_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        help_text="Personal pickup cost (EUR) - usually 0"
+    )
+    dpd_courier_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=5.99,
+        help_text="DPD courier delivery cost (EUR)"
+    )
+    packeta_box_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=3.99,
+        help_text="Packeta box (Z-BOX) delivery cost (EUR)"
+    )
+    packeta_courier_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=4.99,
+        help_text="Packeta courier delivery cost (EUR)"
+    )
+    
+    # Legacy field - kept for backwards compatibility, can be removed later
     standard_shipping_cost = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=5.99,
-        help_text="Standard shipping cost (EUR)"
+        help_text="Standard shipping cost (EUR) - DEPRECATED"
     )
     
     # Tax Settings

@@ -321,8 +321,8 @@ export class ProductDetailComponent implements OnInit {
     
     setTimeout(() => {
       this.addingToCart.set(false);
-      // Show success message or navigate to cart
-      this.router.navigate(['/cart']);
+      const lang = this.languageService.currentLang();
+      this.router.navigate([lang, 'cart']);
     }, 500);
   }
 }

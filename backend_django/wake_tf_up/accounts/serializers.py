@@ -63,4 +63,8 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating user profile"""
     class Meta:
         model = User
-        fields = ('phone', 'first_name', 'last_name', 'theme_preference')
+        fields = (
+            'phone', 'first_name', 'last_name', 
+            'street', 'city', 'postal_code', 'country',
+            'theme_preference'
+        )

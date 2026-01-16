@@ -1,10 +1,15 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { NotificationService } from '../services/notification.service';
 
 export interface MainSettings {
   free_shipping_threshold: number;
-  standard_shipping_cost: number;
+  standard_shipping_cost: number; // Legacy
+  pickup_cost: number;
+  dpd_courier_cost: number;
+  packeta_box_cost: number;
+  packeta_courier_cost: number;
   tax_rate: number;
   site_name: string;
   contact_email: string;
@@ -21,6 +26,7 @@ export interface MainSettings {
 })
 export class SettingsService {
   private http = inject(HttpClient);
+  private notificationService = inject(NotificationService);
   private apiUrl = `${environment.apiUrl}/settings`;
   
   // Signal to store settings
@@ -45,7 +51,7 @@ export class SettingsService {
         this.loading.set(false);
       },
       error: (err: any) => {
-        console.error('Failed to load settings:', err);
+        this.notificationService.error('Failed to load application settings. Using default values.');
         this.error.set('Failed to load application settings');
         this.loading.set(false);
         
@@ -53,6 +59,10 @@ export class SettingsService {
         this.settings.set({
           free_shipping_threshold: 50,
           standard_shipping_cost: 5.99,
+          pickup_cost: 0,
+          dpd_courier_cost: 5.99,
+          packeta_box_cost: 3.99,
+          packeta_courier_cost: 4.99,
           tax_rate: 20,
           site_name: 'Wake TF Up',
           contact_email: 'info@waketfup.com',
@@ -93,5 +103,12 @@ export class SettingsService {
    */
   refresh() {
     this.loadSettings();
+  }
+
+  /**
+   * Get Packeta API key from backend
+   */
+  getPacketaApiKey() {
+    return this.http.get<{ api_key: string }>(`${this.apiUrl}/packeta_key/`);
   }
 }

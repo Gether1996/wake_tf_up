@@ -18,8 +18,27 @@ import { ButtonComponent } from '../../../shared/button/button.component';
           <p class="text-muted-foreground">{{ 'auth.register.subtitle' | transloco }}</p>
         </div>
 
-        <div class="border border-border p-8">
-          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        <!-- Success Message -->
+        @if (success()) {
+          <div class="border border-border p-8 text-center">
+            <div class="mb-6">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 mx-auto text-green-500">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-4">{{ 'auth.register.success_title' | transloco }}</h2>
+            <p class="text-muted-foreground mb-2">{{ 'auth.register.success_message' | transloco }}</p>
+            <p class="font-mono text-sm mb-6">{{ registeredEmail() }}</p>
+            <p class="text-sm text-muted-foreground mb-8">{{ 'auth.register.success_instructions' | transloco }}</p>
+            <a 
+              [routerLink]="loginLink()" 
+              class="inline-block px-6 py-3 border border-foreground hover:bg-foreground hover:text-background transition-colors font-mono uppercase text-sm">
+              {{ 'auth.register.go_to_login' | transloco }}
+            </a>
+          </div>
+        } @else {
+          <div class="border border-border p-8">
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
             <!-- Required Section -->
             <div class="mb-8">
               <h2 class="text-sm font-mono uppercase mb-4 text-foreground">
@@ -35,6 +54,7 @@ import { ButtonComponent } from '../../../shared/button/button.component';
                   type="email"
                   id="email"
                   formControlName="email"
+                  autocomplete="off"
                   class="w-full px-4 py-2 border border-border bg-background focus:border-foreground focus:outline-none transition-colors"
                   [class.border-danger]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
                   placeholder="your@email.com">
@@ -53,6 +73,7 @@ import { ButtonComponent } from '../../../shared/button/button.component';
                     [type]="showPassword() ? 'text' : 'password'"
                     id="password"
                     formControlName="password"
+                    autocomplete="new-password"
                     class="w-full px-4 py-2 border border-border bg-background focus:border-foreground focus:outline-none transition-colors pr-12"
                     [class.border-danger]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
                     placeholder="••••••••">
@@ -88,6 +109,7 @@ import { ButtonComponent } from '../../../shared/button/button.component';
                     [type]="showConfirmPassword() ? 'text' : 'password'"
                     id="confirmPassword"
                     formControlName="confirmPassword"
+                    autocomplete="new-password"
                     class="w-full px-4 py-2 border border-border bg-background focus:border-foreground focus:outline-none transition-colors pr-12"
                     [class.border-danger]="passwordMismatch() && registerForm.get('confirmPassword')?.touched"
                     placeholder="••••••••">
@@ -241,6 +263,7 @@ import { ButtonComponent } from '../../../shared/button/button.component';
             </a>
           </div>
         </div>
+        }
       </div>
     </div>
   `,
@@ -261,6 +284,8 @@ export class RegisterComponent {
 
   loading = signal(false);
   error = signal('');
+  success = signal(false);
+  registeredEmail = signal('');
 
   registerForm: FormGroup;
   showPassword = signal(false);
@@ -316,8 +341,10 @@ export class RegisterComponent {
     };
 
     this.authService.register(registerData).subscribe({
-      next: () => {
-        this.router.navigate(['/profile']);
+      next: (response: any) => {
+        this.success.set(true);
+        this.registeredEmail.set(formValue.email);
+        this.loading.set(false);
       },
       error: (err) => {
         this.error.set(err.error?.message || 'Registration failed. Please try again.');

@@ -8,7 +8,17 @@ class MainSettingsAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Shipping Settings', {
-            'fields': ('free_shipping_threshold', 'standard_shipping_cost')
+            'fields': ('free_shipping_threshold',),
+            'description': 'Configure free shipping threshold and delivery method costs'
+        }),
+        ('Shipping Method Costs', {
+            'fields': (
+                'pickup_cost',
+                'dpd_courier_cost', 
+                'packeta_box_cost',
+                'packeta_courier_cost'
+            ),
+            'description': 'Set costs for different shipping methods (EUR)'
         }),
         ('Tax Settings', {
             'fields': ('tax_rate',)

@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap, BehaviorSubject } from 'rxjs';
 import { User, LoginRequest, RegisterRequest, TokenResponse } from '../api/api.models';
 import { environment } from '../../../environments/environment';
+import { TranslocoService } from '@jsverse/transloco';
 
 @Injectable({
   providedIn: 'root'
@@ -23,11 +24,13 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private translocoService: TranslocoService
   ) {
-    // Load user on init if token exists (only in browser)
+    // Delay loading user to avoid circular dependency
     if (isPlatformBrowser(this.platformId) && this.hasToken()) {
-      this.loadCurrentUser();
+      // Use setTimeout to break circular dependency
+      setTimeout(() => this.loadCurrentUser(), 0);
     }
   }
 
@@ -41,21 +44,16 @@ export class AuthService {
       );
   }
 
-  register(data: RegisterRequest): Observable<User> {
-    return this.http.post<User>(`${environment.apiUrl}/auth/register/`, data)
-      .pipe(
-        tap(() => {
-          // After registration, auto-login
-          this.login({ email: data.email, password: data.password }).subscribe();
-        })
-      );
+  register(data: RegisterRequest): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/auth/register/`, data);
   }
 
   logout(): void {
     this.clearTokens();
     this.currentUser.set(null);
     this.isAuthenticatedSubject.next(false);
-    this.router.navigate(['/login']);
+    const lang = this.translocoService.getActiveLang();
+    this.router.navigate([`/${lang}/auth/login`]);
   }
 
   refreshToken(): Observable<TokenResponse> {
@@ -98,15 +96,52 @@ export class AuthService {
   }
 
   private loadCurrentUser(): void {
+    const token = this.getAccessToken();
+    console.log('[AuthService] Loading current user, has token:', !!token);
+    
     this.http.get<User>(`${environment.apiUrl}/auth/profile/`)
       .subscribe({
         next: (user) => {
+          console.log('[AuthService] User loaded successfully:', user.email);
           this.currentUser.set(user);
           this.isAuthenticatedSubject.next(true);
         },
-        error: () => {
-          this.logout();
+        error: (err) => {
+          console.error('[AuthService] Failed to load user:', err.status, err.message);
+          // Just clear tokens, don't redirect to avoid infinite loop on refresh
+          this.clearTokens();
+          this.currentUser.set(null);
+          this.isAuthenticatedSubject.next(false);
         }
       });
+  }
+
+  updateProfile(data: Partial<User>): Observable<User> {
+    return this.http.patch<User>(`${environment.apiUrl}/auth/profile/`, data)
+      .pipe(
+        tap(user => {
+          this.currentUser.set(user);
+        })
+      );
+  }
+
+  verifyEmail(token: string): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/auth/verify-email/`, {
+      params: { token }
+    });
+  }
+
+  resendVerificationEmail(email: string): Observable<any> {
+    const language = this.translocoService.getActiveLang();
+    return this.http.post<any>(`${environment.apiUrl}/auth/resend-verification/`, { email, language });
+  }
+
+  requestPasswordReset(email: string): Observable<any> {
+    const language = this.translocoService.getActiveLang();
+    return this.http.post<any>(`${environment.apiUrl}/auth/request-password-reset/`, { email, language });
+  }
+
+  resetPassword(token: string, password: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/auth/reset-password/`, { token, password });
   }
 }

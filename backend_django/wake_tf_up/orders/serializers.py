@@ -27,6 +27,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         fields = (
             'shipping_method', 'shipping_name', 'shipping_address', 'shipping_city',
             'shipping_postal_code', 'shipping_country', 'phone',
+            'packeta_point_id', 'packeta_point_name', 'packeta_point_address',
             'is_company_purchase', 'billing_company', 'billing_ico', 'billing_dic', 'billing_ic_dph',
             'items'
         )
@@ -74,7 +75,9 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'status', 'shipping_method', 'shipping_name', 'shipping_address',
             'shipping_city', 'shipping_postal_code', 'shipping_country',
-            'phone', 'is_company_purchase', 'billing_company', 'billing_ico', 
+            'phone', 'packeta_point_id', 'packeta_point_name', 'packeta_point_address',
+            'tracking_number', 'carrier_tracking_url',
+            'is_company_purchase', 'billing_company', 'billing_ico', 
             'billing_dic', 'billing_ic_dph', 'total_amount', 'is_pre_order', 'items',
             'created_at', 'updated_at'
         )

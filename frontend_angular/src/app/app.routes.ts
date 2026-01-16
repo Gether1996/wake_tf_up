@@ -35,6 +35,14 @@ const appRoutes: Routes = [
         path: 'register',
         canActivate: [guestGuard],
         loadComponent: () => import('./pages/auth/register/register.component').then(m => m.RegisterComponent)
+      },
+      {
+        path: 'verify-email',
+        loadComponent: () => import('./pages/auth/verify-email/verify-email.component').then(m => m.VerifyEmailComponent)
+      },
+      {
+        path: 'reset-password',
+        loadComponent: () => import('./pages/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
       }
     ]
   },
@@ -64,6 +72,14 @@ const appRoutes: Routes = [
         loadComponent: () => import('./pages/blog/blog-detail/blog-detail.component').then(m => m.BlogDetailComponent)
       }
     ]
+  },
+  {
+    path: 'privacy',
+    loadComponent: () => import('./pages/privacy-policy/privacy-policy.component').then(m => m.PrivacyPolicyComponent)
+  },
+  {
+    path: 'terms',
+    loadComponent: () => import('./pages/terms-of-service/terms-of-service.component').then(m => m.TermsOfServiceComponent)
   }
 ];
 

@@ -9,7 +9,11 @@ class MainSettingsSerializer(serializers.ModelSerializer):
         model = MainSettings
         fields = [
             'free_shipping_threshold',
-            'standard_shipping_cost',
+            'standard_shipping_cost',  # Legacy - keep for backwards compatibility
+            'pickup_cost',
+            'dpd_courier_cost',
+            'packeta_box_cost',
+            'packeta_courier_cost',
             'tax_rate',
             'site_name',
             'contact_email',

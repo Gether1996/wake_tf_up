@@ -41,7 +41,7 @@ export class AnalyticsService {
   }
 
   private trackEvent(event: ProductEvent): Observable<AnalyticsResponse> {
-    return this.api.post<AnalyticsResponse>('analytics/event/', event);
+    return this.api.post<AnalyticsResponse>('analytics/events/', event);
   }
 
   private getOrCreateSessionId(): string {

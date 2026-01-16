@@ -5,6 +5,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { CartService } from '../../core/api/cart.service';
 import { SettingsService } from '../../core/api/settings.service';
 import { LanguageService } from '../../core/services/language.service';
+import { DialogService } from '../../core/services/dialog.service';
 import { ButtonComponent } from '../../shared/button/button.component';
 
 @Component({
@@ -12,7 +13,39 @@ import { ButtonComponent } from '../../shared/button/button.component';
   imports: [CommonModule, RouterModule, TranslocoModule, ButtonComponent],
   template: `
     <div class="container mx-auto px-4 py-8">
-      <h1 class="text-3xl md:text-4xl font-bold mb-8">{{ 'cart.title' | transloco }}</h1>
+      <h1 class="text-3xl md:text-4xl font-bold mb-4">{{ 'cart.title' | transloco }}</h1>
+
+      <!-- Free Shipping Info Banner -->
+      @if (cartService.items().length > 0) {
+        <div class="mb-8 p-4 border border-border rounded-lg bg-muted/50">
+          @if (cartService.subtotal() >= freeShippingThreshold()) {
+            <div class="flex items-center gap-2 text-success">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="font-medium">{{ 'cart.free_shipping_unlocked' | transloco }}</span>
+            </div>
+          } @else {
+            <div class="flex items-center gap-2 text-info">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{{ 'cart.free_shipping_info' | transloco: { amount: freeShippingThreshold() | currency: 'EUR' } }}</span>
+            </div>
+            <div class="mt-2 ml-7">
+              <div class="w-full bg-border rounded-full h-2">
+                <div 
+                  class="bg-info h-2 rounded-full transition-all duration-300"
+                  [style.width.%]="(cartService.subtotal() / freeShippingThreshold()) * 100">
+                </div>
+              </div>
+              <p class="text-xs text-muted-foreground mt-1">
+                {{ 'cart.free_shipping_remaining' | transloco: { amount: (freeShippingThreshold() - cartService.subtotal()) | currency: 'EUR' } }}
+              </p>
+            </div>
+          }
+        </div>
+      }
 
       @if (cartService.items().length === 0) {
         <!-- Empty Cart -->
@@ -36,9 +69,9 @@ import { ButtonComponent } from '../../shared/button/button.component';
                 <!-- Product Image -->
                 <a [routerLink]="productLink(item.product.slug)" class="flex-shrink-0">
                   <div class="w-24 h-32 bg-muted overflow-hidden">
-                    @if (item.product.images && item.product.images.length > 0) {
+                    @if (getProductImage(item.product)) {
                       <img 
-                        [src]="item.product.images[0].image" 
+                        [src]="getProductImage(item.product)" 
                         [alt]="item.product.name"
                         class="w-full h-full object-cover">
                     }
@@ -137,25 +170,13 @@ import { ButtonComponent } from '../../shared/button/button.component';
 
                 <div class="flex justify-between">
                   <span class="text-muted-foreground">{{ 'cart.shipping' | transloco }}</span>
-                  <span class="font-medium">
-                    @if (cartService.subtotal() >= freeShippingThreshold) {
-                      <span class="text-success">{{ 'cart.free' | transloco }}</span>
-                    } @else {
-                      {{ shippingCost | currency: 'EUR' }}
-                    }
-                  </span>
+                  <span class="text-sm text-muted-foreground">{{ 'cart.calculated_at_checkout' | transloco }}</span>
                 </div>
-
-                @if (cartService.subtotal() < freeShippingThreshold) {
-                  <p class="text-sm text-info">
-                    {{ 'cart.free_shipping_remaining' | transloco: { amount: (freeShippingThreshold - cartService.subtotal()) | currency: 'EUR' } }}
-                  </p>
-                }
               </div>
 
               <div class="flex justify-between text-lg font-bold mb-6">
-                <span>{{ 'cart.total' | transloco }}</span>
-                <span>{{ total() | currency: 'EUR' }}</span>
+                <span>{{ 'cart.subtotal' | transloco }}</span>
+                <span>{{ cartService.subtotal() | currency: 'EUR' }}</span>
               </div>
 
               <app-button 
@@ -190,6 +211,7 @@ export class CartComponent implements OnInit {
   cartService = inject(CartService);
   settingsService = inject(SettingsService);
   private languageService = inject(LanguageService);
+  private dialogService = inject(DialogService);
   
   currentLang = this.languageService.currentLang;
   shopLink = computed(() => `/${this.currentLang()}/shop`);
@@ -199,12 +221,14 @@ export class CartComponent implements OnInit {
   updating = signal(false);
   
   // Get shipping values from settings service
-  freeShippingThreshold = computed(() => 
-    this.settingsService.settings()?.free_shipping_threshold ?? 50
-  );
-  shippingCost = computed(() => 
-    this.settingsService.settings()?.standard_shipping_cost ?? 5.99
-  );
+  freeShippingThreshold = computed(() => {
+    const threshold = this.settingsService.settings()?.free_shipping_threshold;
+    return threshold ? Number(threshold) : 50;
+  });
+  shippingCost = computed(() => {
+    const cost = this.settingsService.settings()?.standard_shipping_cost;
+    return cost ? Number(cost) : 5.99;
+  });
 
   total = computed(() => {
     const subtotal = this.cartService.subtotal();
@@ -213,7 +237,8 @@ export class CartComponent implements OnInit {
   });
 
   ngOnInit() {
-    // Cart is loaded from localStorage automatically
+    // Refresh cart products to get latest prices and stock from server
+    this.cartService.refreshCartProducts();
   }
 
   getItemTotal(item: { product: any; quantity: number }): number {
@@ -234,13 +259,33 @@ export class CartComponent implements OnInit {
     setTimeout(() => this.updating.set(false), 200);
   }
 
-  removeItem(productId: number) {
-    if (!confirm('Are you sure you want to remove this item?')) {
+  async removeItem(productId: number) {
+    const confirmed = await this.dialogService.confirm({
+      title: 'Remove Item',
+      message: 'Are you sure you want to remove this item from your cart?',
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
 
     this.updating.set(true);
     this.cartService.removeFromCart(productId);
     setTimeout(() => this.updating.set(false), 200);
+  }
+
+  getProductImage(product: any): string | null {
+    // Try primary_image first (for list view)
+    if (product.primary_image) {
+      return product.primary_image;
+    }
+    // Fallback to images array (for detail view)
+    if (product.images && product.images.length > 0) {
+      return product.images[0].image;
+    }
+    return null;
   }
 }

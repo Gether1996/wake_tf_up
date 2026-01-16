@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+import uuid
 
 
 class UserManager(BaseUserManager):
@@ -54,6 +55,34 @@ class User(AbstractUser):
     city = models.CharField(max_length=100, blank=True)
     postal_code = models.CharField(max_length=20, blank=True)
     country = models.CharField(max_length=100, blank=True)
+    
+    # Email verification fields
+    is_email_verified = models.BooleanField(
+        default=False,
+        help_text="Whether the user's email has been verified"
+    )
+    email_verification_token = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Token used for email verification"
+    )
+    email_verification_sent_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the verification email was sent"
+    )
+    
+    # Password reset fields
+    password_reset_token = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Token used for password reset"
+    )
+    password_reset_sent_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the password reset email was sent"
+    )
     
     THEME_CHOICES = [
         ('light', 'Light'),

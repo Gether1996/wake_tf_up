@@ -4,7 +4,9 @@ import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { OrderService } from '../../core/api/order.service';
 import { LanguageService } from '../../core/services/language.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { ButtonComponent } from '../../shared/button/button.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-orders',
@@ -63,7 +65,12 @@ import { ButtonComponent } from '../../shared/button/button.component';
                         <div class="w-16 h-20 bg-muted overflow-hidden flex-shrink-0">
                           @if (item.product?.images && item.product.images.length > 0) {
                             <img 
-                              [src]="item.product.images[0].image" 
+                              [src]="getImageUrl(item.product.images[0].image)" 
+                              [alt]="item.product.name"
+                              class="w-full h-full object-cover">
+                          } @else if (item.product?.primary_image) {
+                            <img 
+                              [src]="getImageUrl(item.product.primary_image)" 
                               [alt]="item.product.name"
                               class="w-full h-full object-cover">
                           }
@@ -86,17 +93,44 @@ import { ButtonComponent } from '../../shared/button/button.component';
                           <p class="text-sm font-mono uppercase">
                             @if (order.shipping_method === 'pickup') {
                               {{ 'checkout.pickup' | transloco }}
-                            } @else if (order.shipping_method === 'packeta') {
-                              {{ 'checkout.packeta' | transloco }}
+                            } @else if (order.shipping_method === 'packeta_box') {
+                              {{ 'checkout.packeta_box' | transloco }}
+                            } @else if (order.shipping_method === 'packeta_courier') {
+                              {{ 'checkout.packeta_courier' | transloco }}
+                            } @else if (order.shipping_method === 'dpd_courier') {
+                              {{ 'checkout.dpd_courier' | transloco }}
                             } @else {
-                              {{ 'checkout.courier' | transloco }}
+                              {{ order.shipping_method }}
                             }
                           </p>
                         </div>
-                        <div>
-                          <p class="text-sm text-muted-foreground">{{ 'orders.shipping_address' | transloco }}</p>
-                          <p class="text-sm">{{ order.shipping_address || 'N/A' }}</p>
-                        </div>
+                        @if (order.shipping_method === 'packeta_box' && order.packeta_point_name) {
+                          <div>
+                            <p class="text-sm text-muted-foreground">{{ 'orders.pickup_point' | transloco }}</p>
+                            <p class="text-sm font-medium">{{ order.packeta_point_name }}</p>
+                            <p class="text-xs text-muted-foreground">{{ order.packeta_point_address }}</p>
+                          </div>
+                        } @else {
+                          <div>
+                            <p class="text-sm text-muted-foreground">{{ 'orders.shipping_address' | transloco }}</p>
+                            <p class="text-sm">{{ order.shipping_name }}</p>
+                            <p class="text-xs text-muted-foreground">
+                              {{ order.shipping_address }}, {{ order.shipping_city }}, {{ order.shipping_postal_code }}, {{ order.shipping_country }}
+                            </p>
+                          </div>
+                        }
+                        @if (order.tracking_number) {
+                          <div>
+                            <p class="text-sm text-muted-foreground">{{ 'orders.tracking_number' | transloco }}</p>
+                            <p class="text-sm font-mono font-bold">{{ order.tracking_number }}</p>
+                            @if (order.carrier_tracking_url) {
+                              <a [href]="order.carrier_tracking_url" target="_blank" 
+                                 class="text-xs text-foreground hover:underline">
+                                {{ 'orders.track_shipment' | transloco }} →
+                              </a>
+                            }
+                          </div>
+                        }
                       </div>
                       <div class="text-right">
                         <p class="text-sm text-muted-foreground mb-1">{{ 'orders.total' | transloco }}</p>
@@ -161,6 +195,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
 export class OrdersComponent implements OnInit {
   private orderService = inject(OrderService);
   private languageService = inject(LanguageService);
+  private notificationService = inject(NotificationService);
 
   currentLang = this.languageService.currentLang;
   shopLink = computed(() => `/${this.currentLang()}/shop`);
@@ -184,7 +219,7 @@ export class OrdersComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        console.error('Failed to load orders:', err);
+        this.notificationService.error('Failed to load orders. Please try again.');
         this.loading.set(false);
       }
     });
@@ -254,6 +289,14 @@ export class OrdersComponent implements OnInit {
 
   trackOrder(orderId: number) {
     // TODO: Implement order tracking modal or redirect
-    console.log('Track order:', orderId);
+    this.notificationService.info('Order tracking feature coming soon!');
+  }
+
+  getImageUrl(imagePath: string): string {
+    if (!imagePath) return '';
+    // If already absolute URL, return as is
+    if (imagePath.startsWith('http')) return imagePath;
+    // If relative path, prepend base URL
+    return `${environment.apiBaseUrl}${imagePath}`;
   }
 }

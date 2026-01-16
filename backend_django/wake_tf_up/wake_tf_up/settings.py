@@ -210,3 +210,21 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:4200').split(',')
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Packeta API Configuration
+PACKETA_API_KEY = os.getenv('PACKETA_API_KEY', '9dbc4fa2f90c9113')  # Widget API key for frontend
+PACKETA_API_PASSWORD = os.getenv('PACKETA_API_PASSWORD', '')
+PACKETA_SENDER_ID = os.getenv('PACKETA_SENDER_ID', '')
+PACKETA_REAL_WORLD_USAGE = os.getenv('PACKETA_REAL_WORLD_USAGE', 'False') == 'True'
+
+# Frontend URL for email verification links
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:4200')
+
+# Email Configuration
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@waketfup.com')

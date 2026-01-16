@@ -1,7 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 @Component({
@@ -57,7 +57,8 @@ export class ButtonComponent {
       primary: 'bg-foreground text-background hover:bg-foreground/90 focus:ring-foreground',
       secondary: 'bg-muted text-foreground hover:bg-muted/80 focus:ring-muted',
       outline: 'border-2 border-foreground text-foreground hover:bg-foreground hover:text-background focus:ring-foreground',
-      ghost: 'text-foreground hover:bg-muted focus:ring-muted'
+      ghost: 'text-foreground hover:bg-muted focus:ring-muted',
+      danger: 'bg-danger text-white hover:bg-danger/90 focus:ring-danger'
     };
 
     const widthClass = this.fullWidth() ? 'w-full' : '';

@@ -6,7 +6,9 @@
     "error": "Niečo sa pokazilo",
     "close": "Zavrieť",
     "save": "Uložiť",
-    "cancel": "Zrušiť"
+    "saving": "Ukladá sa...",
+    "cancel": "Zrušiť",
+    "send": "Odoslať"
   },
   "brand": {
     "name": "WAKE TF UP",
@@ -127,26 +129,47 @@
     "continueShopping": "Pokračovať v nákupe",
     "subtotal": "Medzisúčet",
     "shipping": "Doprava",
+    "calculated_at_checkout": "Vypočíta sa pri pokladni",
     "total": "Celkom",
     "checkout": "Pokračovať k pokladni",
     "remove": "Odstrániť",
     "add_to_cart": "Pridať do košíka",
     "added": "Pridané!",
+    "in_cart": "V košíku",
     "preorder": "Predobjednať teraz",
     "order_summary": "Súhrn objednávky",
     "free": "ZDARMA",
+    "free_shipping_info": "Doprava zdarma pri objednávkach nad {{ amount }}",
+    "free_shipping_unlocked": "Odomkli ste dopravu zdarma!",
     "free_shipping_remaining": "Pridajte ešte {{ amount }} pre dopravu zadarmo",
     "max_quantity": "Maximálne množstvo dosiahnuté"
   },
   "checkout": {
     "title": "Pokladňa",
+    "step_cart": "Košík",
+    "step_shipping": "Doprava",
+    "step_contact": "Kontakt",
+    "step_review": "Prehľad",
+    "step_checkout": "Pokladňa",
+    "step_complete": "Hotovo",
+    "next_step": "Ďalej",
+    "previous_step": "Späť",
+    "review_order": "Prehľad objednávky",
+    "order_items": "Položky objednávky",
+    "contact_info": "Kontaktné údaje",
+    "shipping_address": "Adresa doručenia",
+    "company_info": "Firemné údaje",
     "shipping_method": "Spôsob doručenia",
     "pickup": "Osobný odber",
     "pickup_desc": "Vyzdvihnutie osobne na našej pobočke",
-    "packeta": "Packeta Z-Box",
-    "packeta_desc": "Doručenie na Packeta výdajné miesto",
-    "courier": "Kuriérska služba",
-    "courier_desc": "Doručenie na vašu adresu",
+    "packeta_box": "Packeta Z-Box",
+    "packeta_box_desc": "Doručenie na Packeta výdajné miesto",
+    "packeta_courier": "Packeta Kuriér",
+    "packeta_courier_desc": "Doručenie domov kuriérom Packeta",
+    "dpd_courier": "DPD Kuriér",
+    "dpd_courier_desc": "Rýchle doručenie na vašu adresu kuriérom DPD",
+    "select_pickup_point": "Vybrať výdajné miesto",
+    "change_pickup_point": "Zmeniť výdajné miesto",
     "free": "ZDARMA",
     "shipping": "Doručovacie informácie",
     "name": "Celé meno",
@@ -168,7 +191,8 @@
     "qty": "Mn.",
     "place_order": "Dokončiť objednávku",
     "secure_checkout": "🔒 Bezpečná pokladňa",
-    "payment": "Spôsob platby"
+    "payment": "Spôsob platby",
+    "total": "Celkom"
   },
   "auth": {
     "_login": "Prihlásenie",
@@ -182,7 +206,15 @@
       "password": "Heslo",
       "submit": "Prihlásiť sa",
       "noAccount": "Nemáte účet?",
-      "register": "Registrovať"
+      "register": "Registrovať",
+      "email_verified": "Účet bol úspešne overený. Môžete sa prihlásiť.",
+      "email_not_verified": "Prosím overte svoj email pred prihlásením. Skontrolujte si email pre overovací link.",
+      "no_email": "Nedostali ste email?",
+      "resend_button": "Poslať znovu",
+      "resend_success": "Overovací email bol úspešne poslaný. Skontrolujte si schránku.",
+      "forgot_password": "Zabudli ste heslo?",
+      "forgot_password_description": "Zadajte váš email a pošleme vám link na zmenu hesla.",
+      "reset_email_sent": "Email na zmenu hesla bol odoslaný. Skontrolujte si schránku."
     },
     "register": {
       "title": "Registrácia",
@@ -206,7 +238,37 @@
       "hide_password": "Skryť heslo",
       "submit": "Registrovať",
       "hasAccount": "Už máte účet?",
-      "login": "Prihlásiť sa"
+      "login": "Prihlásiť sa",
+      "success_title": "Registrácia úspešná!",
+      "success_message": "Na vašu emailovú adresu sme poslali overovací link:",
+      "success_instructions": "Prosím skontrolujte svoj email a kliknite na overovací link pre dokončenie registrácie.",
+      "go_to_login": "Prejsť na prihlásenie"
+    },
+    "verify": {
+      "verifying": "Overujeme váš email...",
+      "please_wait": "Prosím počkajte",
+      "success_title": "Email overený!",
+      "success_message": "Váš účet bol úspešne overený. Môžete sa prihlásiť.",
+      "go_to_login": "Prihlásiť sa",
+      "error_title": "Overenie zlyhalo",
+      "go_to_register": "Registrovať sa znova"
+    },
+    "reset_password": {
+      "title": "Zmena hesla",
+      "subtitle": "Zadajte nové heslo pre váš účet",
+      "password": "Nové heslo",
+      "confirm_password": "Potvrdiť heslo",
+      "password_min_length": "Heslo musí mať minimálne 8 znakov",
+      "passwords_not_match": "Heslá sa nezhodujú",
+      "submit": "Zmeniť heslo",
+      "validating": "Overujeme token...",
+      "please_wait": "Prosím počkajte",
+      "success_title": "Heslo zmenené!",
+      "success_message": "Vaše heslo bolo úspešne zmenené. Môžete sa prihlásiť s novým heslom.",
+      "go_to_login": "Prihlásiť sa",
+      "error_title": "Zmena hesla zlyhala",
+      "back_to_login": "Späť na prihlásenie",
+      "go_to_register": "Registrovať sa"
     }
   },
   "profile": {
@@ -215,7 +277,14 @@
     "orders": "Moje objednávky",
     "account_info": "Informácie o účte",
     "name": "Meno",
+    "first_name": "Meno",
+    "last_name": "Priezvisko",
     "email": "Email",
+    "phone": "Telefón",
+    "shipping_address": "Doručovacia adresa",
+    "no_address": "Zatiaľ nemáte zadanú adresu. Kliknite na upraviť pre pridanie.",
+    "edit": "Upraviť",
+    "cancel": "Zrušiť",
     "preferences": "Predvoľby",
     "theme": "Téma",
     "theme_hint": "Prepnite tmavý/svetlý režim v hlavičke",
@@ -234,7 +303,10 @@
     "start_shopping": "Začať nakupovať",
     "order_number": "Objednávka #{{ number }}",
     "status": "Stav",
-    "quantity": "Mn.",    "shipping_method": "Spôsob doručenia",    "shipping_address": "Doručovacia adresa",
+    "quantity": "Mn.",    "shipping_method": "Spôsob doručenia",    "pickup_point": "Výdajné miesto",
+    "tracking_number": "Tracking číslo",
+    "track_shipment": "Sledovať zásielku",
+    "shipping_address": "Doručovacia adresa",
     "total": "Celkom",
     "track": "Sledovať objednávku",
     "status_created": "Vytvorená",
@@ -301,5 +373,207 @@
     "rights": "Všetky práva vyhradené",
     "privacy": "Ochrana súkromia",
     "terms": "Obchodné podmienky"
+  },
+  "privacy": {
+    "title": "Zásady ochrany osobných údajov",
+    "effective_date": "Platnosť od",
+    "date": "16. januára 2026",
+    "back_home": "Späť na hlavnú stránku",
+    "section1": {
+      "title": "1. Úvod",
+      "content": "WAKE TF UP rešpektuje Vaše súkromie a zaväzuje sa chrániť Vaše osobné údaje v súlade s Nariadením GDPR (Všeobecné nariadenie o ochrane údajov) a zákonom č. 18/2018 Z. z. o ochrane osobných údajov. Tieto zásady Vás informujú o tom, ako spracúvame Vaše osobné údaje, keď navštívite našu webovú stránku alebo si u nás nakúpite."
+    },
+    "section2": {
+      "title": "2. Prevádzkovateľ",
+      "content": "<p><strong>WAKE TF UP</strong><br>Adresa: [Adresa spoločnosti]<br>IČO: [IČO]<br>Email: info@waketfup.com<br>Telefón: [Telefón]</p>"
+    },
+    "section3": {
+      "title": "3. Aké údaje zhromažďujeme",
+      "intro": "Môžeme zhromažďovať, používať, ukladať a prenášať rôzne druhy osobných údajov:",
+      "personal": {
+        "title": "Identifikačné údaje",
+        "content": "meno, priezvisko, email, telefónne číslo"
+      },
+      "order": {
+        "title": "Objednávkové údaje",
+        "content": "doručovacia adresa, fakturačné údaje (IČO, DIČ, IČ DPH pre firemné nákupy)"
+      },
+      "technical": {
+        "title": "Technické údaje",
+        "content": "IP adresa, typ prehliadača, časové pásmo, operačný systém"
+      },
+      "payment": {
+        "title": "Platobné údaje",
+        "content": "informácie o platbe (spracúvané prostredníctvom bezpečných platobných brán)"
+      }
+    },
+    "section4": {
+      "title": "4. Ako používame Vaše údaje",
+      "item1": "Spracovanie a vybavenie Vašich objednávok",
+      "item2": "Komunikácia s Vami ohľadom objednávok a doručenia",
+      "item3": "Poskytovanie zákazníckej podpory",
+      "item4": "Zasielanie marketingových správ (len so súhlasom)",
+      "item5": "Zlepšovanie našich služieb a webovej stránky"
+    },
+    "section5": {
+      "title": "5. Právny základ spracovania (GDPR)",
+      "contract": {
+        "title": "Plnenie zmluvy",
+        "content": "spracúvame údaje potrebné na vybavenie Vašej objednávky"
+      },
+      "consent": {
+        "title": "Súhlas",
+        "content": "newsletter a marketingové správy (môžete kedykoľvek odvolať)"
+      },
+      "legitimate": {
+        "title": "Oprávnený záujem",
+        "content": "prevencia podvodov, zlepšovanie služieb"
+      },
+      "legal": {
+        "title": "Právna povinnosť",
+        "content": "uchovávanie účtovných dokladov podľa zákona"
+      }
+    },
+    "section6": {
+      "title": "6. Zdieľanie údajov",
+      "intro": "Vaše údaje môžeme zdieľať s nasledujúcimi stranami:",
+      "shipping": {
+        "title": "Dopravné spoločnosti",
+        "content": "Packeta, DPD (len údaje potrebné na doručenie)"
+      },
+      "payment": {
+        "title": "Platobné brány",
+        "content": "bezpečné spracovanie platieb"
+      },
+      "services": {
+        "title": "Poskytovatelia služieb",
+        "content": "hosting, analytika (s dohodami o ochrane údajov)"
+      }
+    },
+    "section7": {
+      "title": "7. Vaše práva (GDPR)",
+      "intro": "Podľa GDPR máte nasledujúce práva:",
+      "access": "Právo na prístup k svojim osobným údajom",
+      "rectification": "Právo na opravu nesprávnych údajov",
+      "erasure": "Právo na vymazanie údajov (\"právo byť zabudnutý\")",
+      "restriction": "Právo na obmedzenie spracovania",
+      "portability": "Právo na prenosnosť údajov",
+      "objection": "Právo namietať proti spracovaniu",
+      "complaint": "Právo podať sťažnosť na Úrad na ochranu osobných údajov SR (dataprotection.gov.sk)"
+    },
+    "section8": {
+      "title": "8. Uchovávanie údajov",
+      "content": "Vaše osobné údaje uchováme len tak dlho, ako je potrebné na účely, na ktoré boli zhromaždené. Objednávkové údaje uchováme minimálne 10 rokov v súlade s účtovnými predpismi. Marketingové súhlasy platia do ich odvolania."
+    },
+    "section9": {
+      "title": "9. Bezpečnosť",
+      "content": "Implementovali sme vhodné technické a organizačné opatrenia na ochranu Vašich osobných údajov proti neoprávnenému prístupu, strate alebo zneužitiu. Používame šifrovanie SSL/TLS, bezpečné servery a pravidelne aktualizujeme naše bezpečnostné protokoly."
+    },
+    "section10": {
+      "title": "10. Cookies",
+      "content": "Naša webová stránka používa cookies na zlepšenie Vašej používateľskej skúsenosti. Používame len nevyhnutné cookies pre fungovanie košíka a autentifikácie. Nepoužívame sledovacie alebo marketingové cookies tretích strán."
+    },
+    "section11": {
+      "title": "11. Zmeny týchto zásad",
+      "content": "Môžeme priebežne aktualizovať tieto zásady. O významných zmenách Vás budeme informovať emailom alebo oznámením na webovej stránke. Odporúčame pravidelne kontrolovať túto stránku."
+    },
+    "section12": {
+      "title": "12. Kontakt",
+      "content": "<p>Ak máte otázky týkajúce sa ochrany osobných údajov alebo chcete uplatniť svoje práva, kontaktujte nás:</p><p><strong>Email:</strong> privacy@waketfup.com<br><strong>Telefón:</strong> [Telefón]<br><strong>Pošta:</strong> WAKE TF UP, [Adresa]</p>"
+    }
+  },
+  "terms": {
+    "title": "Všeobecné obchodné podmienky",
+    "effective_date": "Platnosť od",
+    "date": "16. januára 2026",
+    "back_home": "Späť na hlavnú stránku",
+    "section1": {
+      "title": "1. Úvodné ustanovenia",
+      "content": "Tieto Všeobecné obchodné podmienky (ďalej len \"VOP\") upravujú práva a povinnosti predávajúceho a kupujúceho pri kúpe tovaru prostredníctvom internetového obchodu na adrese waketfup.com. VOP sú vydané v súlade so zákonom č. 40/1964 Zb. Občiansky zákonník, zákonom č. 250/2007 Z.z. o ochrane spotrebiteľa a zákonom č. 102/2014 Z.z. o ochrane spotrebiteľa pri predaji tovaru alebo poskytovaní služieb na základe zmluvy uzavretej na diaľku."
+    },
+    "section2": {
+      "title": "2. Vymedzenie pojmov",
+      "seller": "Predávajúci: WAKE TF UP, [IČO], so sídlom [Adresa]",
+      "buyer": "Kupujúci: fyzická alebo právnická osoba, ktorá uzatvára kúpnu zmluvu",
+      "goods": "Tovar: streetwear oblečenie z recyklovaných materiálov prezentované v internetovom obchode",
+      "contract": "Kúpna zmluva: zmluva uzavretá na diaľku medzi predávajúcim a kupujúcim"
+    },
+    "section3": {
+      "title": "3. Registrácia a používateľský účet",
+      "content": "Kupujúci môže vytvoriť používateľský účet registráciou. Pri registrácii je kupujúci povinný uviesť pravdivé údaje. Kupujúci je zodpovedný za ochranu svojho hesla. Kupujúci môže svoj účet kedykoľvek zrušiť."
+    },
+    "section4": {
+      "title": "4. Objednávka a uzavretie zmluvy",
+      "intro": "Proces objednávky:",
+      "step1": "Kupujúci vloží tovar do košíka a prejde na pokladňu",
+      "step2": "Vyplní doručovacie a fakturačné údaje",
+      "step3": "Zvolí spôsob doručenia a zaplatí objednávku",
+      "step4": "Kúpna zmluva je uzavretá odoslaním objednávky a jej potvrdením predávajúcim emailom"
+    },
+    "section5": {
+      "title": "5. Ceny a platobné podmienky",
+      "item1": "Všetky ceny sú uvedené v EUR vrátane DPH",
+      "item2": "Ceny sú platné v čase odoslania objednávky",
+      "item3": "K cene tovaru sa pripočítava cena dopravy podľa zvoleného spôsobu doručenia",
+      "item4": "Platba je možná online platobnou kartou alebo bankovým prevodom"
+    },
+    "section6": {
+      "title": "6. Doručenie",
+      "content": "Tovar doručujeme prostredníctvom zmluvných dopravcov (Packeta, DPD). Štandardná doba doručenia je 3-5 pracovných dní. O odoslaní tovaru budete informovaní emailom s tracking číslom. Vlastnícke právo k tovaru prechádza na kupujúceho prevzatím tovaru a úplným zaplatením kúpnej ceny."
+    },
+    "section7": {
+      "title": "7. Odstúpenie od zmluvy (Zákon č. 102/2014 Z.z.)",
+      "intro": "Kupujúci má právo odstúpiť od zmluvy do 14 dní od prevzatia tovaru bez uvedenia dôvodu.",
+      "period": "Lehota na odstúpenie: 14 kalendárnych dní",
+      "form": "Formulár: môžete použiť náš formulár alebo poslať email",
+      "return": "Vrátenie tovaru: do 14 dní od odstúpenia, v pôvodnom obale, nepoužitý",
+      "refund": "Vrátenie peňazí: do 14 dní od doručenia vráteného tovaru",
+      "exceptions_title": "Výnimky z práva na odstúpenie",
+      "exception1": "Tovar vyrobený na mieru alebo personalizovaný",
+      "exception2": "Tovar, ktorý bol rozbalený a z hygienických dôvodov nemôže byť vrátený",
+      "exception3": "Limited edition kusy (ak sú označené ako neotvárateľné)"
+    },
+    "section8": {
+      "title": "8. Záruka a reklamácie",
+      "content": "Na tovar sa vzťahuje zákonná záruka 24 mesiacov. Reklamáciu môžete uplatniť na adrese predávajúceho alebo emailom na reklamacie@waketfup.com. Reklamáciu vybavíme do 30 dní. Práva zo zodpovednosti za vady tovaru sa riadia Občianskym zákonníkom a zákonom o ochrane spotrebiteľa."
+    },
+    "section9": {
+      "title": "9. Duševné vlastníctvo",
+      "content": "Všetok obsah webovej stránky (dizajn, fotografie, texty, logá) je chránený autorskými právami a je majetkom predávajúceho. Akékoľvek použitie bez písomného súhlasu je zakázané."
+    },
+    "section10": {
+      "title": "10. Obmedzenie zodpovednosti",
+      "content": "Predávajúci nenesie zodpovednosť za škody vzniknuté nesprávnym použitím tovaru alebo nedodržaním pokynov na starostlivosť. Predávajúci nezodpovedá za oneskorenie dodávky spôsobené dopravcom alebo vyššou mocou."
+    },
+    "section11": {
+      "title": "11. Riešenie sporov",
+      "content": "<p>Ak vznikne spor medzi predávajúcim a kupujúcim, budeme sa snažiť o mimosúdne riešenie. Kupujúci má právo obrátiť sa na orgán alternatívneho riešenia sporov:</p><p><strong>Slovenská obchodná inšpekcia</strong><br>Prievozská 32, 827 99 Bratislava<br>Tel: 02/58 27 21 72<br>www.soi.sk</p><p>Platforma EÚ pre riešenie sporov online: <a href='https://ec.europa.eu/consumers/odr' target='_blank' class='text-accent hover:underline'>ec.europa.eu/consumers/odr</a></p>"
+    },
+    "section12": {
+      "title": "12. Záverečné ustanovenia",
+      "content": "Tieto VOP nadobúdajú účinnosť dňom 16. januára 2026. Predávajúci si vyhradzuje právo zmeniť VOP. Aktuálne znenie VOP je vždy dostupné na tejto stránke. Vzťahy neupravené VOP sa riadia právnym poriadkom Slovenskej republiky."
+    },
+    "section13": {
+      "title": "13. Kontakt",
+      "content": "<p><strong>WAKE TF UP</strong><br>Adresa: [Adresa spoločnosti]<br>IČO: [IČO]<br>DIČ: [DIČ]<br>Email: info@waketfup.com<br>Telefón: [Telefón]</p>"
+    }
+  },
+  "cookies": {
+    "title": "Používame cookies",
+    "description": "Používame nevyhnutné cookies na zabezpečenie fungovania webu. Analytické a marketingové cookies používame len s Vaším súhlasom.",
+    "learn_more": "Viac informácií",
+    "accept_all": "Prijať všetko",
+    "reject": "Odmietnuť",
+    "settings": "Nastavenia",
+    "settings_title": "Nastavenia cookies",
+    "settings_description": "Môžete si vybrať, ktoré typy cookies chcete povoliť. Nevyhnutné cookies sú vždy aktívne.",
+    "essential_title": "Nevyhnutné cookies",
+    "essential_description": "Tieto cookies sú potrebné pre základné fungovanie webu (prihlásenie, košík, bezpečnosť). Nie je možné ich vypnúť.",
+    "analytics_title": "Analytické cookies",
+    "analytics_description": "Pomáhajú nám pochopiť, ako návštevníci používajú web, aby sme mohli zlepšiť používateľskú skúsenosť.",
+    "marketing_title": "Marketingové cookies",
+    "marketing_description": "Používajú sa na zobrazovanie relevantných reklám a sledovanie efektívnosti marketingových kampaní.",
+    "always_active": "Vždy aktívne",
+    "save_preferences": "Uložiť predvoľby"
   }
 }

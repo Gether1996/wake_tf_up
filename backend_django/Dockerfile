@@ -12,10 +12,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
+# Copy and set entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Change to Django project directory
 WORKDIR /app/wake_tf_up
 
 EXPOSE 8000
 
-# Run with Gunicorn (production-ready)
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "wake_tf_up.wsgi:application"]
+# Run with entrypoint that handles migrations
+ENTRYPOINT ["/app/entrypoint.sh"]

@@ -1,4 +1,4 @@
-import { Component, input, computed, inject } from '@angular/core';
+import { Component, input, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Product } from '../../core/api/api.models';
@@ -73,19 +73,51 @@ import { TranslocoModule } from '@jsverse/transloco';
           </p>
         }
 
+        <!-- Cart Controls if product is in cart -->
+        @if (isInCart()) {
+          <div class="border border-border p-3 mb-3 bg-muted/50">
+            <p class="text-xs font-mono uppercase mb-2 text-muted-foreground">
+              {{ 'cart.in_cart' | transloco }}
+            </p>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center border border-border bg-background">
+                <button 
+                  (click)="decreaseQuantity($event)"
+                  class="px-3 py-1 hover:bg-muted transition-colors">
+                  -
+                </button>
+                <span class="px-4 py-1 font-mono text-sm min-w-[2.5rem] text-center">{{ cartQuantity() }}</span>
+                <button 
+                  (click)="increaseQuantity($event)"
+                  [disabled]="!product().pre_order_enabled && cartQuantity() >= product().available_stock"
+                  class="px-3 py-1 hover:bg-muted transition-colors disabled:opacity-50">
+                  +
+                </button>
+              </div>
+              <button 
+                (click)="removeFromCart($event)"
+                class="text-xs text-danger hover:underline">
+                {{ 'cart.remove' | transloco }}
+              </button>
+            </div>
+          </div>
+        }
+
         <!-- Add to Cart Button -->
         @if (product().available_stock > 0 || product().pre_order_enabled) {
           <app-button 
             [variant]="addedToCart() ? 'secondary' : 'primary'"
             [size]="'sm'"
             [fullWidth]="true"
-            [disabled]="addedToCart()"
+            [disabled]="addedToCart() || isInCart()"
             (clicked)="addToCart()">
             @if (addedToCart()) {
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
               {{ 'cart.added' | transloco }}
+            } @else if (isInCart()) {
+              {{ 'cart.in_cart' | transloco }}
             } @else {
               {{ (product().pre_order_enabled ? 'cart.preorder' : 'cart.add_to_cart') | transloco }}
             }
@@ -103,16 +135,19 @@ import { TranslocoModule } from '@jsverse/transloco';
 export class ProductCardComponent {
   product = input.required<Product>();
   private languageService = inject(LanguageService);
+  private cartService = inject(CartService);
+  private analyticsService = inject(AnalyticsService);
   
   currentLang = this.languageService.currentLang;
   productLink = computed(() => `/${this.currentLang()}/product/${this.product().slug}`);
   
   addedToCart = signal(false);
   
-  constructor(
-    private cartService: CartService,
-    private analyticsService: AnalyticsService
-  ) {}
+  // Check if product is in cart and get quantity
+  cartQuantity = computed(() => this.cartService.getItemQuantity(this.product().id));
+  isInCart = computed(() => this.cartQuantity() > 0);
+  
+  constructor() {}
 
   getBadges() {
     const badges: { type: 'drop' | 'recycled' | 'preorder', label: string }[] = [];
@@ -138,6 +173,29 @@ export class ProductCardComponent {
     setTimeout(() => {
       this.addedToCart.set(false);
     }, 2000);
+  }
+
+  increaseQuantity(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.cartService.updateQuantity(this.product().id, this.cartQuantity() + 1);
+  }
+
+  decreaseQuantity(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const newQty = this.cartQuantity() - 1;
+    if (newQty <= 0) {
+      this.removeFromCart(event);
+    } else {
+      this.cartService.updateQuantity(this.product().id, newQty);
+    }
+  }
+
+  removeFromCart(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.cartService.removeFromCart(this.product().id);
   }
 
   trackClick() {

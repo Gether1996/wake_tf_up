@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { BlogService } from '../../../core/api/blog.service';
 import { LanguageService } from '../../../core/services/language.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { BlogPost } from '../../../core/api/api.models';
 
 @Component({
@@ -119,6 +120,7 @@ import { BlogPost } from '../../../core/api/api.models';
 export class BlogListComponent implements OnInit {
   private blogService = inject(BlogService);
   private languageService = inject(LanguageService);
+  private notificationService = inject(NotificationService);
 
   posts = signal<BlogPost[]>([]);
   loading = signal(false);
@@ -139,7 +141,7 @@ export class BlogListComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        console.error('Failed to load blog posts:', err);
+        this.notificationService.error('Failed to load blog posts. Please try again.');
         this.loading.set(false);
       }
     });

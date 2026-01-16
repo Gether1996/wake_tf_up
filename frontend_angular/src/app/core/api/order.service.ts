@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { Order, PaginatedResponse } from './api.models';
 import { CartService } from './cart.service';
@@ -10,13 +9,16 @@ export interface CreateOrderRequest {
     product_id: number;
     quantity: number;
   }>;
-  shipping_method: 'pickup' | 'packeta' | 'courier';
+  shipping_method: 'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier';
   shipping_name: string;
   shipping_address: string;
   shipping_city: string;
   shipping_postal_code: string;
   shipping_country: string;
   phone: string;
+  packeta_point_id?: string;
+  packeta_point_name?: string;
+  packeta_point_address?: string;
   is_company_purchase?: boolean;
   billing_company?: string;
   billing_ico?: string;
@@ -34,13 +36,7 @@ export class OrderService {
   ) {}
 
   createOrder(orderData: CreateOrderRequest): Observable<Order> {
-    return this.api.post<Order>('orders/create/', orderData)
-      .pipe(
-        tap(() => {
-          // Clear cart after successful order
-          this.cartService.clearCart();
-        })
-      );
+    return this.api.post<Order>('orders/create/', orderData);
   }
 
   getOrders(params?: { page?: number; page_size?: number }): Observable<PaginatedResponse<Order>> {
