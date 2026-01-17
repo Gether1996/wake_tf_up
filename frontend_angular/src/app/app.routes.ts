@@ -61,6 +61,10 @@ const appRoutes: Routes = [
     loadComponent: () => import('./pages/orders/orders.component').then(m => m.OrdersComponent)
   },
   {
+    path: 'order-confirmation',
+    loadComponent: () => import('./pages/order-confirmation/order-confirmation.component').then(m => m.OrderConfirmationComponent)
+  },
+  {
     path: 'blog',
     children: [
       {

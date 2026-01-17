@@ -5,8 +5,8 @@ from .models import PaymentTransaction
 
 @admin.register(PaymentTransaction)
 class PaymentTransactionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'order', 'amount_display', 'status_badge', 'provider', 'created_at')
-    list_filter = ('status', 'provider', 'created_at')
+    list_display = ('id', 'order', 'amount_display', 'payment_method', 'status_badge', 'provider', 'created_at')
+    list_filter = ('status', 'payment_method', 'provider', 'created_at')
     search_fields = ('order__id', 'provider_transaction_id', 'order__user__email')
     readonly_fields = ('created_at', 'updated_at', 'provider_response')
     date_hierarchy = 'created_at'
@@ -15,7 +15,7 @@ class PaymentTransactionAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Transaction Info', {
-            'fields': ('order', 'amount', 'status', 'provider')
+            'fields': ('order', 'amount', 'payment_method', 'status', 'provider')
         }),
         ('Provider Details', {
             'fields': ('provider_transaction_id', 'provider_response')

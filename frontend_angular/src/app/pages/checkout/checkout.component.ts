@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { TranslocoModule } from '@jsverse/transloco';
 import { CartService } from '../../core/api/cart.service';
 import { OrderService, CreateOrderRequest } from '../../core/api/order.service';
+import { PaymentService } from '../../core/api/payment.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { LanguageService } from '../../core/services/language.service';
 import { SettingsService } from '../../core/api/settings.service';
@@ -60,17 +61,32 @@ import { environment } from '../../../environments/environment';
           </div>
 
           <!-- Connector -->
-          <div [class]="'w-8 md:w-16 h-0.5 mx-1 ' + (currentStep() >= 3 ? 'bg-foreground' : 'bg-border')"></div>
+          <div [class]="'w-8 md:w-16 h-0.5 mx-1 ' + (currentStep() >= 4 ? 'bg-foreground' : 'bg-border')"></div>
 
-          <!-- Step 4: Review -->
+          <!-- Step 4: Payment -->
           <div 
             [class]="'flex items-center transition-opacity ' + (currentStep() >= 3 ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-60')"
             (click)="goToStep(3)">
-            <div [class]="'flex items-center justify-center w-10 h-10 rounded-full font-mono font-bold ' + (currentStep() === 3 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground')">
-              3
+            <div [class]="'flex items-center justify-center w-10 h-10 rounded-full font-mono font-bold ' + (currentStep() >= 4 ? 'bg-success text-success-foreground' : currentStep() === 3 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground')">
+              @if (currentStep() > 3) { ✓ } @else { 3 }
             </div>
             <div class="ml-2 text-xs hidden md:block">
-              <div [class]="'font-mono uppercase font-bold ' + (currentStep() >= 3 ? '' : 'text-muted-foreground')">{{ 'checkout.step_review' | transloco }}</div>
+              <div [class]="'font-mono uppercase font-bold ' + (currentStep() >= 3 ? '' : 'text-muted-foreground')">{{ 'checkout.step_payment' | transloco }}</div>
+            </div>
+          </div>
+
+          <!-- Connector -->
+          <div [class]="'w-8 md:w-16 h-0.5 mx-1 ' + (currentStep() >= 4 ? 'bg-foreground' : 'bg-border')"></div>
+
+          <!-- Step 5: Review -->
+          <div 
+            [class]="'flex items-center transition-opacity ' + (currentStep() >= 4 ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-60')"
+            (click)="goToStep(4)">
+            <div [class]="'flex items-center justify-center w-10 h-10 rounded-full font-mono font-bold ' + (currentStep() === 4 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground')">
+              4
+            </div>
+            <div class="ml-2 text-xs hidden md:block">
+              <div [class]="'font-mono uppercase font-bold ' + (currentStep() >= 4 ? '' : 'text-muted-foreground')">{{ 'checkout.step_review' | transloco }}</div>
             </div>
           </div>
         </div>
@@ -382,8 +398,83 @@ import { environment } from '../../../environments/environment';
               </div>
               }
 
-              <!-- STEP 3: Review Order -->
+              <!-- STEP 3: Payment Method -->
               @if (currentStep() === 3) {
+              <div class="border border-border p-6 mb-6">
+                <h2 class="text-xl font-bold mb-6">{{ 'checkout.payment_method' | transloco }}</h2>
+                
+                <div class="space-y-3">
+                  <!-- GoPay Payment -->
+                  <label 
+                    class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
+                    [class.border-foreground]="selectedPaymentMethod() === 'gopay'"
+                    [class.bg-muted]="selectedPaymentMethod() === 'gopay'">
+                    <input 
+                      type="radio" 
+                      name="paymentMethod" 
+                      value="gopay" 
+                      [checked]="selectedPaymentMethod() === 'gopay'"
+                      (change)="selectedPaymentMethod.set('gopay')"
+                      class="mr-3">
+                    <div class="flex-1">
+                      <div class="font-mono uppercase font-bold">GoPay</div>
+                      <div class="text-sm text-muted-foreground">{{ 'checkout.gopay_desc' | transloco }}</div>
+                      <div class="mt-2 flex gap-2 items-center flex-wrap">
+                        <span class="text-xs bg-background px-2 py-1 border border-border">💳 {{ 'checkout.card' | transloco }}</span>
+                        <span class="text-xs bg-background px-2 py-1 border border-border">🏦 {{ 'checkout.bank' | transloco }}</span>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <img src="/assets/gopay-logo.svg" alt="GoPay" class="h-8 opacity-80" onerror="this.style.display='none'">
+                    </div>
+                  </label>
+
+                  <!-- Cash on Pickup (only for personal pickup) -->
+                  @if (selectedShippingMethod() === 'pickup') {
+                  <label 
+                    class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
+                    [class.border-foreground]="selectedPaymentMethod() === 'cash_on_pickup'"
+                    [class.bg-muted]="selectedPaymentMethod() === 'cash_on_pickup'">
+                    <input 
+                      type="radio" 
+                      name="paymentMethod" 
+                      value="cash_on_pickup" 
+                      [checked]="selectedPaymentMethod() === 'cash_on_pickup'"
+                      (change)="selectedPaymentMethod.set('cash_on_pickup')"
+                      class="mr-3">
+                    <div class="flex-1">
+                      <div class="font-mono uppercase font-bold">{{ 'checkout.cash_on_pickup' | transloco }}</div>
+                      <div class="text-sm text-muted-foreground">{{ 'checkout.cash_on_pickup_desc' | transloco }}</div>
+                      <div class="mt-2">
+                        <span class="text-xs bg-background px-2 py-1 border border-border">💵 {{ 'checkout.cash' | transloco }}</span>
+                      </div>
+                    </div>
+                    <div class="text-2xl">
+                      💰
+                    </div>
+                  </label>
+                  }
+                </div>
+              </div>
+
+              <!-- Step 3 Navigation -->
+              <div class="flex gap-4">
+                <app-button 
+                  [type]="'button'"
+                  [variant]="'secondary'"
+                  (clicked)="previousStep()">
+                  {{ 'checkout.previous_step' | transloco }}
+                </app-button>
+                <app-button 
+                  [type]="'button'"
+                  (clicked)="nextStep()">
+                  {{ 'checkout.next_step' | transloco }}
+                </app-button>
+              </div>
+              }
+
+              <!-- STEP 4: Review Order -->
+              @if (currentStep() === 4) {
               <div class="border border-border p-6 mb-6">
                 <h2 class="text-xl font-bold mb-6">{{ 'checkout.review_order' | transloco }}</h2>
 
@@ -472,6 +563,20 @@ import { environment } from '../../../environments/environment';
                 </div>
                 }
 
+                <!-- Payment Method -->
+                <div class="mb-6 pb-6 border-b border-border">
+                  <h3 class="font-mono uppercase font-bold text-sm mb-3">{{ 'checkout.payment_method' | transloco }}</h3>
+                  <div class="bg-muted p-4">
+                    @if (selectedPaymentMethod() === 'gopay') {
+                      <p class="font-medium">GoPay</p>
+                      <p class="text-sm text-muted-foreground mt-1">{{ 'checkout.gopay_desc' | transloco }}</p>
+                    } @else if (selectedPaymentMethod() === 'cash_on_pickup') {
+                      <p class="font-medium">{{ 'checkout.cash_on_pickup' | transloco }}</p>
+                      <p class="text-sm text-muted-foreground mt-1">{{ 'checkout.cash_on_pickup_desc' | transloco }}</p>
+                    }
+                  </div>
+                </div>
+
                 <!-- Additional Notes -->
                 @if (checkoutForm.get('notes')?.value) {
                 <div class="mb-6">
@@ -491,7 +596,7 @@ import { environment } from '../../../environments/environment';
                 </div>
               </div>
 
-              <!-- Step 3 Navigation -->
+              <!-- Step 4 Navigation -->
               <div class="flex gap-4">
                 <app-button 
                   [type]="'button'"
@@ -588,6 +693,7 @@ export class CheckoutComponent implements OnInit {
   private router = inject(Router);
   cartService = inject(CartService);
   private orderService = inject(OrderService);
+  private paymentService = inject(PaymentService);
   private authService = inject(AuthService);
   private languageService = inject(LanguageService);
   private settingsService = inject(SettingsService);
@@ -597,10 +703,11 @@ export class CheckoutComponent implements OnInit {
 
   submitting = signal(false);
   error = signal('');
-  currentStep = signal(1); // 1=shipping, 2=contact, 3=review
+  currentStep = signal(1); // 1=shipping, 2=contact, 3=payment, 4=review
   isCompanyPurchase = signal(false);
   selectedShippingMethod = signal<'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier'>('dpd_courier');
   selectedPacketaPoint = signal<{ id: string; name: string; address: string } | null>(null);
+  selectedPaymentMethod = signal<'gopay' | 'cash_on_pickup'>('gopay');
   
   // Shipping costs from settings
   freeShippingThreshold = computed(() => {
@@ -692,6 +799,10 @@ export class CheckoutComponent implements OnInit {
       // Reset Packeta point when changing shipping method
       if (value !== 'packeta_box') {
         this.selectedPacketaPoint.set(null);
+      }
+      // Reset payment method to GoPay if not pickup
+      if (value !== 'pickup') {
+        this.selectedPaymentMethod.set('gopay');
       }
     });
   }
@@ -816,6 +927,11 @@ export class CheckoutComponent implements OnInit {
       this.error.set('');
       this.currentStep.set(3);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (this.currentStep() === 3) {
+      // Step 3: Payment method (always GoPay for now)
+      this.error.set('');
+      this.currentStep.set(4);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
@@ -848,8 +964,8 @@ export class CheckoutComponent implements OnInit {
   }
 
   onSubmit() {
-    // This should only be called from step 3 (review)
-    if (this.currentStep() !== 3) {
+    // This should only be called from step 4 (review)
+    if (this.currentStep() !== 4) {
       return;
     }
 
@@ -901,8 +1017,38 @@ export class CheckoutComponent implements OnInit {
 
     this.orderService.createOrder(orderData).subscribe({
       next: (order) => {
-        this.cartService.clearCart();
-        this.router.navigate([`/${this.currentLang()}/orders`]);
+        // Check payment method
+        if (this.selectedPaymentMethod() === 'cash_on_pickup') {
+          // Cash on pickup - no GoPay payment needed
+          this.cartService.clearCart();
+          this.router.navigate([this.currentLang(), 'order-confirmation'], {
+            queryParams: { 
+              order_id: order.id, 
+              payment_method: 'cash_on_pickup',
+              status: 'pending'
+            }
+          });
+        } else {
+          // GoPay payment - create payment and redirect
+          this.paymentService.createPayment({ order_id: order.id }).subscribe({
+            next: (paymentResponse) => {
+              if (paymentResponse.success && paymentResponse.payment_url) {
+                // Clear cart and redirect to GoPay
+                this.cartService.clearCart();
+                // Redirect to GoPay payment page
+                window.location.href = paymentResponse.payment_url;
+              } else {
+                this.error.set('Failed to initialize payment. Please try again.');
+                this.submitting.set(false);
+              }
+            },
+            error: (err) => {
+              console.error('Payment creation error:', err);
+              this.error.set(err.error?.error || 'Failed to initialize payment. Please try again.');
+              this.submitting.set(false);
+            }
+          });
+        }
       },
       error: (err) => {
         this.error.set(err.error?.message || 'Failed to place order. Please try again.');

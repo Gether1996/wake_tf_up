@@ -15,6 +15,11 @@ class PaymentTransaction(models.Model):
         ('refunded', 'Refunded'),
     ]
     
+    PAYMENT_METHOD_CHOICES = [
+        ('gopay', 'GoPay Online Payment'),
+        ('cash_on_pickup', 'Cash on Personal Pickup'),
+    ]
+    
     order = models.ForeignKey(
         Order,
         on_delete=models.CASCADE,
@@ -27,7 +32,13 @@ class PaymentTransaction(models.Model):
         default='pending'
     )
     
-    # Payment provider details
+    # Payment method and provider details
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PAYMENT_METHOD_CHOICES,
+        default='gopay',
+        help_text="Payment method chosen by customer"
+    )
     provider = models.CharField(
         max_length=50,
         default='gopay',
@@ -57,85 +68,16 @@ class PaymentTransaction(models.Model):
         return f"Transaction #{self.id} - {self.order} - {self.status}"
 
 
-# Payment Provider Interface (stub)
-class PaymentProviderInterface:
-    """
-    Abstract interface for payment providers.
-    Implement this for GoPay or other payment gateways.
-    """
-    
-    def create_payment(self, order, return_url, notify_url):
-        """
-        Create a payment request with the provider.
-        
-        Args:
-            order: Order instance
-            return_url: URL to return user after payment
-            notify_url: URL for payment notifications/webhooks
-            
-        Returns:
-            dict: Payment details including payment URL
-        """
-        raise NotImplementedError("Subclasses must implement create_payment")
-    
-    def check_payment_status(self, transaction_id):
-        """
-        Check payment status with the provider.
-        
-        Args:
-            transaction_id: Provider's transaction ID
-            
-        Returns:
-            dict: Payment status information
-        """
-        raise NotImplementedError("Subclasses must implement check_payment_status")
-    
-    def refund_payment(self, transaction_id, amount):
-        """
-        Request a refund from the provider.
-        
-        Args:
-            transaction_id: Provider's transaction ID
-            amount: Amount to refund
-            
-        Returns:
-            dict: Refund status information
-        """
-        raise NotImplementedError("Subclasses must implement refund_payment")
+# GoPay Payment States
+GOPAY_STATES = {
+    'CREATED': 'pending',
+    'PAYMENT_METHOD_CHOSEN': 'pending',
+    'PAID': 'completed',
+    'AUTHORIZED': 'completed',
+    'CANCELED': 'failed',
+    'TIMEOUTED': 'failed',
+    'REFUNDED': 'refunded',
+    'PARTIALLY_REFUNDED': 'refunded',
+}
 
-
-class GoPayProvider(PaymentProviderInterface):
-    """
-    GoPay payment provider implementation stub.
-    TODO: Implement actual GoPay API integration.
-    """
-    
-    def __init__(self):
-        # TODO: Initialize with GoPay credentials
-        self.api_url = "https://gate.gopay.cz/api"
-        self.client_id = None  # Load from settings
-        self.client_secret = None  # Load from settings
-    
-    def create_payment(self, order, return_url, notify_url):
-        """
-        TODO: Implement GoPay payment creation
-        
-        Reference: GoPay API documentation
-        - Create payment session
-        - Get payment URL
-        - Store transaction details
-        """
-        # Stub implementation
-        return {
-            'payment_url': 'https://gate.gopay.cz/payment/...',
-            'transaction_id': 'stub_transaction_id',
-            'status': 'pending'
-        }
-    
-    def check_payment_status(self, transaction_id):
-        """TODO: Implement payment status check"""
-        return {'status': 'pending'}
-    
-    def refund_payment(self, transaction_id, amount):
-        """TODO: Implement refund logic"""
-        return {'status': 'refunded'}
+# Note: GoPay service implementation is in gopay_service.py

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { OrderService } from '../../core/api/order.service';
+import { PaymentService } from '../../core/api/payment.service';
 import { LanguageService } from '../../core/services/language.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ButtonComponent } from '../../shared/button/button.component';
@@ -140,13 +141,22 @@ import { environment } from '../../../environments/environment';
                   </div>
 
                   <!-- Actions -->
-                  @if (order.status === 'created' || order.status === 'paid') {
-                    <div class="mt-4 pt-4 border-t border-border">
+                  <div class="mt-4 pt-4 border-t border-border flex gap-3">
+                    @if (order.status === 'created') {
+                      <app-button 
+                        [variant]="'primary'" 
+                        [size]="'sm'" 
+                        (clicked)="payNow(order.id)"
+                        [loading]="payingOrderId() === order.id">
+                        {{ 'orders.pay_now' | transloco }}
+                      </app-button>
+                    }
+                    @if (order.status === 'created' || order.status === 'paid' || order.status === 'shipped') {
                       <app-button [variant]="'ghost'" [size]="'sm'" (clicked)="trackOrder(order.id)">
                         {{ 'orders.track' | transloco }}
                       </app-button>
-                    </div>
-                  }
+                    }
+                  </div>
                 </div>
               </div>
             }
@@ -194,6 +204,7 @@ import { environment } from '../../../environments/environment';
 })
 export class OrdersComponent implements OnInit {
   private orderService = inject(OrderService);
+  private paymentService = inject(PaymentService);
   private languageService = inject(LanguageService);
   private notificationService = inject(NotificationService);
 
@@ -202,6 +213,7 @@ export class OrdersComponent implements OnInit {
 
   orders = signal<any[]>([]);
   loading = signal(false);
+  payingOrderId = signal<number | null>(null);
   currentPage = signal(1);
   totalPages = signal(1);
   pageSize = 10;
@@ -290,6 +302,28 @@ export class OrdersComponent implements OnInit {
   trackOrder(orderId: number) {
     // TODO: Implement order tracking modal or redirect
     this.notificationService.info('Order tracking feature coming soon!');
+  }
+
+  payNow(orderId: number) {
+    this.payingOrderId.set(orderId);
+    
+    this.paymentService.createPayment({ order_id: orderId }).subscribe({
+      next: (response) => {
+        if (response.success && response.payment_url) {
+          // Redirect to GoPay payment page
+          window.location.href = response.payment_url;
+        } else {
+          this.notificationService.error('Failed to initialize payment');
+          this.payingOrderId.set(null);
+        }
+      },
+      error: (err) => {
+        console.error('Payment error:', err);
+        const errorMsg = err.error?.error || 'Failed to initialize payment. Please try again.';
+        this.notificationService.error(errorMsg);
+        this.payingOrderId.set(null);
+      }
+    });
   }
 
   getImageUrl(imagePath: string): string {
