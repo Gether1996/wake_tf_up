@@ -1,0 +1,25 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:loyalty_discountcode_changelist' %}">Discount Codes</a>
+    &rsaquo; Generate Promotional Codes
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Generate Promotional Codes</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-row">
+        {{ form.as_p }}
+    </div>
+    <div class="submit-row">
+        <input type="submit" value="Generate Codes" class="default" name="apply">
+        <a href="{% url 'admin:loyalty_discountcode_changelist' %}" class="button cancel-link">Cancel</a>
+    </div>
+</form>
+{% endblock %}

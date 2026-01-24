@@ -32,6 +32,7 @@ urlpatterns = [
     path('api/v1/analytics/', include('analytics.urls')),
     path('api/v1/newsletter/', include('newsletter.urls')),
     path('api/v1/settings/', include('settings.urls')),
+    path('api/v1/loyalty/', include('loyalty.urls')),
 ]
 
 # Serve media files in development

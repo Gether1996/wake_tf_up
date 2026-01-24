@@ -90,12 +90,24 @@ class User(AbstractUser):
         ('auto', 'Auto'),
     ]
     
+    USER_ROLE_CHOICES = [
+        ('regular', 'Regular User'),
+        ('staff', 'Staff'),
+    ]
+    
     theme_preference = models.CharField(
         max_length=10,
         choices=THEME_CHOICES,
         default='auto',
         blank=True,
         help_text="User's preferred UI theme"
+    )
+    
+    user_role = models.CharField(
+        max_length=20,
+        choices=USER_ROLE_CHOICES,
+        default='regular',
+        help_text="User role (for non-superusers)"
     )
     
     USERNAME_FIELD = 'email'

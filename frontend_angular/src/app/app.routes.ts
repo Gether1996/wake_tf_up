@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/auth/auth.guard';
 import { languageGuard } from './core/guards/language.guard';
+import { demoGuard } from './core/guards/demo.guard';
 
 const appRoutes: Routes = [
   {
@@ -84,13 +85,27 @@ const appRoutes: Routes = [
   {
     path: 'terms',
     loadComponent: () => import('./pages/terms-of-service/terms-of-service.component').then(m => m.TermsOfServiceComponent)
+  },
+  {
+    path: 'review/submit',
+    loadComponent: () => import('./pages/review-submit/review-submit').then(m => m.ReviewSubmit)
+  },
+  {
+    path: 'review/:id',
+    loadComponent: () => import('./pages/review-detail/review-detail').then(m => m.ReviewDetail)
   }
 ];
 
 export const routes: Routes = [
+  // Demo login (no guards)
+  {
+    path: 'demo-login',
+    loadComponent: () => import('./pages/demo-login/demo-login.component').then(m => m.DemoLoginComponent)
+  },
+  // All other routes protected by demoGuard
   {
     path: ':lang',
-    canActivate: [languageGuard],
+    canActivate: [demoGuard, languageGuard],
     children: appRoutes
   },
   {

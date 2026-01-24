@@ -19,6 +19,8 @@ export interface MainSettings {
   max_cart_quantity: number;
   maintenance_mode: boolean;
   maintenance_message: string;
+  newsletter_popup_delay: number;
+  newsletter_popup_enabled: boolean;
 }
 
 @Injectable({
@@ -71,7 +73,9 @@ export class SettingsService {
           twitter_url: '',
           max_cart_quantity: 10,
           maintenance_mode: false,
-          maintenance_message: ''
+          maintenance_message: '',
+          newsletter_popup_delay: 5,
+          newsletter_popup_enabled: true
         });
       }
     });

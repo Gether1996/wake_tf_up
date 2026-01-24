@@ -52,13 +52,21 @@ export class AuthService {
     this.clearTokens();
     this.currentUser.set(null);
     this.isAuthenticatedSubject.next(false);
+    
+    // Clear cart and checkout data for security (prevent data leaking to next user)
+    // Use lazy injection to avoid circular dependency
+    if (isPlatformBrowser(this.platformId)) {
+      sessionStorage.removeItem('checkout_data');
+      localStorage.removeItem('cart'); // Clear cart directly to avoid circular dependency
+    }
+    
     const lang = this.translocoService.getActiveLang();
     this.router.navigate([`/${lang}/auth/login`]);
   }
 
   refreshToken(): Observable<TokenResponse> {
     const refresh = this.getRefreshToken();
-    return this.http.post<TokenResponse>(`${environment.apiUrl}/auth/refresh/`, { refresh })
+    return this.http.post<TokenResponse>(`${environment.apiUrl}/auth/token/refresh/`, { refresh })
       .pipe(
         tap(response => {
           this.storeTokens(response);

@@ -23,5 +23,7 @@ class MainSettingsSerializer(serializers.ModelSerializer):
             'max_cart_quantity',
             'maintenance_mode',
             'maintenance_message',
+            'newsletter_popup_delay',
+            'newsletter_popup_enabled',
         ]
         read_only_fields = fields  # All fields are read-only via API

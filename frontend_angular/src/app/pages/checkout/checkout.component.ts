@@ -1,12 +1,13 @@
 import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { TranslocoModule } from '@jsverse/transloco';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { CartService } from '../../core/api/cart.service';
 import { OrderService, CreateOrderRequest } from '../../core/api/order.service';
 import { PaymentService } from '../../core/api/payment.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { LoyaltyService, ValidateDiscountCodeResponse } from '../../core/api/loyalty.service';
 import { LanguageService } from '../../core/services/language.service';
 import { SettingsService } from '../../core/api/settings.service';
 import { ButtonComponent } from '../../shared/button/button.component';
@@ -14,7 +15,7 @@ import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-checkout',
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, TranslocoModule, ButtonComponent],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslocoModule, ButtonComponent],
   template: `
     <div class="container mx-auto px-4 py-8">
       <!-- Progress Steps -->
@@ -184,15 +185,6 @@ import { environment } from '../../../environments/environment';
                     <div class="font-mono font-bold">{{ packetaCourierCost() | currency: 'EUR' }}</div>
                   </label>
                 </div>
-              </div>
-
-              <!-- Step 1 Navigation -->
-              <div class="flex justify-end">
-                <app-button 
-                  [type]="'button'"
-                  (clicked)="nextStep()">
-                  {{ 'checkout.next_step' | transloco }}
-                </app-button>
               </div>
               }
 
@@ -381,21 +373,6 @@ import { environment } from '../../../environments/environment';
                   </div>
                 }
               </div>
-
-              <!-- Step 2 Navigation -->
-              <div class="flex gap-4 mt-6">
-                <app-button 
-                  [type]="'button'"
-                  [variant]="'secondary'"
-                  (clicked)="previousStep()">
-                  {{ 'checkout.previous_step' | transloco }}
-                </app-button>
-                <app-button 
-                  [type]="'button'"
-                  (clicked)="nextStep()">
-                  {{ 'checkout.next_step' | transloco }}
-                </app-button>
-              </div>
               }
 
               <!-- STEP 3: Payment Method -->
@@ -414,14 +391,39 @@ import { environment } from '../../../environments/environment';
                       name="paymentMethod" 
                       value="gopay" 
                       [checked]="selectedPaymentMethod() === 'gopay'"
-                      (change)="selectedPaymentMethod.set('gopay')"
+                      (change)="selectedPaymentMethod.set('gopay'); saveCheckoutData()"
                       class="mr-3">
                     <div class="flex-1">
                       <div class="font-mono uppercase font-bold">GoPay</div>
                       <div class="text-sm text-muted-foreground">{{ 'checkout.gopay_desc' | transloco }}</div>
                       <div class="mt-2 flex gap-2 items-center flex-wrap">
-                        <span class="text-xs bg-background px-2 py-1 border border-border">💳 {{ 'checkout.card' | transloco }}</span>
-                        <span class="text-xs bg-background px-2 py-1 border border-border">🏦 {{ 'checkout.bank' | transloco }}</span>
+                        <span class="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white px-3 py-1.5 rounded flex items-center gap-1 font-medium shadow-sm">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                            <rect x="2" y="5" width="20" height="14" rx="2" stroke="white" stroke-width="2"/>
+                            <path d="M2 10h20" stroke="white" stroke-width="2"/>
+                          </svg>
+                          <span>{{ 'checkout.card' | transloco }}</span>
+                        </span>
+                        <span class="text-xs bg-gradient-to-br from-green-600 to-teal-600 text-white px-3 py-1.5 rounded flex items-center gap-1 font-medium shadow-sm">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                            <path d="M3 9h18v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="white" stroke-width="2"/>
+                            <path d="M21 9V6a2 2 0 00-2-2H5a2 2 0 00-2 2v3" stroke="white" stroke-width="2"/>
+                            <path d="M12 3v6M8 13h8M8 17h5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                          </svg>
+                          <span>{{ 'checkout.bank' | transloco }}</span>
+                        </span>
+                        <span class="text-xs bg-white text-black px-3 py-1.5 border border-gray-200 rounded flex items-center gap-1 font-medium shadow-sm" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;">
+                          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" fill="#4285F4"/>
+                          </svg>
+                          <span style="letter-spacing: -0.01em;">Pay</span>
+                        </span>
+                        <span class="text-xs bg-black text-white px-3 py-1.5 border border-black rounded flex items-center gap-1 font-medium shadow-sm" style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;">
+                          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="white" style="flex-shrink: 0;">
+                            <path d="M16.365 8.115c-.378.445-.999 1.213-.999 2.338 0 1.294.756 1.854 1.026 2.016-.067.203-.319 1.093-.999 2.05-.621.874-1.269 1.747-2.268 1.747s-1.243-.555-2.352-.555c-1.081 0-1.458.571-2.352.571-.894 0-1.539-.807-2.283-1.798C5.286 12.858 4.5 10.521 4.5 8.319c0-3.264 2.117-4.995 4.199-4.995.999 0 1.832.656 2.461.656.596 0 1.526-.689 2.663-.689.428 0 1.966.038 2.982 1.48-.077.048-1.78 1.04-1.78 3.09.001 0 .001 0 0 0zm-2.58-4.904c.336-.42.596-.999.596-1.578 0-.081-.008-.162-.023-.211-.569.023-1.247.378-1.651.84-.32.354-.621.92-.621 1.506 0 .087.015.174.023.202.039.007.103.015.166.015.51 0 1.148-.342 1.51-.774z"/>
+                          </svg>
+                          <span style="letter-spacing: -0.02em;">Pay</span>
+                        </span>
                       </div>
                     </div>
                     <div class="text-right">
@@ -440,7 +442,7 @@ import { environment } from '../../../environments/environment';
                       name="paymentMethod" 
                       value="cash_on_pickup" 
                       [checked]="selectedPaymentMethod() === 'cash_on_pickup'"
-                      (change)="selectedPaymentMethod.set('cash_on_pickup')"
+                      (change)="selectedPaymentMethod.set('cash_on_pickup'); saveCheckoutData()"
                       class="mr-3">
                     <div class="flex-1">
                       <div class="font-mono uppercase font-bold">{{ 'checkout.cash_on_pickup' | transloco }}</div>
@@ -455,21 +457,6 @@ import { environment } from '../../../environments/environment';
                   </label>
                   }
                 </div>
-              </div>
-
-              <!-- Step 3 Navigation -->
-              <div class="flex gap-4">
-                <app-button 
-                  [type]="'button'"
-                  [variant]="'secondary'"
-                  (clicked)="previousStep()">
-                  {{ 'checkout.previous_step' | transloco }}
-                </app-button>
-                <app-button 
-                  [type]="'button'"
-                  (clicked)="nextStep()">
-                  {{ 'checkout.next_step' | transloco }}
-                </app-button>
               </div>
               }
 
@@ -594,21 +581,28 @@ import { environment } from '../../../environments/environment';
                     <span class="text-2xl font-bold">{{ total() | currency: 'EUR' }}</span>
                   </div>
                 </div>
-              </div>
 
-              <!-- Step 4 Navigation -->
-              <div class="flex gap-4">
-                <app-button 
-                  [type]="'button'"
-                  [variant]="'secondary'"
-                  (clicked)="previousStep()">
-                  {{ 'checkout.previous_step' | transloco }}
-                </app-button>
-                <app-button 
-                  [type]="'submit'"
-                  [loading]="submitting()">
-                  {{ 'checkout.place_order' | transloco }}
-                </app-button>
+                <!-- Terms of Service Checkbox -->
+                <div class="mt-6">
+                  <label class="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      formControlName="acceptTerms"
+                      class="mt-1 w-4 h-4 cursor-pointer">
+                    <span class="text-sm">
+                      <ng-container *transloco="let t">
+                        {{ t('checkout.accept_terms_1') }}
+                        <a [routerLink]="'/' + currentLang() + '/terms-of-service'" target="_blank" class="text-accent hover:underline">
+                          {{ t('checkout.terms_of_service') }}
+                        </a>
+                        {{ t('checkout.accept_terms_2') }}
+                      </ng-container>
+                    </span>
+                  </label>
+                  @if (checkoutForm.get('acceptTerms')?.invalid && checkoutForm.get('acceptTerms')?.touched) {
+                    <p class="text-sm text-danger mt-2">{{ 'checkout.terms_required' | transloco }}</p>
+                  }
+                </div>
               </div>
               }
 
@@ -670,12 +664,104 @@ import { environment } from '../../../environments/environment';
                     }
                   </span>
                 </div>
+
+                @if (discountValidation()?.valid) {
+                  <div class="flex justify-between text-success">
+                    <span>{{ 'checkout.discount' | transloco }} ({{ discountCode() }})</span>
+                    <span>-{{ discountValidation()!.discount_amount | currency: 'EUR' }}</span>
+                  </div>
+                }
               </div>
 
-              <div class="flex justify-between text-lg font-bold">
+              <!-- Discount Code Input -->
+              <div class="mb-6 pb-6 border-b border-border">
+                <h3 class="font-mono uppercase font-bold text-sm mb-3">{{ 'checkout.discount_code' | transloco }}</h3>
+                
+                @if (!discountValidation()?.valid) {
+                  <div class="flex gap-2">
+                    <input
+                      type="text"
+                      [(ngModel)]="discountCode"
+                      (ngModelChange)="saveCheckoutData()"
+                      [disabled]="validatingDiscount()"
+                      class="flex-1 px-3 py-2 text-sm border border-border bg-background focus:border-foreground focus:outline-none transition-colors"
+                      [class.border-danger]="discountError()"
+                      [placeholder]="(currentLang() === 'sk' ? 'Zadajte kód' : 'Enter code') + ''">
+                    <app-button
+                      [size]="'sm'"
+                      [disabled]="validatingDiscount() || !discountCode().trim()"
+                      [loading]="validatingDiscount()"
+                      (clicked)="validateDiscountCode()">
+                      {{ currentLang() === 'sk' ? 'Použiť' : 'Apply' }}
+                    </app-button>
+                  </div>
+                  @if (discountError()) {
+                    <p class="text-xs text-danger mt-1">{{ discountError() }}</p>
+                  }
+                } @else {
+                  <div class="bg-success/10 border border-success p-3 flex items-center justify-between">
+                    <div class="flex-1">
+                      <p class="text-sm font-medium text-success">✓ {{ discountValidation()!.message }}</p>
+                      <p class="text-xs text-muted-foreground mt-1">{{ 'checkout.code' | transloco }}: {{ discountCode() }}</p>
+                    </div>
+                    <button
+                      type="button"
+                      (click)="removeDiscountCode()"
+                      class="text-muted-foreground hover:text-foreground transition-colors">
+                      ✕
+                    </button>
+                  </div>
+                }
+              </div>
+
+              <div class="flex justify-between text-lg font-bold mb-6">
                 <span>{{ 'cart.total' | transloco }}</span>
                 <span>{{ total() | currency: 'EUR' }}</span>
               </div>
+
+              <!-- Navigation Buttons -->
+              @if (currentStep() === 1) {
+                <app-button 
+                  [type]="'button'"
+                  [fullWidth]="true"
+                  (clicked)="nextStep()">
+                  {{ 'checkout.next_step' | transloco }}
+                </app-button>
+              } @else if (currentStep() === 4) {
+                <div class="space-y-3">
+                  <app-button 
+                    [type]="'button'"
+                    [fullWidth]="true"
+                    [loading]="submitting()"
+                    [disabled]="checkoutForm.invalid || submitting()"
+                    (clicked)="onSubmit()">
+                    {{ 'checkout.place_order' | transloco }}
+                  </app-button>
+                  <app-button 
+                    [type]="'button'"
+                    [variant]="'secondary'"
+                    [fullWidth]="true"
+                    (clicked)="previousStep()">
+                    {{ 'checkout.previous_step' | transloco }}
+                  </app-button>
+                </div>
+              } @else {
+                <div class="space-y-3">
+                  <app-button 
+                    [type]="'button'"
+                    [fullWidth]="true"
+                    (clicked)="nextStep()">
+                    {{ 'checkout.next_step' | transloco }}
+                  </app-button>
+                  <app-button 
+                    [type]="'button'"
+                    [variant]="'secondary'"
+                    [fullWidth]="true"
+                    (clicked)="previousStep()">
+                    {{ 'checkout.previous_step' | transloco }}
+                  </app-button>
+                </div>
+              }
             </div>
           </div>
         </div>
@@ -697,6 +783,8 @@ export class CheckoutComponent implements OnInit {
   private authService = inject(AuthService);
   private languageService = inject(LanguageService);
   private settingsService = inject(SettingsService);
+  private loyaltyService = inject(LoyaltyService);
+  private translocoService = inject(TranslocoService);
 
   currentLang = this.languageService.currentLang;
   shopLink = computed(() => `/${this.currentLang()}/shop`);
@@ -708,6 +796,12 @@ export class CheckoutComponent implements OnInit {
   selectedShippingMethod = signal<'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier'>('dpd_courier');
   selectedPacketaPoint = signal<{ id: string; name: string; address: string } | null>(null);
   selectedPaymentMethod = signal<'gopay' | 'cash_on_pickup'>('gopay');
+  
+  // Discount code
+  discountCode = signal('');
+  validatingDiscount = signal(false);
+  discountValidation = signal<ValidateDiscountCodeResponse | null>(null);
+  discountError = signal('');
   
   // Shipping costs from settings
   freeShippingThreshold = computed(() => {
@@ -759,6 +853,7 @@ export class CheckoutComponent implements OnInit {
       postalCode: ['', Validators.required],
       country: ['SK', Validators.required],
       notes: [''],
+      acceptTerms: [false, Validators.requiredTrue],
       // Billing fields (conditional)
       billingCompany: [''],
       billingIco: [''],
@@ -793,6 +888,9 @@ export class CheckoutComponent implements OnInit {
       return;
     }
     
+    // Load saved checkout data from localStorage
+    this.loadCheckoutData();
+    
     // Subscribe to shipping method changes
     this.checkoutForm.get('shippingMethod')?.valueChanges.subscribe(value => {
       this.selectedShippingMethod.set(value);
@@ -804,6 +902,12 @@ export class CheckoutComponent implements OnInit {
       if (value !== 'pickup') {
         this.selectedPaymentMethod.set('gopay');
       }
+      this.saveCheckoutData();
+    });
+
+    // Subscribe to form changes to auto-save
+    this.checkoutForm.valueChanges.subscribe(() => {
+      this.saveCheckoutData();
     });
   }
 
@@ -823,6 +927,8 @@ export class CheckoutComponent implements OnInit {
         this.checkoutForm.get(field)?.updateValueAndValidity();
       });
     }
+    
+    this.saveCheckoutData();
   }
 
   openPacketaWidget() {
@@ -840,6 +946,7 @@ export class CheckoutComponent implements OnInit {
                 name: point.name,
                 address: `${point.street}, ${point.city}, ${point.zip}`
               });
+              this.saveCheckoutData();
             }
           }, {
             country: 'sk',
@@ -858,6 +965,7 @@ export class CheckoutComponent implements OnInit {
                 name: point.name,
                 address: `${point.street}, ${point.city}, ${point.zip}`
               });
+              this.saveCheckoutData();
             }
           }, {
             country: 'sk',
@@ -873,7 +981,9 @@ export class CheckoutComponent implements OnInit {
   total(): number {
     const subtotal = this.cartService.subtotal();
     const shipping = subtotal >= this.freeShippingThreshold() ? 0 : this.selectedShippingCost();
-    return subtotal + shipping;
+    const discount = this.discountValidation()?.valid ? this.discountValidation()!.discount_amount : 0;
+    // Discount applies only to subtotal, then add shipping
+    return Math.max(0, (subtotal - discount) + shipping);
   }
 
   getImageUrl(imagePath: string): string {
@@ -931,6 +1041,7 @@ export class CheckoutComponent implements OnInit {
       // Step 3: Payment method (always GoPay for now)
       this.error.set('');
       this.currentStep.set(4);
+      this.saveCheckoutData();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
@@ -938,6 +1049,7 @@ export class CheckoutComponent implements OnInit {
   previousStep() {
     if (this.currentStep() > 1) {
       this.currentStep.set(this.currentStep() - 1);
+      this.saveCheckoutData();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
@@ -948,8 +1060,66 @@ export class CheckoutComponent implements OnInit {
     if (step <= this.currentStep() && step >= 1) {
       this.currentStep.set(step);
       this.error.set('');
+      this.saveCheckoutData();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  }
+
+  saveCheckoutData() {
+    const checkoutData = {
+      formValues: this.checkoutForm.value,
+      currentStep: this.currentStep(),
+      isCompanyPurchase: this.isCompanyPurchase(),
+      selectedShippingMethod: this.selectedShippingMethod(),
+      selectedPacketaPoint: this.selectedPacketaPoint(),
+      selectedPaymentMethod: this.selectedPaymentMethod(),
+      discountCode: this.discountCode(),
+      discountValidation: this.discountValidation()
+    };
+    // Use sessionStorage - data is cleared when tab/browser is closed
+    // This prevents data leaking between different users on same device
+    sessionStorage.setItem('checkout_data', JSON.stringify(checkoutData));
+  }
+
+  loadCheckoutData() {
+    const saved = sessionStorage.getItem('checkout_data');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        
+        // Restore form values
+        if (data.formValues) {
+          this.checkoutForm.patchValue(data.formValues, { emitEvent: false });
+        }
+        
+        // Restore state
+        if (data.currentStep) this.currentStep.set(data.currentStep);
+        
+        // Restore company purchase and update validators
+        if (data.isCompanyPurchase !== undefined) {
+          this.isCompanyPurchase.set(data.isCompanyPurchase);
+          const billingFields = ['billingCompany', 'billingIco'];
+          if (data.isCompanyPurchase) {
+            billingFields.forEach(field => {
+              this.checkoutForm.get(field)?.setValidators([Validators.required]);
+              this.checkoutForm.get(field)?.updateValueAndValidity();
+            });
+          }
+        }
+        
+        if (data.selectedShippingMethod) this.selectedShippingMethod.set(data.selectedShippingMethod);
+        if (data.selectedPacketaPoint) this.selectedPacketaPoint.set(data.selectedPacketaPoint);
+        if (data.selectedPaymentMethod) this.selectedPaymentMethod.set(data.selectedPaymentMethod);
+        if (data.discountCode) this.discountCode.set(data.discountCode);
+        if (data.discountValidation) this.discountValidation.set(data.discountValidation);
+      } catch (e) {
+        console.error('Failed to load checkout data:', e);
+      }
+    }
+  }
+
+  clearCheckoutData() {
+    sessionStorage.removeItem('checkout_data');
   }
 
   getShippingMethodName(): string {
@@ -961,6 +1131,69 @@ export class CheckoutComponent implements OnInit {
       'packeta_courier': this.currentLang() === 'sk' ? 'Packeta Kuriér' : 'Packeta Courier'
     };
     return names[method] || method;
+  }
+
+  validateDiscountCode() {
+    const code = this.discountCode().trim();
+    if (!code) {
+      this.discountError.set(this.translocoService.translate('checkout.enter_discount_code'));
+      return;
+    }
+
+    this.validatingDiscount.set(true);
+    this.discountError.set('');
+    
+    // Discount applies only to subtotal, not shipping
+    const orderTotal = this.cartService.subtotal();
+
+    this.loyaltyService.validateDiscountCode({
+      code: code,
+      order_total: orderTotal
+    }).subscribe({
+      next: (response) => {
+        this.validatingDiscount.set(false);
+        if (response.valid) {
+          this.discountValidation.set(response);
+          this.discountError.set('');
+          this.saveCheckoutData();
+        } else {
+          this.discountValidation.set(null);
+          // Use error_code for translation, fallback to message
+          if (response.error_code) {
+            const translationKey = `checkout.discount_errors.${response.error_code}`;
+            if (response.error_code === 'MIN_ORDER_VALUE' && response.min_value) {
+              this.discountError.set(
+                this.translocoService.translate(translationKey, { value: response.min_value })
+              );
+            } else {
+              this.discountError.set(this.translocoService.translate(translationKey));
+            }
+          } else {
+            this.discountError.set(response.message);
+          }
+        }
+      },
+      error: (err) => {
+        this.validatingDiscount.set(false);
+        this.discountValidation.set(null);
+        const errorCode = err.error?.error_code;
+        if (errorCode) {
+          const translationKey = `checkout.discount_errors.${errorCode}`;
+          this.discountError.set(this.translocoService.translate(translationKey));
+        } else {
+          this.discountError.set(
+            this.translocoService.translate('checkout.discount_errors.UNKNOWN')
+          );
+        }
+      }
+    });
+  }
+
+  removeDiscountCode() {
+    this.discountCode.set('');
+    this.discountValidation.set(null);
+    this.discountError.set('');
+    this.saveCheckoutData();
   }
 
   onSubmit() {
@@ -1012,11 +1245,17 @@ export class CheckoutComponent implements OnInit {
       items: this.cartService.items().map(item => ({
         product_id: item.product.id,
         quantity: item.quantity
-      }))
+      })),
+      ...(this.discountValidation()?.valid && this.discountCode() && {
+        discount_code_str: this.discountCode()
+      })
     };
 
     this.orderService.createOrder(orderData).subscribe({
       next: (order) => {
+        // Clear saved checkout data after successful order creation
+        this.clearCheckoutData();
+        
         // Check payment method
         if (this.selectedPaymentMethod() === 'cash_on_pickup') {
           // Cash on pickup - no GoPay payment needed

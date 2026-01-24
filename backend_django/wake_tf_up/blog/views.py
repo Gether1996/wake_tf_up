@@ -1,6 +1,6 @@
 from rest_framework import generics, permissions, viewsets, filters
-from .models import BlogPost
-from .serializers import BlogPostListSerializer, BlogPostDetailSerializer
+from .models import BlogPost, BlogImage
+from .serializers import BlogPostListSerializer, BlogPostDetailSerializer, BlogImageSerializer
 
 
 class IsSuperuser(permissions.BasePermission):
@@ -28,6 +28,19 @@ class BlogPostDetailView(generics.RetrieveAPIView):
     serializer_class = BlogPostDetailSerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = 'slug'
+
+
+class BlogImageListView(generics.ListAPIView):
+    """
+    List all blog images (for admin use in content creation).
+    GET /api/v1/blog/images/
+    """
+    queryset = BlogImage.objects.all().order_by('-created_at')
+    serializer_class = BlogImageSerializer
+    permission_classes = [IsSuperuser]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'alt_text', 'caption']
+    ordering_fields = ['created_at', 'title']
 
 
 # ============ ADMIN CRUD ENDPOINTS ============

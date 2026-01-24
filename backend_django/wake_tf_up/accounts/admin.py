@@ -10,8 +10,8 @@ admin.site.unregister(Group)
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     """Custom User admin for email-based authentication"""
-    list_display = ('email', 'phone', 'first_name', 'last_name', 'city', 'country', 'is_superuser', 'theme_preference')
-    list_filter = ('is_superuser', 'is_active', 'theme_preference', 'country')
+    list_display = ('email', 'phone', 'first_name', 'last_name', 'city', 'country', 'is_superuser', 'user_role', 'theme_preference')
+    list_filter = ('is_superuser', 'user_role', 'is_active', 'theme_preference', 'country')
     search_fields = ('email', 'phone', 'first_name', 'last_name', 'city', 'street')
     ordering = ('email',)
     
@@ -20,7 +20,7 @@ class UserAdmin(BaseUserAdmin):
         ('Personal info', {'fields': ('first_name', 'last_name', 'phone')}),
         ('Address', {'fields': ('street', 'city', 'postal_code', 'country')}),
         ('Preferences', {'fields': ('theme_preference',)}),
-        ('Permissions', {'fields': ('is_active', 'is_superuser')}),
+        ('Permissions', {'fields': ('is_active', 'is_superuser', 'user_role')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     

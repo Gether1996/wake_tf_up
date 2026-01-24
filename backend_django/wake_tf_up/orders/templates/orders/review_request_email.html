@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ohodnoťte Vašu objednávku</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 24px;
+        }
+        .order-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+        }
+        .order-info p {
+            margin: 5px 0;
+        }
+        .product-section {
+            margin-bottom: 30px;
+        }
+        .product-item {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        .product-item h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .review-button {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        .review-button:hover {
+            background-color: #2980b9;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+        .message {
+            margin-bottom: 25px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Vaša objednávka bola doručená!</h1>
+        </div>
+
+        <div class="message">
+            <p>Ahoj <strong>{{ user.first_name|default:user.email }}</strong>,</p>
+            <p>
+                Ďakujeme za Vašu objednávku! Dúfame, že ste s produktami spokojní. 
+                Veľmi by nám pomohlo, keby ste zanechali hodnotenie na produkty, ktoré ste si kúpili.
+            </p>
+            <p>
+                Vaše hodnotenie pomôže ostatným zákazníkom pri výbere a nám pri zlepšovaní našich služieb.
+            </p>
+        </div>
+
+        <div class="order-info">
+            <p><strong>Číslo objednávky:</strong> #{{ order.id }}</p>
+            <p><strong>Dátum doručenia:</strong> {{ order.updated_at|date:"d.m.Y H:i" }}</p>
+        </div>
+
+        <div class="product-section">
+            <h2 style="color: #2c3e50; margin-bottom: 20px;">Ohodnoťte Vaše produkty:</h2>
+            
+            {% for token in tokens %}
+            <div class="product-item">
+                <h3>{{ token.product.name }}</h3>
+                <p style="color: #7f8c8d; margin-bottom: 15px;">
+                    Kliknutím na tlačidlo nižšie zanecháte hodnotenie pre tento produkt.
+                </p>
+                <a href="{{ base_url }}/sk/review/submit?token={{ token.token }}" class="review-button">
+                    ⭐ Ohodnotiť produkt
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="footer">
+            <p>
+                Tento link je platný 30 dní od doručenia objednávky.<br>
+                Pre každý produkt môžete zanechať len jedno hodnotenie.
+            </p>
+            <p style="margin-top: 15px;">
+                Ak máte akékoľvek otázky, neváhajte nás kontaktovať.<br>
+                Wake TF Up Team
+            </p>
+        </div>
+    </div>
+</body>
+</html>

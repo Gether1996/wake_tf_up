@@ -21,6 +21,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating orders"""
     items = OrderItemSerializer(many=True)
+    discount_code_str = serializers.CharField(write_only=True, required=False, allow_blank=True)
     
     class Meta:
         model = Order
@@ -29,13 +30,14 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             'shipping_postal_code', 'shipping_country', 'phone',
             'packeta_point_id', 'packeta_point_name', 'packeta_point_address',
             'is_company_purchase', 'billing_company', 'billing_ico', 'billing_dic', 'billing_ic_dph',
-            'items'
+            'items', 'discount_code_str'
         )
     
     def create(self, validated_data):
         from .models import StockReservationService
         
         items_data = validated_data.pop('items')
+        discount_code_str = validated_data.pop('discount_code_str', None)
         user = self.context['request'].user
         
         # Use the stock reservation service
@@ -45,6 +47,15 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             shipping_data=validated_data
         )
         
+        # Apply discount code if provided
+        if discount_code_str:
+            from loyalty.models import DiscountCode
+            try:
+                discount_code = DiscountCode.objects.get(code=discount_code_str)
+                order.apply_discount(discount_code)
+            except DiscountCode.DoesNotExist:
+                pass  # Silently ignore invalid codes
+        
         return order
 
 
@@ -53,11 +64,13 @@ class OrderListSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     items_count = serializers.SerializerMethodField()
     is_pre_order = serializers.ReadOnlyField()
+    discount_code_display = serializers.CharField(source='discount_code.code', read_only=True)
     
     class Meta:
         model = Order
         fields = (
-            'id', 'status', 'shipping_method', 'total_amount', 'items', 'items_count',
+            'id', 'status', 'shipping_method', 'total_amount', 'discount_amount',
+            'discount_code_display', 'items', 'items_count',
             'is_pre_order', 'created_at', 'updated_at'
         )
     
@@ -69,6 +82,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for order detail"""
     items = OrderItemSerializer(many=True, read_only=True)
     is_pre_order = serializers.ReadOnlyField()
+    discount_code_display = serializers.CharField(source='discount_code.code', read_only=True)
     
     class Meta:
         model = Order
@@ -78,6 +92,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
             'phone', 'packeta_point_id', 'packeta_point_name', 'packeta_point_address',
             'tracking_number', 'carrier_tracking_url',
             'is_company_purchase', 'billing_company', 'billing_ico', 
-            'billing_dic', 'billing_ic_dph', 'total_amount', 'is_pre_order', 'items',
+            'billing_dic', 'billing_ic_dph', 'total_amount', 'discount_amount',
+            'discount_code_display', 'is_pre_order', 'items',
             'created_at', 'updated_at'
         )

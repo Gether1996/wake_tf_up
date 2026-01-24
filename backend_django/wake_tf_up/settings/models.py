@@ -89,6 +89,20 @@ class MainSettings(models.Model):
         help_text="Message to display during maintenance"
     )
     
+    # Newsletter Popup Settings
+    newsletter_popup_delay = models.PositiveIntegerField(
+        default=5,
+        null=True,
+        blank=True,
+        help_text="Minutes before showing newsletter popup (default: 5)"
+    )
+    newsletter_popup_enabled = models.BooleanField(
+        default=True,
+        null=True,
+        blank=True,
+        help_text="Enable automatic newsletter popup"
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

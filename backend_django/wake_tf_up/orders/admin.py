@@ -22,10 +22,10 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('order_number', 'user_email', 'shipping_name', 'shipping_method', 'status', 'total_amount_display', 'is_pre_order', 'created_at')
+    list_display = ('order_number', 'user_email', 'shipping_name', 'shipping_method', 'status', 'discount_display', 'total_amount_display', 'is_pre_order', 'created_at')
     list_filter = ('status', 'shipping_method', 'created_at', 'updated_at')
     search_fields = ('id', 'user__email', 'shipping_name', 'shipping_city', 'phone', 'packeta_point_name')
-    readonly_fields = ('total_amount', 'created_at', 'updated_at', 'is_pre_order')
+    readonly_fields = ('total_amount', 'discount_amount', 'created_at', 'updated_at', 'is_pre_order')
     inlines = [OrderItemInline]
     date_hierarchy = 'created_at'
     list_per_page = 25
@@ -33,7 +33,7 @@ class OrderAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Order Info', {
-            'fields': ('user', 'status', 'shipping_method', 'total_amount', 'is_pre_order')
+            'fields': ('user', 'status', 'shipping_method', 'discount_code', 'discount_amount', 'total_amount', 'is_pre_order')
         }),
         ('Shipping Address', {
             'fields': ('shipping_name', 'shipping_address', 'shipping_city',
@@ -69,6 +69,12 @@ class OrderAdmin(admin.ModelAdmin):
         return f"€{obj.total_amount}"
     total_amount_display.short_description = 'Total'
     total_amount_display.admin_order_field = 'total_amount'
+    
+    def discount_display(self, obj):
+        if obj.discount_code:
+            return f"-€{obj.discount_amount} ({obj.discount_code.code})"
+        return "-"
+    discount_display.short_description = 'Discount'
     
     def is_pre_order(self, obj):
         return obj.is_pre_order

@@ -1,0 +1,42 @@
+pridavat do produktu viacej videi
+pri ktorom videu je ktory thumbnail - prehlad DONE
+
+produkt - jeden rozmer a prisposobenie fotky
+rozklikavanie zvacsenie fotky DONE
+
+zlavovy kod novy typ - newsletter kvoli filtrovaniu DONE
+
+nahravanie fotiek kvoli blogom - novy model kde si budem vediet nahrat fotky do DB a vytvorit im pristupny URL, ktore potom budem vediet pouzit ako src do HTML sablony pre blog (najskor nahram takto fotky a potom si spravim HTML na blog s danymi linkami fotiek) DONE
+
+User:
+pat.kredatus@gmail.com
+User who owns this code (optional for general promotions)
+filtrovanie userov DONE
+
+discount kod platnost nepovinna - bud do nekonecna alebo pocet pouziti DONE
+
+Please verify your email before logging in. Check your inbox for the verification link. DONE
+
+preklady DONE
+
+pri dokonceni obj zakliknut terms of service DONE
+
+newsletter po 5 min automaticky popup - nastavitelny cas
+-statistika kto to zrusil a kto sa prihlasil DONE
+
+generovanie QR kodov a prehlad kolko krat naskenovane DONE
+
+vsetci na newsletteri - posielane emailov, kodov zlavovych DONE
+
+review len cez link v emaily - moze  byt aj neprihlaseny uzivatel DONE
+
+Limited Edition
+Exclusive pieces, once they're gone, they're gone
+-miesto tohto dat recenzie - miniatury fotky na rozklik celej recenzie DONE
+
+----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+
+
+
+na demo webe najskor popup s prihlasenim

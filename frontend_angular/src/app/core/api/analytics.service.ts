@@ -49,14 +49,15 @@ export class AnalyticsService {
       return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
     
-    const stored = localStorage.getItem('analytics_session_id');
+    // Use sessionStorage - session ID should be unique per browser session
+    const stored = sessionStorage.getItem('analytics_session_id');
     if (stored) {
       return stored;
     }
 
     // Generate simple session ID
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('analytics_session_id', sessionId);
+    sessionStorage.setItem('analytics_session_id', sessionId);
     return sessionId;
   }
 }

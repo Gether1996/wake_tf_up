@@ -39,7 +39,7 @@ body {
 }
 
 .badge-recycled {
-  @apply badge border border-success text-success bg-transparent;
+  @apply badge border border-success text-white bg-success;
 }
 
 .badge-preorder {

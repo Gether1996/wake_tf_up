@@ -21,7 +21,7 @@ import { TranslocoModule } from '@jsverse/transloco';
             <img 
               [src]="getProductImage()" 
               [alt]="product().name"
-              class="w-full h-full object-cover transition-transform group-hover:scale-105"
+              class="w-full h-full object-contain transition-transform group-hover:scale-105"
               loading="lazy">
           } @else {
             <div class="w-full h-full flex items-center justify-center text-muted-foreground">

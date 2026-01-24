@@ -1,6 +1,6 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { AuthService } from '../../core/auth/auth.service';
 import { CartService } from '../../core/api/cart.service';
@@ -58,6 +58,18 @@ import { LanguageService } from '../../core/services/language.service';
                 </svg>
               }
             </button>
+
+            <!-- Demo Logout (Temporary) -->
+            @if (hasDemoAccess()) {
+              <button 
+                (click)="demoLogout()" 
+                class="hover:text-danger transition-colors"
+                title="Exit Demo Access">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+              </button>
+            }
 
             <!-- Cart -->
             <a [routerLink]="cartLink()" class="relative hover:text-accent transition-colors">
@@ -137,11 +149,25 @@ export class HeaderComponent {
   private cartService = inject(CartService);
   private themeService = inject(ThemeService);
   private languageService = inject(LanguageService);
+  private router = inject(Router);
 
   isAuthenticated = this.authService.isAuthenticated;
   cartItemCount = this.cartService.itemCount;
   isDark = this.themeService.isDark;
   currentLang = this.languageService.currentLang;
+  
+  // Demo access check
+  hasDemoAccess = signal(false);
+
+  constructor() {
+    // Check demo access on init
+    this.checkDemoAccess();
+  }
+
+  checkDemoAccess() {
+    const demoAccess = localStorage.getItem('demo_access');
+    this.hasDemoAccess.set(demoAccess === 'true');
+  }
 
   // Computed localized paths
   lang = computed(() => `/${this.currentLang()}`);
@@ -185,5 +211,16 @@ export class HeaderComponent {
   logout() {
     this.authService.logout();
     this.closeUserMenu();
+  }
+
+  demoLogout() {
+    // Clear demo access
+    localStorage.removeItem('demo_access');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    
+    // Redirect to demo login
+    this.router.navigate(['/demo-login']);
   }
 }

@@ -44,10 +44,12 @@ class ProductImageInline(admin.TabularInline):
     fields = ('image', 'order')
 
 
-class ProductVideoInline(admin.StackedInline):
+class ProductVideoInline(admin.TabularInline):
     model = ProductVideo
-    extra = 0
-    fields = ('video', 'thumbnail')
+    extra = 1
+    fields = ('video', 'thumbnail', 'order')
+    fields = ('video', 'thumbnail', 'order')
+    ordering = ['order']
 
 
 @admin.register(Product)

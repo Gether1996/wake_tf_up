@@ -1,0 +1,72 @@
+<div *ngIf="isVisible()" class="popup-backdrop" (click)="onBackdropClick($event)">
+  <div class="popup-container">
+    <button 
+      type="button" 
+      class="close-button"
+      (click)="close(false)"
+      [attr.aria-label]="'close' | transloco"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <div class="popup-content">
+      <div class="popup-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+        </svg>
+      </div>
+
+      <h2 class="popup-title">{{ 'newsletter_popup.title' | transloco }}</h2>
+      <p class="popup-description">{{ 'newsletter_popup.description' | transloco }}</p>
+
+      <form [formGroup]="subscribeForm" (ngSubmit)="onSubmit()" class="popup-form">
+        <div class="form-group">
+          <input
+            type="email"
+            id="popup-email"
+            formControlName="email"
+            [placeholder]="'newsletter_popup.email_placeholder' | transloco"
+            class="email-input"
+            [class.error]="subscribeForm.get('email')?.invalid && subscribeForm.get('email')?.touched"
+          />
+          <div 
+            *ngIf="subscribeForm.get('email')?.invalid && subscribeForm.get('email')?.touched"
+            class="error-message"
+          >
+            <span *ngIf="subscribeForm.get('email')?.errors?.['required']">
+              {{ 'newsletter_popup.email_required' | transloco }}
+            </span>
+            <span *ngIf="subscribeForm.get('email')?.errors?.['email']">
+              {{ 'newsletter_popup.email_invalid' | transloco }}
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="isSubmitting() || subscribeForm.invalid"
+          class="submit-button"
+        >
+          <span *ngIf="!isSubmitting()">{{ 'newsletter_popup.subscribe_button' | transloco }}</span>
+          <span *ngIf="isSubmitting()" class="flex items-center justify-center">
+            <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ 'newsletter_popup.subscribing' | transloco }}
+          </span>
+        </button>
+      </form>
+
+      <button
+        type="button"
+        class="no-thanks-button"
+        (click)="close(true)"
+      >
+        {{ 'newsletter_popup.no_thanks' | transloco }}
+      </button>
+    </div>
+  </div>
+</div>

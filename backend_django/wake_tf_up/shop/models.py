@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
 from datetime import datetime
+from decimal import Decimal
 
 
 class Category(models.Model):
@@ -63,14 +64,14 @@ class Product(models.Model):
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        validators=[MinValueValidator(0)],
+        validators=[MinValueValidator(Decimal('0'))],
         help_text="Price in EUR"
     )
     
     discount_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        validators=[MinValueValidator(0)],
+        validators=[MinValueValidator(Decimal('0'))],
         null=True,
         blank=True,
         help_text="Discounted price in EUR (optional)"
@@ -182,11 +183,11 @@ class ProductImage(models.Model):
 
 
 class ProductVideo(models.Model):
-    """Optional video per product"""
-    product = models.OneToOneField(
+    """Multiple videos per product"""
+    product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
-        related_name='video'
+        related_name='videos'
     )
     video = models.FileField(upload_to='products/videos/%Y/%m/')
     thumbnail = models.ImageField(
@@ -194,12 +195,14 @@ class ProductVideo(models.Model):
         blank=True,
         null=True
     )
+    order = models.PositiveIntegerField(default=0, help_text="Display order")
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         db_table = 'product_videos'
+        ordering = ['order', 'created_at']
         verbose_name = 'Product Video'
         verbose_name_plural = 'Product Videos'
     
     def __str__(self):
-        return f"Video for {self.product.name}"
+        return f"Video {self.order + 1} for {self.product.name}"

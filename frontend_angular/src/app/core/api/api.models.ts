@@ -52,7 +52,7 @@ export interface Product {
   is_recycled: boolean;
   is_published: boolean;
   images: ProductImage[];
-  video?: ProductVideo; // Single video in detail view
+  videos?: ProductVideo[]; // Multiple videos in detail view
   primary_image?: string; // Primary image URL in list view
   created_at: string;
   updated_at?: string; // Only in detail view
@@ -79,7 +79,8 @@ export interface ProductImage {
 export interface ProductVideo {
   id: number;
   video: string;
-  thumbnail?: string;
+  thumbnail: string;
+  order: number;
 }
 
 export interface CartItem {
@@ -127,9 +128,30 @@ export interface OrderItem {
 export interface Review {
   id: number;
   user: User;
-  product: number;
+  product: number | Product;  // Can be ID or full product object
   rating: number;
   text: string;
+  reviewer_name?: string;  // Optional reviewer name
+  display_name?: string;  // Name to display (from backend)
+  is_anonymous: boolean;
+  created_at: string;
+}
+
+export interface FeaturedReview {
+  id: number;
+  user: User;
+  product: {
+    id: number;
+    name: string;
+    slug: string;
+    price: string;
+    discount_price?: string;
+    image_url?: string;
+  };
+  rating: number;
+  text: string;
+  display_name: string;  // Name to display (from backend)
+  is_anonymous: boolean;
   created_at: string;
 }
 

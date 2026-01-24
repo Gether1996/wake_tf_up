@@ -8,7 +8,9 @@
     "save": "Uložiť",
     "saving": "Ukladá sa...",
     "cancel": "Zrušiť",
-    "send": "Odoslať"
+    "send": "Odoslať",
+    "back": "Späť",
+    "back_home": "Späť na hlavnú stránku"
   },
   "brand": {
     "name": "WAKE TF UP",
@@ -34,11 +36,24 @@
   },
   "newsletter": {
     "title": "Buďte v obraze",
-    "description": "Dostávajte info o nových dropoch a doplneniach",
+    "description": "Dostávajte info o nových dropoch a získajte 5% zľavový kupón na privítanie!",
     "email_placeholder": "Zadajte email",
     "subscribe": "Prihlásiť sa",
-    "success": "Ďakujeme za prihlásenie!",
-    "error": "Niečo sa pokazilo. Skúste prosím znova."
+    "success": "Ďakujeme za prihlásenie! Zľavový kupón dostanete emailom o 5 minút.",
+    "error": "Niečo sa pokazilo. Skúste prosím znova.",
+    "discount_info": "🎁 Nový subscriber dostane 5% zľavový kupón!"
+  },
+  "newsletter_popup": {
+    "title": "Získajte zľavový kód!",
+    "description": "Prihláste sa do newslettera a dostanete 5% zľavový kód na váš prvý nákup. Okrem toho budete ako prví vedieť o nových dropoch!",
+    "email_placeholder": "Zadajte váš email",
+    "email_required": "Email je povinný",
+    "email_invalid": "Zadajte platný email",
+    "subscribe_button": "Chcem zľavu!",
+    "subscribing": "Prihlasuje sa...",
+    "no_thanks": "Nie, ďakujem",
+    "subscribed_success": "Skvelé! Zľavový kód dostanete emailom o 5 minút.",
+    "subscription_error": "Niečo sa pokazilo. Skúste prosím znova."
   },
   "badges": {
     "drop": "DROP",
@@ -64,6 +79,11 @@
       "title": "Limitovaná Edícia",
       "subtitle": "Exkluzívne kusy, keď zmiznú, zmiznú navždy",
       "view_all": "Všetky Dropy"
+    },
+    "reviews": {
+      "title": "Ľuďom sa páčilo",
+      "subtitle": "Reálne hodnotenia od našich zákazníkov",
+      "no_reviews": "Zatiaľ žiadne hodnotenia"
     },
     "about": {
       "title": "Prečo WAKE TF UP?",
@@ -120,7 +140,8 @@
     "in_stock": "Skladom",
     "quantity": "Množstvo",
     "description": "Popis",
-    "color": "Farba"
+    "color": "Farba",
+    "click_to_zoom": "Kliknite pre priblíženie"
   },
   "cart": {
     "title": "Košík",
@@ -198,7 +219,29 @@
     "place_order": "Dokončiť objednávku",
     "secure_checkout": "🔒 Bezpečná pokladňa",
     "payment": "Spôsob platby",
-    "total": "Celkom"
+    "total": "Celkom",
+    "discount": "Zľava",
+    "discount_code": "Zľavový kód",
+    "code": "Kód",
+    "apply_code": "Použiť",
+    "remove_code": "Odstrániť",
+    "discount_applied": "Zľava aplikovaná",
+    "enter_discount_code": "Zadajte zľavový kód",
+    "discount_errors": {
+      "INVALID_CODE": "Neplatný zľavový kód",
+      "AUTH_REQUIRED": "Pre tento kód sa musíte prihlásiť",
+      "WRONG_USER": "Tento kód nie je platný pre váš účet",
+      "INACTIVE": "Tento kód už nie je aktívny",
+      "ALREADY_USED": "Tento kód už bol použitý",
+      "EXPIRED": "Platnosť tohto kódu vypršala",
+      "MIN_ORDER_VALUE": "Minimálna hodnota objednávky je {{value}}€",
+      "MAX_USES_REACHED": "Tento kód dosiahol maximum použití",
+      "UNKNOWN": "Neplatný zľavový kód"
+    },
+    "accept_terms_1": "Súhlasím s",
+    "terms_of_service": "obchodnými podmienkami",
+    "accept_terms_2": "a pravidlami ochrany osobných údajov",
+    "terms_required": "Musíte súhlasiť s obchodnými podmienkami"
   },
   "auth": {
     "_login": "Prihlásenie",
@@ -601,5 +644,32 @@
     "error_title": "Chyba platby",
     "error_message": "Pri spracovaní platby sa vyskytol problém. Prosím kontaktujte podporu.",
     "contact_support": "Kontaktovať podporu"
+  },
+  "review": {
+    "view_product": "Zobraziť produkt",
+    "rating": "Hodnotenie",
+    "verified_purchase": "Overený nákup"
+  },
+  "review_submit": {
+    "title": "Ohodnôťte Váš nákup",
+    "subtitle": "Vaša spätná väzba nám pomáha zlepšovať naše služby",
+    "rating_label": "Hodnotenie",
+    "stars": "hviezdičiek",
+    "name_label": "Vaše meno",
+    "name_placeholder": "Napr. Ján Novák",
+    "anonymous_label": "Chcem ostať anonymný",
+    "anonymous_description": "Vaše meno sa nezobrazí pri recenzii",
+    "review_label": "Vaša recenzia",
+    "review_placeholder": "Podeľte sa o Vašu skúsenosť s týmto produktom...",
+    "characters": "znakov",
+    "submit_button": "Odoslať recenziu",
+    "submitting": "Odosiela sa...",
+    "success_title": "Ďakujeme za recenziu!",
+    "success_message": "Vaše hodnotenie bolo úspešne odoslané. O chvíľu budete presmerovaní na hlavnú stránku.",
+    "invalid_link": "Neplatný link",
+    "error_invalid_token": "Neplatný token",
+    "error_empty_review": "Prosím napíšte svoju recenziu",
+    "error_name_required": "Prosím zadajte svoje meno alebo vyberte anonymné",
+    "error_submit_failed": "Nepodarilo sa odoslať recenziu. Skúste prosím znova."
   }
 }

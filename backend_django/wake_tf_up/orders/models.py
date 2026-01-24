@@ -88,6 +88,22 @@ class Order(models.Model):
     billing_dic = models.CharField(max_length=50, blank=True, help_text="DIČ (Tax ID)")
     billing_ic_dph = models.CharField(max_length=50, blank=True, help_text="IČ DPH (VAT ID)")
     
+    # Discount code
+    discount_code = models.ForeignKey(
+        'loyalty.DiscountCode',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='orders',
+        help_text="Applied discount code"
+    )
+    discount_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text="Discount amount applied"
+    )
+    
     # Order totals
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
@@ -121,6 +137,44 @@ class Order(models.Model):
     def is_pre_order(self):
         """Check if order contains any pre-order items"""
         return self.items.filter(is_pre_order=True).exists()
+    
+    def apply_discount(self, discount_code_obj):
+        """
+        Apply a discount code to this order.
+        
+        Args:
+            discount_code_obj: DiscountCode instance
+        
+        Returns:
+            bool: True if discount applied successfully, False otherwise
+        """
+        from loyalty.models import LoyaltyService
+        from decimal import Decimal
+        
+        # Calculate subtotal from items
+        subtotal = sum(item.price_at_purchase * item.quantity for item in self.items.all())
+        
+        # Validate the code with user
+        result = LoyaltyService.apply_discount_code(
+            discount_code_obj.code, 
+            Decimal(subtotal), 
+            user=self.user
+        )
+        
+        if result['valid']:
+            self.discount_code = discount_code_obj
+            self.discount_amount = result['discount_amount']
+            self.total_amount = subtotal - self.discount_amount
+            self.save()
+            
+            # Increment usage count
+            discount_code_obj.usage_count += 1
+            if discount_code_obj.usage_count >= discount_code_obj.max_uses:
+                discount_code_obj.is_used = True
+            discount_code_obj.save()
+            
+            return True
+        return False
 
 
 class OrderItem(models.Model):

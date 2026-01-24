@@ -24,6 +24,7 @@ export interface CreateOrderRequest {
   billing_ico?: string;
   billing_dic?: string;
   billing_ic_dph?: string;
+  discount_code_str?: string;
 }
 
 @Injectable({

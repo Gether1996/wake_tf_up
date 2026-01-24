@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -56,7 +56,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
           <!-- Images -->
           <div>
             <!-- Main Image/Video -->
-            <div class="aspect-[3/4] bg-muted mb-4 overflow-hidden">
+            <div class="aspect-[3/4] bg-muted mb-4 overflow-hidden relative group">
               @if (isVideoSelected()) {
                 <video 
                   [src]="selectedImage()" 
@@ -68,7 +68,17 @@ import { ButtonComponent } from '../../shared/button/button.component';
                 <img 
                   [src]="selectedImage()" 
                   [alt]="product()!.name"
-                  class="w-full h-full object-cover">
+                  (click)="openLightbox()"
+                  class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity">
+                <!-- Zoom hint -->
+                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-black bg-opacity-20">
+                  <div class="bg-white text-foreground px-4 py-2 rounded-full font-mono text-sm flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                    </svg>
+                    {{ 'product.click_to_zoom' | transloco }}
+                  </div>
+                </div>
               } @else {
                 <div class="w-full h-full flex items-center justify-center text-muted-foreground">
                   <span class="font-mono text-sm">{{ 'common.no_image' | transloco }}</span>
@@ -76,8 +86,8 @@ import { ButtonComponent } from '../../shared/button/button.component';
               }
             </div>
 
-            <!-- Thumbnails (Images + Video) -->
-            @if ((product()!.images && product()!.images.length > 0) || product()!.video) {
+            <!-- Thumbnails (Images + Videos) -->
+            @if ((product()!.images && product()!.images.length > 0) || (product()!.videos && product()!.videos.length > 0)) {
               <div class="grid grid-cols-4 gap-2">
                 <!-- Image Thumbnails -->
                 @for (image of product()!.images; track image.id) {
@@ -87,22 +97,18 @@ import { ButtonComponent } from '../../shared/button/button.component';
                     <img [src]="image.image" [alt]="product()!.name" class="w-full h-full object-cover">
                   </button>
                 }
-                <!-- Video Thumbnail -->
-                @if (product()!.video) {
-                  <button
-                    (click)="selectImage(product()!.video!.video, true)"
-                    [class]="'aspect-square overflow-hidden border-2 transition-all relative ' + (isVideoSelected() ? 'border-foreground' : 'border-border')">
-                    @if (product()!.video?.thumbnail) {
-                      <img [src]="product()!.video!.thumbnail" [alt]="product()!.name + ' video'" class="w-full h-full object-cover">
-                    } @else {
-                      <div class="w-full h-full bg-muted flex items-center justify-center">
-                        <span class="text-2xl">▶</span>
+                <!-- Video Thumbnails -->
+                @if (product()!.videos && product()!.videos.length > 0) {
+                  @for (video of product()!.videos; track video.id) {
+                    <button
+                      (click)="selectImage(video.video, true)"
+                      [class]="'aspect-square overflow-hidden border-2 transition-all relative ' + (selectedImage() === video.video && isVideoSelected() ? 'border-foreground' : 'border-border')">
+                      <img [src]="video.thumbnail" [alt]="product()!.name + ' video ' + (video.order + 1)" class="w-full h-full object-cover">
+                      <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                        <span class="text-white text-3xl">▶</span>
                       </div>
-                    }
-                    <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-                      <span class="text-white text-3xl">▶</span>
-                    </div>
-                  </button>
+                    </button>
+                  }
                 }
               </div>
             }
@@ -209,6 +215,61 @@ import { ButtonComponent } from '../../shared/button/button.component';
             }
           </div>
         </div>
+
+        <!-- Image Lightbox -->
+        @if (lightboxOpen()) {
+          <div 
+            class="fixed inset-0 z-50 bg-black bg-opacity-95 flex items-center justify-center p-4 animate-fadeIn" 
+            (click)="closeLightbox()">
+            <button 
+              (click)="closeLightbox()"
+              class="absolute top-4 right-4 text-white hover:text-gray-300 text-4xl font-light z-10 transition-colors w-12 h-12 flex items-center justify-center"
+              [attr.aria-label]="'common.close' | transloco">
+              &times;
+            </button>
+            
+            <!-- Previous Button -->
+            @if (product()!.images && product()!.images.length > 1) {
+              <button 
+                (click)="previousImage($event)"
+                class="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 text-4xl md:text-6xl font-light z-10 transition-colors w-12 h-12 flex items-center justify-center"
+                [attr.aria-label]="'Previous image'">
+                ‹
+              </button>
+            }
+            
+            <!-- Image -->
+            <div class="relative max-w-full max-h-[90vh] animate-scaleIn">
+              <img 
+                [src]="selectedImage()" 
+                [alt]="product()!.name"
+                (click)="$event.stopPropagation()"
+                class="max-w-full max-h-[90vh] object-contain">
+            </div>
+            
+            <!-- Next Button -->
+            @if (product()!.images && product()!.images.length > 1) {
+              <button 
+                (click)="nextImage($event)"
+                class="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 text-4xl md:text-6xl font-light z-10 transition-colors w-12 h-12 flex items-center justify-center"
+                [attr.aria-label]="'Next image'">
+                ›
+              </button>
+            }
+            
+            <!-- Image Counter -->
+            @if (product()!.images && product()!.images.length > 1) {
+              <div class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm font-mono bg-black bg-opacity-70 px-4 py-2 rounded-full backdrop-blur-sm">
+                {{ currentImageIndex() + 1 }} / {{ product()!.images.length }}
+              </div>
+            }
+            
+            <!-- Instruction text -->
+            <div class="absolute top-4 left-4 text-white text-xs font-mono bg-black bg-opacity-70 px-3 py-2 rounded hidden md:block">
+              ESC: {{ 'common.close' | transloco }} • ← →: Navigate
+            </div>
+          </div>
+        }
       </div>
     }
   `,
@@ -216,9 +277,37 @@ import { ButtonComponent } from '../../shared/button/button.component';
     :host {
       display: block;
     }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    .animate-fadeIn {
+      animation: fadeIn 0.2s ease-out;
+    }
+    
+    .animate-scaleIn {
+      animation: scaleIn 0.3s ease-out;
+    }
   `]
 })
-export class ProductDetailComponent implements OnInit {
+export class ProductDetailComponent implements OnInit, OnDestroy {
   private catalogService = inject(CatalogService);
   private cartService = inject(CartService);
   private analyticsService = inject(AnalyticsService);
@@ -237,6 +326,8 @@ export class ProductDetailComponent implements OnInit {
   quantity = signal(1);
   selectedImage = signal('');
   isVideoSelected = signal(false);
+  lightboxOpen = signal(false);
+  currentImageIndex = signal(0);
 
   ngOnInit() {
     this.route.params.subscribe(params => {
@@ -245,6 +336,30 @@ export class ProductDetailComponent implements OnInit {
         this.loadProduct(slug);
       }
     });
+  }
+
+  ngOnDestroy() {
+    // Ensure body scroll is restored
+    document.body.style.overflow = '';
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    if (!this.lightboxOpen()) return;
+
+    switch(event.key) {
+      case 'Escape':
+        this.closeLightbox();
+        break;
+      case 'ArrowLeft':
+        event.preventDefault();
+        this.previousImage(event as any);
+        break;
+      case 'ArrowRight':
+        event.preventDefault();
+        this.nextImage(event as any);
+        break;
+    }
   }
 
   loadProduct(slug?: string) {
@@ -324,5 +439,45 @@ export class ProductDetailComponent implements OnInit {
       const lang = this.languageService.currentLang();
       this.router.navigate([lang, 'cart']);
     }, 500);
+  }
+
+  openLightbox() {
+    if (this.isVideoSelected()) return; // Don't open lightbox for videos
+    const product = this.product();
+    if (!product || !product.images || product.images.length === 0) return;
+    
+    // Find current image index
+    const currentUrl = this.selectedImage();
+    const index = product.images.findIndex(img => img.image === currentUrl);
+    this.currentImageIndex.set(index >= 0 ? index : 0);
+    
+    this.lightboxOpen.set(true);
+    // Prevent body scroll when lightbox is open
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeLightbox() {
+    this.lightboxOpen.set(false);
+    document.body.style.overflow = '';
+  }
+
+  nextImage(event: Event) {
+    event.stopPropagation();
+    const product = this.product();
+    if (!product || !product.images) return;
+    
+    const newIndex = (this.currentImageIndex() + 1) % product.images.length;
+    this.currentImageIndex.set(newIndex);
+    this.selectedImage.set(product.images[newIndex].image);
+  }
+
+  previousImage(event: Event) {
+    event.stopPropagation();
+    const product = this.product();
+    if (!product || !product.images) return;
+    
+    const newIndex = this.currentImageIndex() === 0 ? product.images.length - 1 : this.currentImageIndex() - 1;
+    this.currentImageIndex.set(newIndex);
+    this.selectedImage.set(product.images[newIndex].image);
   }
 }

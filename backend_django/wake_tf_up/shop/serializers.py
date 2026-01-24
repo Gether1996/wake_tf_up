@@ -24,10 +24,10 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 
 class ProductVideoSerializer(serializers.ModelSerializer):
-    """Serializer for product video"""
+    """Serializer for product videos"""
     class Meta:
         model = ProductVideo
-        fields = ('id', 'video', 'thumbnail')
+        fields = ('id', 'video', 'thumbnail', 'order')
 
 
 class ProductListSerializer(serializers.ModelSerializer):
@@ -61,7 +61,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     color = ColorSerializer(read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
-    video = ProductVideoSerializer(read_only=True)
+    videos = ProductVideoSerializer(many=True, read_only=True)
     available_stock = serializers.ReadOnlyField()
     sold_quantity = serializers.ReadOnlyField()
     is_in_stock = serializers.ReadOnlyField()
@@ -72,5 +72,5 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'slug', 'category', 'color',
             'price', 'discount_price', 'total_stock', 'sold_quantity', 'available_stock',
             'is_in_stock', 'pre_order_enabled', 'is_limited_drop', 'is_recycled', 'is_published',
-            'images', 'video', 'created_at', 'updated_at'
+            'images', 'videos', 'created_at', 'updated_at'
         )

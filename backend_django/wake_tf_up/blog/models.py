@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+import os
 
 
 class BlogPost(models.Model):
@@ -38,3 +39,41 @@ class BlogPost(models.Model):
     
     def __str__(self):
         return self.title
+
+
+class BlogImage(models.Model):
+    """Images for use in blog posts"""
+    title = models.CharField(
+        max_length=200,
+        help_text="Descriptive title for the image"
+    )
+    image = models.ImageField(
+        upload_to='blog/images/%Y/%m/',
+        help_text="Upload image"
+    )
+    alt_text = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Alternative text for accessibility"
+    )
+    caption = models.TextField(
+        blank=True,
+        help_text="Optional caption"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'blog_images'
+        verbose_name = 'Blog Image'
+        verbose_name_plural = 'Blog Images'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.title
+    
+    @property
+    def filename(self):
+        """Get just the filename from the full path"""
+        return os.path.basename(self.image.name)

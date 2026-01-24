@@ -8,7 +8,9 @@
     "save": "Save",
     "saving": "Saving...",
     "cancel": "Cancel",
-    "send": "Send"
+    "send": "Send",
+    "back": "Back",
+    "back_home": "Back to home"
   },
   "brand": {
     "name": "WAKE TF UP",
@@ -34,11 +36,24 @@
   },
   "newsletter": {
     "title": "Stay Updated",
-    "description": "Get notified about new drops and restocks",
+    "description": "Get notified about new drops and receive a 5% welcome discount code!",
     "email_placeholder": "Enter your email",
     "subscribe": "Subscribe",
-    "success": "Thanks for subscribing!",
-    "error": "Something went wrong. Please try again."
+    "success": "Thanks for subscribing! You'll receive your discount code via email in 5 minutes.",
+    "error": "Something went wrong. Please try again.",
+    "discount_info": "🎁 New subscribers get a 5% discount code!"
+  },
+  "newsletter_popup": {
+    "title": "Get a Discount Code!",
+    "description": "Subscribe to our newsletter and receive a 5% discount code for your first purchase. Plus, be the first to know about new drops!",
+    "email_placeholder": "Enter your email",
+    "email_required": "Email is required",
+    "email_invalid": "Please enter a valid email",
+    "subscribe_button": "Get Discount!",
+    "subscribing": "Subscribing...",
+    "no_thanks": "No, thanks",
+    "subscribed_success": "Great! You'll receive your discount code via email in 5 minutes.",
+    "subscription_error": "Something went wrong. Please try again."
   },
   "badges": {
     "drop": "DROP",
@@ -64,8 +79,11 @@
       "title": "Limited Edition",
       "subtitle": "Exclusive pieces, once they're gone, they're gone",
       "view_all": "See All Drops"
-    },
-    "about": {
+    },    "reviews": {
+      "title": "People Loved These",
+      "subtitle": "Real reviews from our customers",
+      "no_reviews": "No reviews yet"
+    },    "about": {
       "title": "Why WAKE TF UP?",
       "description": "We believe in giving clothing a second life. Every piece is carefully sourced, reworked, and transformed into something unique. No mass production. No waste. Just conscious fashion.",
       "stat1": "Recycled Materials",
@@ -120,7 +138,8 @@
     "in_stock": "In Stock",
     "quantity": "Quantity",
     "description": "Description",
-    "color": "Color"
+    "color": "Color",
+    "click_to_zoom": "Click to zoom"
   },
   "cart": {
     "title": "Cart",
@@ -200,7 +219,29 @@
     "place_order": "Place Order",
     "secure_checkout": "🔒 Secure checkout",
     "payment": "Payment Method",
-    "total": "Total"
+    "total": "Total",
+    "discount": "Discount",
+    "discount_code": "Discount Code",
+    "code": "Code",
+    "apply_code": "Apply",
+    "remove_code": "Remove",
+    "discount_applied": "Discount applied",
+    "enter_discount_code": "Enter discount code",
+    "discount_errors": {
+      "INVALID_CODE": "Invalid discount code",
+      "AUTH_REQUIRED": "This code requires you to be logged in",
+      "WRONG_USER": "This code is not valid for your account",
+      "INACTIVE": "This code is no longer active",
+      "ALREADY_USED": "This code has already been used",
+      "EXPIRED": "This code has expired",
+      "MIN_ORDER_VALUE": "Minimum order value is {{value}}€",
+      "MAX_USES_REACHED": "This code usage limit has been reached",
+      "UNKNOWN": "Invalid discount code"
+    },
+    "accept_terms_1": "I agree to the",
+    "terms_of_service": "Terms of Service",
+    "accept_terms_2": "and Privacy Policy",
+    "terms_required": "You must agree to the Terms of Service"
   },
   "auth": {
     "_login": "Login",
@@ -603,6 +644,32 @@
     "error_title": "Payment Error",
     "error_message": "There was an issue processing your payment. Please contact support.",
     "contact_support": "Contact Support"
+  },
+  "review": {
+    "view_product": "View Product",
+    "rating": "Rating",
+    "verified_purchase": "Verified Purchase"
+  },
+  "review_submit": {
+    "title": "Review Your Purchase",
+    "subtitle": "Your feedback helps us improve our service",
+    "rating_label": "Rating",
+    "stars": "stars",
+    "name_label": "Your name",
+    "name_placeholder": "E.g. John Doe",
+    "anonymous_label": "I want to stay anonymous",
+    "anonymous_description": "Your name will not be shown with the review",
+    "review_label": "Your review",
+    "review_placeholder": "Share your experience with this product...",
+    "characters": "characters",
+    "submit_button": "Submit Review",
+    "submitting": "Submitting...",
+    "success_title": "Thank you for your review!",
+    "success_message": "Your review has been successfully submitted. You will be redirected to the home page shortly.",
+    "invalid_link": "Invalid link",
+    "error_invalid_token": "Invalid token",
+    "error_empty_review": "Please write your review",
+    "error_name_required": "Please enter your name or select anonymous",
+    "error_submit_failed": "Failed to submit review. Please try again."
   }
 }
-
