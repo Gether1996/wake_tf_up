@@ -11,6 +11,15 @@ class RelativeImageField(serializers.ImageField):
         return value.url
 
 
+class RelativeFileField(serializers.FileField):
+    """Custom FileField that returns relative URLs instead of absolute"""
+    def to_representation(self, value):
+        if not value:
+            return None
+        # Return relative URL path (nginx handles the domain)
+        return value.url
+
+
 class CategorySerializer(serializers.ModelSerializer):
     """Serializer for categories"""
     class Meta:
@@ -36,7 +45,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 class ProductVideoSerializer(serializers.ModelSerializer):
     """Serializer for product videos"""
-    video = serializers.FileField()
+    video = RelativeFileField()
     thumbnail = RelativeImageField()
     
     class Meta:

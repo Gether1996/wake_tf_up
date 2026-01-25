@@ -5,3 +5,7 @@ class ShopConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'shop'
     verbose_name = '01. Shop'
+    
+    def ready(self):
+        """Import signals when app is ready"""
+        import shop.signals
