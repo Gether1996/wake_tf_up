@@ -32,7 +32,7 @@ export class NotificationService {
     this.show(message, 'info', duration);
   }
 
-  private show(message: string, type: Notification['type'], duration: number) {
+  show(message: string, type: Notification['type'], duration: number) {
     const notification: Notification = {
       id: this.nextId++,
       message,

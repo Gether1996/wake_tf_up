@@ -36,7 +36,7 @@ export interface PaymentStatusResponse {
 })
 export class PaymentService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiBaseUrl}/api/v1/payments`;
+  private apiUrl = `${environment.apiUrl}/payments`;
 
   /**
    * Create a GoPay payment for an order

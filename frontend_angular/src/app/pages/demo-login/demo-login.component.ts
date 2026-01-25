@@ -126,7 +126,7 @@ export class DemoLoginComponent {
     this.loading.set(true);
     this.error.set('');
 
-    this.api.post('accounts/demo/login/', {
+    this.api.post('auth/demo/login/', {
       email: this.email,
       password: this.password
     }).subscribe({

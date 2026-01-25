@@ -13,15 +13,15 @@ import { TranslocoModule } from '@jsverse/transloco';
   selector: 'app-product-card',
   imports: [CommonModule, RouterModule, BadgeComponent, ButtonComponent, TranslocoModule],
   template: `
-    <article class="group relative bg-background border border-border overflow-hidden transition-all hover:border-foreground">
+    <article class="group relative bg-background border border-border overflow-hidden transition-all hover:border-foreground flex flex-col h-full">
       <!-- Product Image -->
       <a [routerLink]="productLink()" (click)="trackClick()">
-        <div class="aspect-[3/4] overflow-hidden bg-muted">
+        <div class="aspect-square overflow-hidden bg-muted">
           @if (getProductImage()) {
             <img 
               [src]="getProductImage()" 
               [alt]="product().name"
-              class="w-full h-full object-contain transition-transform group-hover:scale-105"
+              class="w-full h-full object-cover transition-transform group-hover:scale-105"
               loading="lazy">
           } @else {
             <div class="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -43,9 +43,9 @@ import { TranslocoModule } from '@jsverse/transloco';
       }
 
       <!-- Product Info -->
-      <div class="p-4">
+      <div class="p-4 flex flex-col flex-1">
         <a [routerLink]="productLink()" class="block group-hover:text-accent transition-colors">
-          <h3 class="font-sans font-medium text-base mb-1">{{ product().name }}</h3>
+          <h3 class="font-sans font-medium text-base mb-1 line-clamp-2 min-h-[3rem]">{{ product().name }}</h3>
         </a>
         
         @if (product().category) {
@@ -65,64 +65,51 @@ import { TranslocoModule } from '@jsverse/transloco';
         </div>
 
         <!-- Stock Status -->
-        @if (product().available_stock === 0) {
-          <p class="text-sm text-danger font-mono uppercase mb-3">{{ 'product.out_of_stock' | transloco }}</p>
-        } @else if (product().available_stock < 5) {
-          <p class="text-sm text-warning font-mono uppercase mb-3">
-            {{ 'product.low_stock' | transloco }} ({{ product().available_stock }})
-          </p>
-        }
-
-        <!-- Cart Controls if product is in cart -->
-        @if (isInCart()) {
-          <div class="border border-border p-3 mb-3 bg-muted/50">
-            <p class="text-xs font-mono uppercase mb-2 text-muted-foreground">
-              {{ 'cart.in_cart' | transloco }}
+        <div class="min-h-[1.5rem] mb-3">
+          @if (product().available_stock === 0) {
+            <p class="text-sm text-danger font-mono uppercase">{{ 'product.out_of_stock' | transloco }}</p>
+          } @else if (product().available_stock < 5) {
+            <p class="text-sm text-warning font-mono uppercase">
+              {{ 'product.low_stock' | transloco }} ({{ product().available_stock }})
             </p>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center border border-border bg-background">
-                <button 
-                  (click)="decreaseQuantity($event)"
-                  class="px-3 py-1 hover:bg-muted transition-colors">
-                  -
-                </button>
-                <span class="px-4 py-1 font-mono text-sm min-w-[2.5rem] text-center">{{ cartQuantity() }}</span>
-                <button 
-                  (click)="increaseQuantity($event)"
-                  [disabled]="!product().pre_order_enabled && cartQuantity() >= product().available_stock"
-                  class="px-3 py-1 hover:bg-muted transition-colors disabled:opacity-50">
-                  +
-                </button>
-              </div>
-              <button 
-                (click)="removeFromCart($event)"
-                class="text-xs text-danger hover:underline">
-                {{ 'cart.remove' | transloco }}
-              </button>
-            </div>
-          </div>
-        }
-
-        <!-- Add to Cart Button -->
-        @if (product().available_stock > 0 || product().pre_order_enabled) {
-          <app-button 
-            [variant]="addedToCart() ? 'secondary' : 'primary'"
-            [size]="'sm'"
-            [fullWidth]="true"
-            [disabled]="addedToCart() || isInCart()"
-            (clicked)="addToCart()">
-            @if (addedToCart()) {
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          } @else if (isInCart()) {
+            <p class="text-sm text-accent font-mono uppercase flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              {{ 'cart.added' | transloco }}
-            } @else if (isInCart()) {
-              {{ 'cart.in_cart' | transloco }}
-            } @else {
-              {{ (product().pre_order_enabled ? 'cart.preorder' : 'cart.add_to_cart') | transloco }}
+              {{ 'cart.in_cart' | transloco }} ({{ cartQuantity() }}×)
+            </p>
+          }
+        </div>
+
+        <!-- Add to Cart Button -->
+        <div class="mt-auto flex gap-2">
+          @if (product().available_stock > 0 || product().pre_order_enabled) {
+            <app-button 
+              [variant]="addedToCart() ? 'secondary' : 'primary'"
+              [size]="'sm'"
+              [fullWidth]="true"
+              [disabled]="addedToCart()"
+              (clicked)="addToCart()">
+              @if (addedToCart()) {
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                {{ 'cart.added' | transloco }}
+              } @else {
+                {{ (product().pre_order_enabled ? 'cart.preorder' : 'cart.add_to_cart') | transloco }}
+              }
+            </app-button>
+            @if (isInCart()) {
+              <button 
+                (click)="removeFromCart($event)"
+                class="px-3 text-sm text-danger hover:bg-danger/10 transition-colors border border-border rounded"
+                [attr.aria-label]="'cart.remove' | transloco">
+                ×
+              </button>
             }
-          </app-button>
-        }
+          }
+        </div>
       </div>
     </article>
   `,

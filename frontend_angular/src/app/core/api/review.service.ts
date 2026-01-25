@@ -16,7 +16,7 @@ export class ReviewService {
   constructor(private api: ApiService) {}
 
   createReview(review: CreateReviewRequest): Observable<Review> {
-    return this.api.post<Review>('reviews/', review);
+    return this.api.post<Review>('reviews/create/', review);
   }
 
   getProductReviews(productId: number): Observable<Review[]> {

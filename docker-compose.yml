@@ -1,14 +1,13 @@
-version: '3.8'
-
 services:
   backend:
     build:
       context: ./backend_django
-    container_name: wake_tf_up_backend
+    container_name: wake_tf_up_backend_prod
     volumes:
-      - ./backend_django:/app
-    ports:
-      - "8000:8000"
+      - ./backend_django/wake_tf_up/media:/app/wake_tf_up/media
+      - ./backend_django/wake_tf_up/static:/app/wake_tf_up/static
+    expose:
+      - "8000"
     env_file:
       - ./backend_django/.env
     networks:
@@ -18,14 +17,27 @@ services:
   frontend:
     build:
       context: ./frontend_angular
-    container_name: wake_tf_up_frontend
-    volumes:
-      - ./frontend_angular:/app
-      - /app/node_modules
+      dockerfile: Dockerfile.prod
+    container_name: wake_tf_up_frontend_prod
+    expose:
+      - "80"
+    networks:
+      - wake_tf_up_network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: wake_tf_up_nginx
     ports:
-      - "4200:4200"
+      - "9006:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./backend_django/wake_tf_up/media:/app/media:ro
+      - ./backend_django/wake_tf_up/static:/app/static:ro
     depends_on:
       - backend
+      - frontend
     networks:
       - wake_tf_up_network
     restart: unless-stopped

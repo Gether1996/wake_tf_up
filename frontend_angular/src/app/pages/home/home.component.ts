@@ -57,7 +57,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           @for (i of [1,2,3,4]; track i) {
             <div class="animate-pulse">
-              <div class="aspect-[3/4] bg-muted mb-4"></div>
+              <div class="aspect-square bg-muted mb-4"></div>
               <div class="h-4 bg-muted rounded mb-2"></div>
               <div class="h-3 bg-muted rounded w-2/3"></div>
             </div>
@@ -99,7 +99,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
           <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             @for (i of [1,2,3,4,5,6]; track i) {
               <div class="animate-pulse">
-                <div class="aspect-[3/4] bg-background rounded-lg mb-3"></div>
+                <div class="aspect-square bg-background rounded-lg mb-3"></div>
                 <div class="h-3 bg-background rounded mb-2"></div>
                 <div class="h-2 bg-background rounded w-2/3"></div>
               </div>
@@ -110,7 +110,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
             @for (review of featuredReviews(); track review.id) {
               <a [routerLink]="[currentLang(), 'review', review.id]" 
                  class="group block bg-background rounded-lg overflow-hidden transition-transform hover:scale-105 cursor-pointer">
-                <div class="aspect-[3/4] bg-muted relative overflow-hidden">
+                <div class="aspect-square bg-muted relative overflow-hidden">
                   @if (review.product.image_url) {
                     <img [src]="review.product.image_url" 
                          [alt]="review.product.name"

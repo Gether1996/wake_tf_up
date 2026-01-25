@@ -39,7 +39,7 @@ export interface ValidateDiscountCodeResponse {
 })
 export class LoyaltyService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiBaseUrl}/api/v1/loyalty`;
+  private apiUrl = `${environment.apiUrl}/loyalty`;
 
   /**
    * Get all active discount codes for the authenticated user

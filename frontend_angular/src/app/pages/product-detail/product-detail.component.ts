@@ -56,12 +56,12 @@ import { ButtonComponent } from '../../shared/button/button.component';
           <!-- Images -->
           <div>
             <!-- Main Image/Video -->
-            <div class="aspect-[3/4] bg-muted mb-4 overflow-hidden relative group">
+            <div class="mb-4 relative group">
               @if (isVideoSelected()) {
                 <video 
                   [src]="selectedImage()" 
                   controls
-                  class="w-full h-full object-cover">
+                  class="w-full h-auto block">
                   Your browser does not support the video tag.
                 </video>
               } @else if (product()!.images && product()!.images.length > 0) {
@@ -69,7 +69,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
                   [src]="selectedImage()" 
                   [alt]="product()!.name"
                   (click)="openLightbox()"
-                  class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity">
+                  class="w-full h-auto block cursor-pointer hover:opacity-90 transition-opacity">
                 <!-- Zoom hint -->
                 <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-black bg-opacity-20">
                   <div class="bg-white text-foreground px-4 py-2 rounded-full font-mono text-sm flex items-center gap-2">
@@ -80,14 +80,14 @@ import { ButtonComponent } from '../../shared/button/button.component';
                   </div>
                 </div>
               } @else {
-                <div class="w-full h-full flex items-center justify-center text-muted-foreground">
+                <div class="w-full min-h-[400px] flex items-center justify-center text-muted-foreground bg-muted">
                   <span class="font-mono text-sm">{{ 'common.no_image' | transloco }}</span>
                 </div>
               }
             </div>
 
             <!-- Thumbnails (Images + Videos) -->
-            @if ((product()!.images && product()!.images.length > 0) || (product()!.videos && product()!.videos.length > 0)) {
+            @if ((product()!.images && product()!.images.length > 0) || ((product()!.videos?.length ?? 0) > 0)) {
               <div class="grid grid-cols-4 gap-2">
                 <!-- Image Thumbnails -->
                 @for (image of product()!.images; track image.id) {
@@ -98,7 +98,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
                   </button>
                 }
                 <!-- Video Thumbnails -->
-                @if (product()!.videos && product()!.videos.length > 0) {
+                @if ((product()!.videos?.length ?? 0) > 0) {
                   @for (video of product()!.videos; track video.id) {
                     <button
                       (click)="selectImage(video.video, true)"
@@ -219,7 +219,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
         <!-- Image Lightbox -->
         @if (lightboxOpen()) {
           <div 
-            class="fixed inset-0 z-50 bg-black bg-opacity-95 flex items-center justify-center p-4 animate-fadeIn" 
+            class="fixed inset-0 z-50 bg-black bg-opacity-95 flex items-center justify-center animate-fadeIn" 
             (click)="closeLightbox()">
             <button 
               (click)="closeLightbox()"
@@ -239,12 +239,15 @@ import { ButtonComponent } from '../../shared/button/button.component';
             }
             
             <!-- Image -->
-            <div class="relative max-w-full max-h-[90vh] animate-scaleIn">
+            <div 
+              class="relative w-full h-full animate-scaleIn overflow-hidden flex items-center justify-center"
+              (wheel)="handleZoom($event)"
+              (click)="$event.stopPropagation()">
               <img 
                 [src]="selectedImage()" 
                 [alt]="product()!.name"
-                (click)="$event.stopPropagation()"
-                class="max-w-full max-h-[90vh] object-contain">
+                [style.transform]="'scale(' + zoomLevel() + ')'"
+                class="max-w-full max-h-full object-contain transition-transform duration-200 cursor-zoom-in">
             </div>
             
             <!-- Next Button -->
@@ -264,9 +267,16 @@ import { ButtonComponent } from '../../shared/button/button.component';
               </div>
             }
             
+            <!-- Zoom indicator -->
+            @if (zoomLevel() !== 1) {
+              <div class="absolute top-4 left-1/2 -translate-x-1/2 text-white text-sm font-mono bg-black bg-opacity-70 px-4 py-2 rounded-full">
+                {{ (zoomLevel() * 100).toFixed(0) }}%
+              </div>
+            }
+            
             <!-- Instruction text -->
             <div class="absolute top-4 left-4 text-white text-xs font-mono bg-black bg-opacity-70 px-3 py-2 rounded hidden md:block">
-              ESC: {{ 'common.close' | transloco }} • ← →: Navigate
+              ESC: {{ 'common.close' | transloco }} • ← →: Navigate • Scroll: Zoom
             </div>
           </div>
         }
@@ -328,6 +338,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   isVideoSelected = signal(false);
   lightboxOpen = signal(false);
   currentImageIndex = signal(0);
+  zoomLevel = signal(1);
 
   ngOnInit() {
     this.route.params.subscribe(params => {
@@ -441,6 +452,15 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     }, 500);
   }
 
+  handleZoom(event: WheelEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const delta = event.deltaY > 0 ? -0.1 : 0.1;
+    const newZoom = Math.min(Math.max(this.zoomLevel() + delta, 0.5), 3);
+    this.zoomLevel.set(newZoom);
+  }
+
   openLightbox() {
     if (this.isVideoSelected()) return; // Don't open lightbox for videos
     const product = this.product();
@@ -451,6 +471,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     const index = product.images.findIndex(img => img.image === currentUrl);
     this.currentImageIndex.set(index >= 0 ? index : 0);
     
+    this.zoomLevel.set(1); // Reset zoom
     this.lightboxOpen.set(true);
     // Prevent body scroll when lightbox is open
     document.body.style.overflow = 'hidden';
@@ -458,6 +479,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
   closeLightbox() {
     this.lightboxOpen.set(false);
+    this.zoomLevel.set(1); // Reset zoom
     document.body.style.overflow = '';
   }
 
@@ -469,6 +491,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     const newIndex = (this.currentImageIndex() + 1) % product.images.length;
     this.currentImageIndex.set(newIndex);
     this.selectedImage.set(product.images[newIndex].image);
+    this.zoomLevel.set(1); // Reset zoom when changing images
   }
 
   previousImage(event: Event) {
@@ -479,5 +502,6 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     const newIndex = this.currentImageIndex() === 0 ? product.images.length - 1 : this.currentImageIndex() - 1;
     this.currentImageIndex.set(newIndex);
     this.selectedImage.set(product.images[newIndex].image);
+    this.zoomLevel.set(1); // Reset zoom when changing images
   }
 }

@@ -84,7 +84,8 @@ export class ReviewSubmit implements OnInit {
         this.submitting.set(false);
         this.notificationService.show(
           this.translocoService.translate('review_submit.success_title'), 
-          'success'
+          'success',
+          3000
         );
         
         setTimeout(() => {

@@ -72,7 +72,7 @@
         <div class="bg-muted rounded-lg p-6 mb-6 flex-grow">
           <div class="flex items-start gap-3 mb-4">
             <div class="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-background font-bold">
-              {{ review()!.display_name?.charAt(0) || '?' }}
+              {{ review()!.display_name.charAt(0) || '?' }}
             </div>
             <div class="flex-1">
               <p class="font-medium">{{ review()!.display_name || 'Anonymný zákazník' }}</p>

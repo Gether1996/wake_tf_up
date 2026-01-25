@@ -1,8 +1,12 @@
-<app-header></app-header>
+@if (showLayout()) {
+  <app-header></app-header>
+}
 <main class="min-h-screen">
   <router-outlet></router-outlet>
 </main>
-<app-footer></app-footer>
+@if (showLayout()) {
+  <app-footer></app-footer>
+}
 <app-notification-container></app-notification-container>
 <app-confirm-dialog></app-confirm-dialog>
 <app-cookie-consent></app-cookie-consent>
