@@ -228,6 +228,9 @@ CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:4200,
 
 CORS_ALLOW_CREDENTIALS = True
 
+# CSRF Trusted Origins (required for admin and forms)
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:9006,https://demo.wake-tf-up.eu,https://www.demo.wake-tf-up.eu').split(',')
+
 # Packeta API Configuration
 PACKETA_API_KEY = os.getenv('PACKETA_API_KEY', '9dbc4fa2f90c9113')  # Widget API key for frontend
 PACKETA_API_PASSWORD = os.getenv('PACKETA_API_PASSWORD', '')
