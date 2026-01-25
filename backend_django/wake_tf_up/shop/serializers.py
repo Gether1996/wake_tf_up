@@ -50,9 +50,9 @@ class ProductListSerializer(serializers.ModelSerializer):
         """Get the first image as primary"""
         image = obj.images.first()
         if image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(image.image.url)
+            # Return relative URL path instead of absolute URL
+            # Nginx reverse proxy will handle proper domain
+            return image.image.url
         return None
 
 

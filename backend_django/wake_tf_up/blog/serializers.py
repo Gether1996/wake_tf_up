@@ -32,10 +32,7 @@ class BlogImageSerializer(serializers.ModelSerializer):
         )
     
     def get_image_url(self, obj):
-        """Get absolute URL for the image"""
-        request = self.context.get('request')
-        if obj.image and request:
-            return request.build_absolute_uri(obj.image.url)
-        elif obj.image:
+        """Get relative URL for the image (Nginx handles domain)"""
+        if obj.image:
             return obj.image.url
         return None

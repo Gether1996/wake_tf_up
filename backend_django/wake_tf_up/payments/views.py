@@ -97,8 +97,9 @@ class CreatePaymentView(generics.CreateAPIView):
             id=existing_payment.id if existing_payment and existing_payment.status != 'failed' else None
         ).update(status='failed')
         
-        # Build return and notification URLs
-        base_url = request.build_absolute_uri('/').rstrip('/')
+        # Build return and notification URLs using configured frontend URL
+        from django.conf import settings
+        base_url = settings.FRONTEND_URL.rstrip('/')
         return_url = f"{base_url}/api/v1/payments/return/"
         notify_url = f"{base_url}/api/v1/payments/notification/"
         
