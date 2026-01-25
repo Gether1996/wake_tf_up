@@ -2,7 +2,7 @@ services:
   backend:
     build:
       context: ./backend_django
-    container_name: wake_tf_up_backend_prod
+    container_name: wake_tf_up_backend
     volumes:
       - ./backend_django/wake_tf_up/media:/app/wake_tf_up/media
       - ./backend_django/wake_tf_up/static:/app/wake_tf_up/static
@@ -13,12 +13,18 @@ services:
     networks:
       - wake_tf_up_network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   frontend:
     build:
       context: ./frontend_angular
       dockerfile: Dockerfile.prod
-    container_name: wake_tf_up_frontend_prod
+    container_name: wake_tf_up_frontend
     expose:
       - "80"
     networks:
