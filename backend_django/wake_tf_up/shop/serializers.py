@@ -2,6 +2,15 @@ from rest_framework import serializers
 from .models import Product, Category, Color, ProductImage, ProductVideo
 
 
+class RelativeImageField(serializers.ImageField):
+    """Custom ImageField that returns relative URLs instead of absolute"""
+    def to_representation(self, value):
+        if not value:
+            return None
+        # Return relative URL path (nginx handles the domain)
+        return value.url
+
+
 class CategorySerializer(serializers.ModelSerializer):
     """Serializer for categories"""
     class Meta:
@@ -18,6 +27,8 @@ class ColorSerializer(serializers.ModelSerializer):
 
 class ProductImageSerializer(serializers.ModelSerializer):
     """Serializer for product images"""
+    image = RelativeImageField()
+    
     class Meta:
         model = ProductImage
         fields = ('id', 'image', 'order')
@@ -25,6 +36,9 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 class ProductVideoSerializer(serializers.ModelSerializer):
     """Serializer for product videos"""
+    video = serializers.FileField()
+    thumbnail = RelativeImageField()
+    
     class Meta:
         model = ProductVideo
         fields = ('id', 'video', 'thumbnail', 'order')

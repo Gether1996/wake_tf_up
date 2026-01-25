@@ -2,6 +2,15 @@ from rest_framework import serializers
 from .models import BlogPost, BlogImage
 
 
+class RelativeImageField(serializers.ImageField):
+    """Custom ImageField that returns relative URLs instead of absolute"""
+    def to_representation(self, value):
+        if not value:
+            return None
+        # Return relative URL path (nginx handles the domain)
+        return value.url
+
+
 class BlogPostListSerializer(serializers.ModelSerializer):
     """Serializer for blog post list"""
     class Meta:
@@ -21,6 +30,7 @@ class BlogPostDetailSerializer(serializers.ModelSerializer):
 
 class BlogImageSerializer(serializers.ModelSerializer):
     """Serializer for blog images"""
+    image = RelativeImageField()
     image_url = serializers.SerializerMethodField()
     filename = serializers.ReadOnlyField()
     
