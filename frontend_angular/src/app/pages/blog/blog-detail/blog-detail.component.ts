@@ -7,6 +7,7 @@ import { BlogService } from '../../../core/api/blog.service';
 import { LanguageService } from '../../../core/services/language.service';
 import { BlogPost } from '../../../core/api/api.models';
 import { ButtonComponent } from '../../../shared/button/button.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-blog-detail',
@@ -61,17 +62,16 @@ import { ButtonComponent } from '../../../shared/button/button.component';
                    prose-headings:font-bold prose-headings:tracking-tight
                    prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-4
                    prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-3
-                   prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-6
+                   prose-p:text-foreground prose-p:leading-relaxed prose-p:mb-6
                    prose-a:text-accent prose-a:no-underline hover:prose-a:underline
                    prose-strong:text-foreground prose-strong:font-semibold
                    prose-ul:my-6 prose-ul:list-disc prose-ul:pl-6
                    prose-ol:my-6 prose-ol:list-decimal prose-ol:pl-6
-                   prose-li:text-muted-foreground prose-li:mb-2
+                   prose-li:text-foreground prose-li:mb-2
                    prose-img:rounded-none prose-img:border prose-img:border-border
-                   prose-blockquote:border-l-4 prose-blockquote:border-foreground 
-                   prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-muted-foreground
-                   prose-code:text-accent prose-code:bg-muted prose-code:px-1 prose-code:py-0.5
-                   dark:prose-invert"
+                   prose-blockquote:border-l-4 prose-blockquote:border-accent 
+                   prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-foreground
+                   prose-code:text-accent prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded"
             [innerHTML]="sanitizedContent()">
           </div>
 
@@ -128,7 +128,16 @@ export class BlogDetailComponent implements OnInit {
   copied = signal(false);
   
   sanitizedContent = computed(() => {
-    const content = this.post()?.content_html || '';
+    let content = this.post()?.content_html || '';
+    
+    // Transform relative media URLs to absolute URLs
+    if (content && environment.apiBaseUrl) {
+      // Replace src="/media/ with src="{apiBaseUrl}/media/
+      content = content.replace(/src="\/media\//g, `src="${environment.apiBaseUrl}/media/`);
+      // Replace src='/media/ with src='{apiBaseUrl}/media/
+      content = content.replace(/src='\/media\//g, `src='${environment.apiBaseUrl}/media/`);
+    }
+    
     return this.sanitizer.bypassSecurityTrustHtml(content);
   });
 

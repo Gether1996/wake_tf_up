@@ -8,10 +8,11 @@ import { CartService } from '../../core/api/cart.service';
 import { AnalyticsService } from '../../core/api/analytics.service';
 import { LanguageService } from '../../core/services/language.service';
 import { TranslocoModule } from '@jsverse/transloco';
+import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
 
 @Component({
   selector: 'app-product-card',
-  imports: [CommonModule, RouterModule, BadgeComponent, ButtonComponent, TranslocoModule],
+  imports: [CommonModule, RouterModule, BadgeComponent, ButtonComponent, TranslocoModule, MediaUrlPipe],
   template: `
     <article class="group relative bg-background border border-border overflow-hidden transition-all hover:border-foreground flex flex-col h-full">
       <!-- Product Image -->
@@ -19,7 +20,7 @@ import { TranslocoModule } from '@jsverse/transloco';
         <div class="aspect-square overflow-hidden bg-muted">
           @if (getProductImage()) {
             <img 
-              [src]="getProductImage()" 
+              [src]="getProductImage() | mediaUrl" 
               [alt]="product().name"
               class="w-full h-full object-cover transition-transform group-hover:scale-105"
               loading="lazy">
@@ -50,7 +51,7 @@ import { TranslocoModule } from '@jsverse/transloco';
         
         @if (product().category) {
           <p class="text-sm text-muted-foreground font-mono uppercase tracking-wide mb-2">
-            {{ product().category }}
+            {{ product().category.name }}
           </p>
         }
 

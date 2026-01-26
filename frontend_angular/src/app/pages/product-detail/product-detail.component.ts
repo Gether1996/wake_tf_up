@@ -9,10 +9,11 @@ import { LanguageService } from '../../core/services/language.service';
 import { Product } from '../../core/api/api.models';
 import { BadgeComponent } from '../../shared/badge/badge.component';
 import { ButtonComponent } from '../../shared/button/button.component';
+import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
 
 @Component({
   selector: 'app-product-detail',
-  imports: [CommonModule, RouterModule, TranslocoModule, BadgeComponent, ButtonComponent],
+  imports: [CommonModule, RouterModule, TranslocoModule, BadgeComponent, ButtonComponent, MediaUrlPipe],
   template: `
     @if (loading()) {
       <div class="container mx-auto px-4 py-8">
@@ -59,14 +60,14 @@ import { ButtonComponent } from '../../shared/button/button.component';
             <div class="mb-4 relative group">
               @if (isVideoSelected()) {
                 <video 
-                  [src]="selectedImage()" 
+                  [src]="selectedImage() | mediaUrl" 
                   controls
                   class="w-full h-auto block">
                   Your browser does not support the video tag.
                 </video>
               } @else if (product()!.images && product()!.images.length > 0) {
                 <img 
-                  [src]="selectedImage()" 
+                  [src]="selectedImage() | mediaUrl" 
                   [alt]="product()!.name"
                   (click)="openLightbox()"
                   class="w-full h-auto block cursor-pointer hover:opacity-90 transition-opacity">
@@ -94,7 +95,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
                   <button
                     (click)="selectImage(image.image, false)"
                     [class]="'aspect-square overflow-hidden border-2 transition-all ' + (selectedImage() === image.image && !isVideoSelected() ? 'border-foreground' : 'border-border')">
-                    <img [src]="image.image" [alt]="product()!.name" class="w-full h-full object-cover">
+                    <img [src]="image.image | mediaUrl" [alt]="product()!.name" class="w-full h-full object-cover">
                   </button>
                 }
                 <!-- Video Thumbnails -->
@@ -103,7 +104,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
                     <button
                       (click)="selectImage(video.video, true)"
                       [class]="'aspect-square overflow-hidden border-2 transition-all relative ' + (selectedImage() === video.video && isVideoSelected() ? 'border-foreground' : 'border-border')">
-                      <img [src]="video.thumbnail" [alt]="product()!.name + ' video ' + (video.order + 1)" class="w-full h-full object-cover">
+                      <img [src]="video.thumbnail | mediaUrl" [alt]="product()!.name + ' video ' + (video.order + 1)" class="w-full h-full object-cover">
                       <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
                         <span class="text-white text-3xl">▶</span>
                       </div>
@@ -196,7 +197,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
             @if (product()!.description) {
               <div class="mt-8 pt-8 border-t border-border">
                 <h2 class="font-mono text-sm uppercase tracking-wide mb-4">{{ 'product.description' | transloco }}</h2>
-                <div class="prose prose-sm max-w-none text-muted-foreground" [innerHTML]="product()!.description"></div>
+                <div class="prose prose-sm max-w-none text-muted-foreground break-words whitespace-pre-wrap" [innerHTML]="product()!.description"></div>
               </div>
             }
 
@@ -244,7 +245,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
               (wheel)="handleZoom($event)"
               (click)="$event.stopPropagation()">
               <img 
-                [src]="selectedImage()" 
+                [src]="selectedImage() | mediaUrl" 
                 [alt]="product()!.name"
                 [style.transform]="'scale(' + zoomLevel() + ')'"
                 class="max-w-full max-h-full object-contain transition-transform duration-200 cursor-zoom-in">

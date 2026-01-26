@@ -27,7 +27,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
               [(ngModel)]="selectedCategory" 
               (ngModelChange)="applyFilters()"
               class="w-full px-3 py-2 bg-background border border-border focus:outline-none focus:border-foreground font-mono text-sm">
-              <option [value]="null">{{ 'shop.filters.all' | transloco }}</option>
+              <option value="">{{ 'shop.filters.all' | transloco }}</option>
               @for (category of categories(); track category.id) {
                 <option [value]="category.slug">{{ category.name }}</option>
               }
@@ -224,7 +224,7 @@ export class ShopComponent implements OnInit {
   totalPages = computed(() => Math.ceil(this.totalProducts() / this.pageSize));
   
   // Filters
-  selectedCategory: string | null = null;
+  selectedCategory: string | null = '';
   selectedColor: number | null = null;
   showInStock = false;
   showPreOrder = false;
@@ -233,7 +233,7 @@ export class ShopComponent implements OnInit {
   sortBy = '-created_at';
 
   hasActiveFilters = computed(() => 
-    this.selectedCategory !== null ||
+    (this.selectedCategory !== null && this.selectedCategory !== '') ||
     this.selectedColor !== null ||
     this.showInStock ||
     this.showPreOrder ||
@@ -269,7 +269,7 @@ export class ShopComponent implements OnInit {
     
     // Load filters from query params
     this.route.queryParams.subscribe(params => {
-      this.selectedCategory = params['category'] || null;
+      this.selectedCategory = params['category'] || '';
       this.selectedColor = params['color'] ? +params['color'] : null;
       this.showInStock = params['in_stock'] === 'true';
       this.showPreOrder = params['pre_order'] === 'true';
@@ -291,7 +291,7 @@ export class ShopComponent implements OnInit {
       ordering: this.sortBy
     };
 
-    if (this.selectedCategory) filters.category = this.selectedCategory;
+    if (this.selectedCategory && this.selectedCategory !== '') filters.category = this.selectedCategory;
     if (this.selectedColor) filters.color = this.selectedColor;
     if (this.showInStock) filters.in_stock = true;
     if (this.showPreOrder) filters.pre_order = true;
@@ -337,7 +337,7 @@ export class ShopComponent implements OnInit {
   }
 
   clearFilters() {
-    this.selectedCategory = null;
+    this.selectedCategory = '';
     this.selectedColor = null;
     this.showInStock = false;
     this.showPreOrder = false;
@@ -357,7 +357,7 @@ export class ShopComponent implements OnInit {
   private updateQueryParams() {
     const queryParams: any = {};
     
-    if (this.selectedCategory) queryParams.category = this.selectedCategory;
+    if (this.selectedCategory && this.selectedCategory !== '') queryParams.category = this.selectedCategory;
     if (this.selectedColor) queryParams.color = this.selectedColor;
     if (this.showInStock) queryParams.in_stock = 'true';
     if (this.showPreOrder) queryParams.pre_order = 'true';
@@ -369,7 +369,7 @@ export class ShopComponent implements OnInit {
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams,
-      queryParamsHandling: 'merge'
+      replaceUrl: false
     });
   }
 }
