@@ -12,15 +12,28 @@ import { ButtonComponent } from '../../shared/button/button.component';
 @Component({
   selector: 'app-home',
   imports: [CommonModule, RouterModule, TranslocoModule, ProductCardComponent, ButtonComponent],
+  styles: [`
+    :host {
+      display: block;
+    }
+    .hero-section {
+      background-image: url('/image2.png');
+    }
+    @media (min-width: 768px) {
+      .hero-section {
+        background-image: url('/image1.png');
+      }
+    }
+  `],
   template: `
     <!-- Hero Section -->
-    <section class="relative bg-background border-b border-border">
+    <section class="hero-section relative bg-background border-b border-border" style="background-size: cover; background-position: center; min-height: 600px; display: flex; align-items: center;">
       <div class="container mx-auto px-4 py-16 md:py-24">
-        <div class="max-w-3xl">
+        <div class="max-w-xl">
           <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">
             {{ 'home.hero.title' | transloco }}
           </h1>
-          <p class="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl">
+          <p class="text-lg md:text-xl text-muted-foreground mb-8 max-w-md">
             {{ 'home.hero.subtitle' | transloco }}
           </p>
           <div class="flex flex-wrap gap-4">
@@ -163,12 +176,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
         </div>
       </div>
     </section>
-  `,
-  styles: [`
-    :host {
-      display: block;
-    }
-  `]
+  `
 })
 export class HomeComponent implements OnInit {
   private catalogService = inject(CatalogService);

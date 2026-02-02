@@ -24,9 +24,17 @@
 }
 
 /* Base styles */
+@font-face {
+  font-family: 'HitMePunk';
+  src: url('/hit-me-punk.01.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
   @apply bg-background text-foreground antialiased;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'HitMePunk', 'Inter', system-ui, sans-serif;
 }
 
 /* Custom badge styles */

@@ -238,16 +238,16 @@ PACKETA_SENDER_ID = os.getenv('PACKETA_SENDER_ID', '')
 PACKETA_REAL_WORLD_USAGE = os.getenv('PACKETA_REAL_WORLD_USAGE', 'False') == 'True'
 
 # Frontend URL for email verification links
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:4200')
+FRONTEND_URL = os.getenv('FRONTEND_URL')
 
 # Email Configuration
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@waketfup.com')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
 # GoPay Payment Gateway Configuration
 GOPAY_CLIENT_ID = os.getenv('GOPAY_CLIENT_ID', '')  # GoPay GoID
