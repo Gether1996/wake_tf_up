@@ -9,6 +9,8 @@ export interface User {
   postal_code?: string;
   country?: string;
   theme_preference?: 'light' | 'dark' | 'auto';
+  is_staff?: boolean;
+  is_superuser?: boolean;
 }
 
 export interface LoginRequest {

@@ -17,12 +17,30 @@ import { ButtonComponent } from '../../shared/button/button.component';
       display: block;
     }
     .hero-section {
-      background-image: url('/image2.png');
+      background-image: url('/image1.png');
     }
-    @media (min-width: 768px) {
-      .hero-section {
-        background-image: url('/image1.png');
-      }
+    .hero-title {
+      color: #000 !important;
+      text-shadow:
+        -1px -1px 0 #fff,
+         1px -1px 0 #fff,
+        -1px  1px 0 #fff,
+         1px  1px 0 #fff;
+    }
+    ::ng-deep .hero-button button {
+      background: #fff !important;
+      border: 2px solid #000 !important;
+      color: #000 !important;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    ::ng-deep .hero-button button:hover {
+      background: #000 !important;
+      color: #fff !important;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     }
   `],
   template: `
@@ -30,23 +48,27 @@ import { ButtonComponent } from '../../shared/button/button.component';
     <section class="hero-section relative bg-background border-b border-border" style="background-size: cover; background-position: center; min-height: 600px; display: flex; align-items: center;">
       <div class="container mx-auto px-4 py-16 md:py-24">
         <div class="max-w-xl">
-          <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+          <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight hero-title">
             {{ 'home.hero.title' | transloco }}
           </h1>
-          <p class="text-lg md:text-xl text-muted-foreground mb-8 max-w-md">
+          <p class="text-lg md:text-xl mb-8 max-w-md hero-title">
             {{ 'home.hero.subtitle' | transloco }}
           </p>
           <div class="flex flex-wrap gap-4">
-            <a [routerLink]="shopLink()">
-              <app-button [variant]="'primary'" [size]="'lg'">
-                {{ 'home.hero.cta_shop' | transloco }}
-              </app-button>
-            </a>
-            <a [routerLink]="aboutLink()">
-              <app-button [variant]="'outline'" [size]="'lg'">
-                {{ 'home.hero.cta_learn' | transloco }}
-              </app-button>
-            </a>
+            <div class="hero-button">
+              <a [routerLink]="shopLink()">
+                <app-button [variant]="'outline'" [size]="'lg'">
+                  {{ 'home.hero.cta_shop' | transloco }}
+                </app-button>
+              </a>
+            </div>
+            <div class="hero-button">
+              <a [routerLink]="aboutLink()">
+                <app-button [variant]="'outline'" [size]="'lg'">
+                  {{ 'home.hero.cta_learn' | transloco }}
+                </app-button>
+              </a>
+            </div>
           </div>
         </div>
       </div>

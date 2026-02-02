@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Font - Shlop */
+@font-face {
+  font-family: 'Shlop';
+  src: url('/shlop rg.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Custom CSS variables for theming */
 :root {
   --background: 255 255 255;
@@ -24,17 +33,23 @@
 }
 
 /* Base styles */
-@font-face {
-  font-family: 'HitMePunk';
-  src: url('/hit-me-punk.01.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 body {
   @apply bg-background text-foreground antialiased;
-  font-family: 'HitMePunk', 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Apply Shlop font to headings and main texts */
+h1, h2, h3, h4, h5, h6,
+.logo,
+.hero-title,
+.greeting,
+.product-name,
+.section-title,
+button:not(.icon-only),
+.nav-link,
+a[class*="font-bold"],
+.font-heading {
+  font-family: 'Shlop', 'Inter', system-ui, sans-serif;
 }
 
 /* Custom badge styles */

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verified - WAKE TF UP</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .header {
+            background-color: #000000;
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 3px solid #ffffff;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+        .tagline {
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin: 10px 0 0 0;
+            opacity: 0.8;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #000000;
+        }
+        .greeting {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .success-icon {
+            text-align: center;
+            font-size: 48px;
+            margin: 0 0 30px 0;
+        }
+        .message {
+            font-size: 16px;
+            margin: 0 0 20px 0;
+            color: #333333;
+        }
+        .highlight {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-left: 3px solid #000000;
+            margin: 30px 0;
+        }
+        .highlight p {
+            margin: 0;
+            font-size: 15px;
+            color: #000000;
+        }
+        .footer {
+            background-color: #000000;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .footer-links {
+            margin-top: 15px;
+        }
+        .footer-links a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 10px;
+            opacity: 0.8;
+        }
+        .footer-links a:hover {
+            opacity: 1;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="logo">WAKE_TF_UP</h1>
+            <p class="tagline">Reworked. Reclaimed. One of one.</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="success-icon">✓</div>
+            
+            <h2 class="greeting">Email Verified!</h2>
+            
+            <p class="message">
+                Hello {{ user_name }},
+            </p>
+            
+            <p class="message">
+                Your email <strong>{{ user_email }}</strong> has been successfully verified!
+            </p>
+
+            <div class="highlight">
+                <p>
+                    <strong>You can now log in</strong> to your account and start shopping for unique pieces made from recycled materials.
+                </p>
+            </div>
+
+            <p class="message">
+                We're excited to have you as part of our sustainable fashion community.
+            </p>
+
+            <p class="message">
+                Stay tuned for new drops and be the first to grab limited editions!
+            </p>
+
+            <div class="divider"></div>
+
+            <p class="message" style="font-size: 14px; color: #666666;">
+                If you have any questions, feel free to contact us at <strong>info@wake-tf-up.com</strong>
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p style="margin: 0 0 10px 0;">
+                <strong>WAKE TF UP</strong><br>
+                Patrik Bielčik<br>
+                Jedľová 319/33, 010 04 Žilina, Slovakia<br>
+                Company ID: 56698585 | Tax ID: 1127876057
+            </p>
+            
+            <div class="footer-links">
+                <p style="margin: 5px 0; opacity: 0.8;">
+                    © 2026 WAKE TF UP. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -14,10 +14,10 @@ import { LanguageService } from '../../core/services/language.service';
     <header class="sticky top-0 z-50 bg-background border-b border-border">
       <div class="container mx-auto px-4">
         <!-- Top Bar -->
-        <div class="flex items-center justify-between py-4">
+        <div class="flex items-center justify-between py-5">
           <!-- Logo -->
-          <a [routerLink]="homeLink()" class="text-xl font-mono font-bold tracking-tighter hover:text-accent transition-colors">
-            WAKE_TF_UP
+          <a [routerLink]="homeLink()" class="flex items-center hover:opacity-80 transition-opacity">
+            <img src="/logo.png" alt="WAKE TF UP" class="h-12 w-auto">
           </a>
 
           <!-- Desktop Navigation -->
@@ -35,18 +35,18 @@ import { LanguageService } from '../../core/services/language.service';
 
           <!-- Actions -->
           <div class="flex items-center gap-4">
-            <!-- Language Toggle -->
+            <!-- Language Toggle - Desktop Only -->
             <button 
               (click)="toggleLanguage()" 
-              class="text-sm font-mono hover:text-accent transition-colors"
+              class="hidden md:block text-sm font-mono hover:text-accent transition-colors"
               [attr.aria-label]="'nav.change_language' | transloco">
               {{ currentLang() === 'en' ? 'SK' : 'EN' }}
             </button>
 
-            <!-- Theme Toggle -->
+            <!-- Theme Toggle - Desktop Only -->
             <button 
               (click)="toggleTheme()" 
-              class="hover:text-accent transition-colors"
+              class="hidden md:block hover:text-accent transition-colors"
               [attr.aria-label]="'nav.toggle_theme' | transloco">
               @if (isDark()) {
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,11 +59,11 @@ import { LanguageService } from '../../core/services/language.service';
               }
             </button>
 
-            <!-- Demo Logout (Temporary) -->
+            <!-- Demo Logout (Temporary) - Desktop Only -->
             @if (hasDemoAccess()) {
               <button 
                 (click)="demoLogout()" 
-                class="hover:text-danger transition-colors"
+                class="hidden md:block hover:text-danger transition-colors"
                 title="Exit Demo Access">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
@@ -83,9 +83,9 @@ import { LanguageService } from '../../core/services/language.service';
               }
             </a>
 
-            <!-- User Menu -->
+            <!-- User Menu - Desktop Only -->
             @if (isAuthenticated()) {
-              <div class="relative flex items-center">
+              <div class="hidden md:flex items-center relative">
                 <button (click)="toggleUserMenu()" class="hover:text-accent transition-colors">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
@@ -93,13 +93,18 @@ import { LanguageService } from '../../core/services/language.service';
                 </button>
                 
                 @if (userMenuOpen) {
-                  <div class="absolute right-0 mt-2 w-48 bg-background border border-border shadow-lg">
+                  <div class="absolute right-0 top-full mt-2 w-48 bg-background border border-border shadow-lg z-50">
                     <a [routerLink]="profileLink()" (click)="closeUserMenu()" class="block px-4 py-2 hover:bg-muted font-mono text-sm">
                       {{ 'nav.profile' | transloco }}
                     </a>
                     <a [routerLink]="ordersLink()" (click)="closeUserMenu()" class="block px-4 py-2 hover:bg-muted font-mono text-sm">
                       {{ 'nav.orders' | transloco }}
                     </a>
+                    @if (isSuperuser()) {
+                      <a href="/admin/" target="_blank" class="block px-4 py-2 hover:bg-muted font-mono text-sm text-accent">
+                        Admin Panel
+                      </a>
+                    }
                     <button (click)="logout()" class="w-full text-left px-4 py-2 hover:bg-muted font-mono text-sm text-danger">
                       {{ 'auth._logout' | transloco }}
                     </button>
@@ -107,7 +112,7 @@ import { LanguageService } from '../../core/services/language.service';
                 }
               </div>
             } @else {
-              <a [routerLink]="loginLink()" class="font-mono text-sm hover:text-accent transition-colors">
+              <a [routerLink]="loginLink()" class="hidden md:block font-mono text-sm hover:text-accent transition-colors">
                 {{ 'auth._login' | transloco }}
               </a>
             }
@@ -123,16 +128,80 @@ import { LanguageService } from '../../core/services/language.service';
 
         <!-- Mobile Navigation -->
         @if (mobileMenuOpen) {
-          <nav class="md:hidden border-t border-border py-4 space-y-2">
-            <a [routerLink]="shopLink()" (click)="closeMobileMenu()" class="block font-mono text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+          <nav class="md:hidden border-t border-border py-4 space-y-2" style="font-family: 'Shlop', sans-serif;">
+            <a [routerLink]="shopLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
               {{ 'nav.shop' | transloco }}
             </a>
-            <a [routerLink]="blogLink()" (click)="closeMobileMenu()" class="block font-mono text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+            <a [routerLink]="blogLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
               {{ 'nav.blog' | transloco }}
             </a>
-            <a [routerLink]="aboutLink()" (click)="closeMobileMenu()" class="block font-mono text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+            <a [routerLink]="aboutLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
               {{ 'nav.about' | transloco }}
             </a>
+
+            <div class="border-t border-border pt-2 mt-2"></div>
+
+            <!-- User Profile Links - Mobile -->
+            @if (isAuthenticated()) {
+              <a [routerLink]="profileLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+                {{ 'nav.profile' | transloco }}
+              </a>
+              <a [routerLink]="ordersLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+                {{ 'nav.orders' | transloco }}
+              </a>
+              @if (isSuperuser()) {
+                <a href="/admin/" target="_blank" class="block text-sm uppercase tracking-wide text-accent hover:opacity-80 transition-colors py-2">
+                  Admin Panel
+                </a>
+              }
+            } @else {
+              <a [routerLink]="loginLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+                {{ 'auth._login' | transloco }}
+              </a>
+            }
+
+            <div class="border-t border-border pt-2 mt-2"></div>
+
+            <!-- Language Toggle - Mobile -->
+            <button 
+              (click)="toggleLanguage()" 
+              class="w-full text-left text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+              {{ 'nav.change_language' | transloco }}: {{ currentLang() === 'en' ? 'SK' : 'EN' }}
+            </button>
+
+            <!-- Theme Toggle - Mobile -->
+            <button 
+              (click)="toggleTheme()" 
+              class="w-full text-left text-sm uppercase tracking-wide hover:text-accent transition-colors py-2 flex items-center gap-2">
+              <span>{{ 'nav.toggle_theme' | transloco }}</span>
+              @if (isDark()) {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+              } @else {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+              }
+            </button>
+
+            <!-- Demo Logout - Mobile -->
+            @if (hasDemoAccess()) {
+              <button 
+                (click)="demoLogout(); closeMobileMenu()" 
+                class="w-full text-left text-sm uppercase tracking-wide hover:text-danger transition-colors py-2">
+                Exit Demo Access
+              </button>
+            }
+
+            <!-- Logout - Mobile -->
+            @if (isAuthenticated()) {
+              <button 
+                (click)="logout(); closeMobileMenu()" 
+                class="w-full text-left text-sm uppercase tracking-wide text-danger hover:opacity-80 transition-colors py-2">
+                {{ 'auth._logout' | transloco }}
+              </button>
+            }
           </nav>
         }
       </div>
@@ -152,6 +221,7 @@ export class HeaderComponent {
   private router = inject(Router);
 
   isAuthenticated = this.authService.isAuthenticated;
+  isSuperuser = this.authService.isSuperuser;
   cartItemCount = this.cartService.itemCount;
   isDark = this.themeService.isDark;
   currentLang = this.languageService.currentLang;

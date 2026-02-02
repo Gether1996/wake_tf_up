@@ -36,16 +36,15 @@
   },
   "newsletter": {
     "title": "Buďte v obraze",
-    "description": "Dostávajte info o nových dropoch a získajte 5% zľavový kupón na privítanie!",
+    "description": "Dostávajte info o nových dropoch!",
     "email_placeholder": "Zadajte email",
     "subscribe": "Prihlásiť sa",
-    "success": "Ďakujeme za prihlásenie! Zľavový kupón dostanete emailom o 5 minút.",
-    "error": "Niečo sa pokazilo. Skúste prosím znova.",
-    "discount_info": "🎁 Nový subscriber dostane 5% zľavový kupón!"
+    "success": "Ďakujeme za prihlásenie!",
+    "error": "Niečo sa pokazilo. Skúste prosím znova."
   },
   "newsletter_popup": {
-    "title": "Získajte zľavový kód!",
-    "description": "Prihláste sa do newslettera a dostanete 5% zľavový kód na váš prvý nákup. Okrem toho budete ako prví vedieť o nových dropoch!",
+    "title": "Prihláste sa do newslettera!",
+    "description": "Buďte ako prví informovaní o nových dropoch a exkluzívnych ponukách!",
     "email_placeholder": "Zadajte váš email",
     "email_required": "Email je povinný",
     "email_invalid": "Zadajte platný email",
@@ -136,6 +135,8 @@
     "out_of_stock": "Vypredané",
     "low_stock": "Nízky sklad",
     "left": "zostáva",
+    "limited": "Limitovaná edícia",
+    "pieces_left": "ks",
     "preorder_available": "Dostupné na predobjednávku",
     "in_stock": "Skladom",
     "quantity": "Množstvo",
@@ -424,7 +425,12 @@
     "sustainability": "Udržateľnosť",
     "rights": "Všetky práva vyhradené",
     "privacy": "Ochrana súkromia",
-    "terms": "Obchodné podmienky"
+    "terms": "Obchodné podmienky",
+    "company_name": "Patrik Bielčik",
+    "company_address": "Jedľová 319/33, 010 04 Žilina",
+    "company_id": "IČO: 56698585",
+    "company_tax_id": "DIČ: 1127876057",
+    "company_email": "info@wake-tf-up.com"
   },
   "privacy": {
     "title": "Zásady ochrany osobných údajov",
@@ -437,7 +443,7 @@
     },
     "section2": {
       "title": "2. Prevádzkovateľ",
-      "content": "<p><strong>WAKE TF UP</strong><br>Adresa: [Adresa spoločnosti]<br>IČO: [IČO]<br>Email: info@waketfup.com<br>Telefón: [Telefón]</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> Jedľová 319/33, 010 04 Žilina, Slovenská republika<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057<br><strong>Email:</strong> info@wake-tf-up.com</p>"
     },
     "section3": {
       "title": "3. Aké údaje zhromažďujeme",
@@ -531,7 +537,7 @@
     },
     "section12": {
       "title": "12. Kontakt",
-      "content": "<p>Ak máte otázky týkajúce sa ochrany osobných údajov alebo chcete uplatniť svoje práva, kontaktujte nás:</p><p><strong>Email:</strong> privacy@waketfup.com<br><strong>Telefón:</strong> [Telefón]<br><strong>Pošta:</strong> WAKE TF UP, [Adresa]</p>"
+      "content": "<p>Ak máte otázky týkajúce sa ochrany osobných údajov alebo chcete uplatniť svoje práva, kontaktujte nás:</p><p><strong>Email:</strong> info@wake-tf-up.com<br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> Jedľová 319/33, 010 04 Žilina<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057</p>"
     }
   },
   "terms": {
@@ -545,7 +551,7 @@
     },
     "section2": {
       "title": "2. Vymedzenie pojmov",
-      "seller": "Predávajúci: WAKE TF UP, [IČO], so sídlom [Adresa]",
+      "seller": "Predávajúci: WAKE TF UP, Patrik Bielčik, IČO: 56698585, DIČ: 1127876057, so sídlom Jedľová 319/33, 010 04 Žilina",
       "buyer": "Kupujúci: fyzická alebo právnická osoba, ktorá uzatvára kúpnu zmluvu",
       "goods": "Tovar: streetwear oblečenie z recyklovaných materiálov prezentované v internetovom obchode",
       "contract": "Kúpna zmluva: zmluva uzavretá na diaľku medzi predávajúcim a kupujúcim"
@@ -607,7 +613,7 @@
     },
     "section13": {
       "title": "13. Kontakt",
-      "content": "<p><strong>WAKE TF UP</strong><br>Adresa: [Adresa spoločnosti]<br>IČO: [IČO]<br>DIČ: [DIČ]<br>Email: info@waketfup.com<br>Telefón: [Telefón]</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> Jedľová 319/33, 010 04 Žilina, Slovenská republika<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057<br><strong>Email:</strong> info@wake-tf-up.com</p>"
     }
   },
   "cookies": {

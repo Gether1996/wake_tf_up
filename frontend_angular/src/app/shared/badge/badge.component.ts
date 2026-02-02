@@ -17,6 +17,10 @@ export type BadgeVariant = 'drop' | 'recycled' | 'preorder' | 'default';
     :host {
       display: inline-block;
     }
+    span {
+      border: 1px solid #000;
+      border-radius: 4px;
+    }
   `]
 })
 export class BadgeComponent {

@@ -32,12 +32,8 @@ class SubscribeView(generics.CreateAPIView):
             subscriber.unsubscribed_at = None
             subscriber.save()
             
-            # Send discount code after 5 minutes
-            from loyalty.tasks import send_newsletter_discount_code_delayed
-            send_newsletter_discount_code_delayed(email, delay_seconds=300)
-            
             return Response(
-                {'message': 'Subscription reactivated. You will receive a discount code in 5 minutes.'},
+                {'message': 'Subscription reactivated.'},
                 status=status.HTTP_200_OK
             )
         elif not created:
@@ -46,12 +42,8 @@ class SubscribeView(generics.CreateAPIView):
                 status=status.HTTP_200_OK
             )
         
-        # Send discount code after 5 minutes for new subscribers
-        from loyalty.tasks import send_newsletter_discount_code_delayed
-        send_newsletter_discount_code_delayed(email, delay_seconds=300)
-        
         return Response(
-            {'message': 'Successfully subscribed! You will receive a 5% discount code in 5 minutes.'},
+            {'message': 'Successfully subscribed!'},
             status=status.HTTP_201_CREATED
         )
 

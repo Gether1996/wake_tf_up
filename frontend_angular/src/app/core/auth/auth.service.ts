@@ -21,6 +21,7 @@ export class AuthService {
   readonly user = this.currentUser.asReadonly();
   readonly isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
+  readonly isSuperuser = computed(() => this.currentUser()?.is_superuser === true);
 
   constructor(
     private http: HttpClient,

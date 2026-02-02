@@ -76,6 +76,56 @@ WAKE TF UP team
         return False
 
 
+def send_email_confirmed_notification(user, language='sk'):
+    """Helper function to send email confirmation notification"""
+    context = {
+        'user_name': user.first_name or user.email.split('@')[0],
+        'user_email': user.email,
+    }
+    
+    try:
+        # Render HTML template
+        html_content = render_to_string(f'emails/email_confirmed_{language}.html', context)
+        
+        # Plain text fallback
+        text_content = f'''
+Ahoj {context['user_name']},
+
+Váš email bol úspešne overený!
+
+Môžete sa teraz prihlásiť do svojho účtu a začať nakupovať.
+
+Ďakujeme, že ste súčasťou WAKE TF UP!
+
+WAKE TF UP tím
+        ''' if language == 'sk' else f'''
+Hello {context['user_name']},
+
+Your email has been successfully verified!
+
+You can now log in to your account and start shopping.
+
+Thank you for being part of WAKE TF UP!
+
+WAKE TF UP team
+        '''
+        
+        # Create email with HTML
+        email = EmailMultiAlternatives(
+            subject='WAKE TF UP - Email overený' if language == 'sk' else 'WAKE TF UP - Email Verified',
+            body=text_content.strip(),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email],
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send(fail_silently=False)
+        
+        return True
+    except Exception as e:
+        print(f"Failed to send email confirmation notification: {e}")
+        return False
+
+
 def send_password_reset_email(user, language='sk'):
     """Helper function to send password reset email"""
     try:
@@ -209,6 +259,9 @@ class VerifyEmailView(APIView):
             user.is_email_verified = True
             user.is_active = True
             user.save()
+            
+            # Send confirmation email
+            send_email_confirmed_notification(user, language='sk')
             
             return Response(
                 {'message': 'Email verified successfully'},
