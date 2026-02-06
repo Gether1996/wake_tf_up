@@ -27,7 +27,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
               </p>
               
               <a [routerLink]="['/en']" class="block">
-                <button class="w-full bg-accent text-white py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
+                <button class="w-full bg-foreground text-background py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
                   Späť na domovskú stránku
                 </button>
               </a>
@@ -61,7 +61,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
               </p>
               
               <a [routerLink]="['/en']" class="block">
-                <button class="w-full bg-accent text-white py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
+                <button class="w-full bg-foreground text-background py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
                   Späť na domovskú stránku
                 </button>
               </a>
