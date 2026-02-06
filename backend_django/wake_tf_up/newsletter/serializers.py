@@ -16,6 +16,10 @@ class SubscriberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscriber
         fields = ('email',)
+        # Don't validate unique constraint in serializer - we handle it manually in the view
+        extra_kwargs = {
+            'email': {'validators': []},
+        }
 
 
 class NewsletterPopupStatSerializer(serializers.ModelSerializer):
