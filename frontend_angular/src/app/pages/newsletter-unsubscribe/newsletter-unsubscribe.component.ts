@@ -2,12 +2,11 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api/api.service';
-import { ButtonComponent } from '../../shared/button/button.component';
 
 @Component({
   selector: 'app-newsletter-unsubscribe',
   standalone: true,
-  imports: [CommonModule, RouterLink, ButtonComponent],
+  imports: [CommonModule, RouterLink],
   template: `
     <div class="min-h-screen flex items-center justify-center bg-background px-4">
       <div class="max-w-md w-full">
