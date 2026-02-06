@@ -1,6 +1,28 @@
 from django.contrib import admin, messages
 from django.utils.html import format_html
-from .models import Subscriber, NewsletterPopupStat
+from django.utils.safestring import mark_safe
+from django.urls import reverse
+from .models import Subscriber, NewsletterPopupStat, NewsletterTemplate, DiscountCodeTemplate, NewsletterImage
+from datetime import datetime
+import re
+from django.template import Template, Context
+
+
+def clean_text_for_email(text):
+    """Remove ONLY problematic bidirectional/format control characters, keep Slovak chars"""
+    if not text:
+        return text
+    
+    import re
+    # Remove: LRE, RLE, PDF, LRO, RLO, LRI, RLI, FSI, PDI
+    cleaned = re.sub(r'[\u202A-\u202E\u2066-\u2069]', '', text)
+    # Also try to encode/decode to catch any remaining problematic chars
+    try:
+        cleaned.encode('utf-8').decode('utf-8')
+    except UnicodeEncodeError:
+        # If still fails, remove all non-ASCII-compatible chars
+        cleaned = cleaned.encode('utf-8', errors='ignore').decode('utf-8')
+    return cleaned
 
 
 @admin.register(Subscriber)
@@ -11,7 +33,7 @@ class SubscriberAdmin(admin.ModelAdmin):
     readonly_fields = ('subscribed_at', 'unsubscribed_at')
     date_hierarchy = 'subscribed_at'
     list_per_page = 50
-    actions = ['activate_subscribers', 'deactivate_subscribers', 'send_bulk_email', 'send_discount_codes']
+    actions = ['activate_subscribers', 'deactivate_subscribers', 'send_bulk_newsletter_news', 'send_bulk_discount_codes']
     
     def status_badge(self, obj):
         if obj.is_active:
@@ -27,123 +49,189 @@ class SubscriberAdmin(admin.ModelAdmin):
     # Actions
     def activate_subscribers(self, request, queryset):
         queryset.update(is_active=True, unsubscribed_at=None)
-    activate_subscribers.short_description = "Activate selected subscribers"
+    activate_subscribers.short_description = "Aktivovať vybrané emaily"
     
     def deactivate_subscribers(self, request, queryset):
         from datetime import datetime
         queryset.update(is_active=False, unsubscribed_at=datetime.now())
-    deactivate_subscribers.short_description = "Deactivate selected subscribers"
+    deactivate_subscribers.short_description = "Deaktivovať vybrané emaily"
     
-    def send_bulk_email(self, request, queryset):
-        """Send bulk email to selected subscribers"""
-        from django.shortcuts import render, redirect
-        from django import forms
-        from django.core.mail import send_mail
+    def send_bulk_newsletter_news(self, request, queryset):
+        """Send newsletter news HTML template to selected subscribers"""
+        from django.core.mail import EmailMultiAlternatives
         from django.conf import settings
         
-        class BulkEmailForm(forms.Form):
-            subject = forms.CharField(
-                max_length=200,
-                widget=forms.TextInput(attrs={'size': '80'}),
-                help_text="Email subject line"
+        # Get the newsletter template
+        try:
+            template = NewsletterTemplate.objects.get(pk=1)
+        except NewsletterTemplate.DoesNotExist:
+            self.message_user(
+                request, 
+                "Newsletter šablóna neexistuje. Vytvorte ju najprv.", 
+                level=messages.ERROR
             )
-            message = forms.CharField(
-                widget=forms.Textarea(attrs={'rows': 15, 'cols': 80}),
-                help_text="Email message body"
-            )
-            include_discount = forms.BooleanField(
-                required=False,
-                initial=False,
-                help_text="Automatically generate and include a 5% discount code for each subscriber"
-            )
+            return
         
-        if 'apply' in request.POST:
-            form = BulkEmailForm(request.POST)
-            if form.is_valid():
-                subject = form.cleaned_data['subject']
-                message = form.cleaned_data['message']
-                include_discount = form.cleaned_data['include_discount']
-                
-                sent_count = 0
-                for subscriber in queryset:
-                    email_message = message
-                    
-                    # Generate discount code if requested
-                    if include_discount:
-                        from loyalty.models import LoyaltyService
-                        discount_code = LoyaltyService.generate_newsletter_code(subscriber.email)
-                        email_message += f"\n\n---\nYour exclusive discount code: {discount_code.code}\n"
-                        email_message += f"Discount: {discount_code.discount_percentage}%\n"
-                        email_message += f"Valid until: {discount_code.valid_until.strftime('%Y-%m-%d')}\n"
-                    
-                    try:
-                        send_mail(
-                            subject=subject,
-                            message=email_message,
-                            from_email=settings.DEFAULT_FROM_EMAIL,
-                            recipient_list=[subscriber.email],
-                            fail_silently=False,
-                        )
-                        sent_count += 1
-                    except Exception as e:
-                        self.message_user(request, f"Failed to send to {subscriber.email}: {str(e)}", level=messages.ERROR)
-                
-                self.message_user(request, f"Successfully sent {sent_count} emails")
-                return redirect(request.get_full_path())
-        else:
-            form = BulkEmailForm()
-        
-        context = {
-            'form': form,
-            'subscribers': queryset,
-            'subscriber_count': queryset.count(),
-        }
-        return render(request, 'admin/newsletter/send_bulk_email.html', context)
-    send_bulk_email.short_description = "Send bulk email to selected subscribers"
-    
-    def send_discount_codes(self, request, queryset):
-        """Send discount codes to selected subscribers"""
-        from loyalty.models import LoyaltyService
-        from django.core.mail import send_mail
-        from django.conf import settings
+        if not template.content_html:
+            self.message_user(
+                request,
+                "Newsletter šablóna nemá žiadny HTML obsah.",
+                level=messages.ERROR
+            )
+            return
         
         sent_count = 0
+        failed_count = 0
+        
+        # Get base URL once
+        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
+        
+        # Debug: Check subject in database
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"[NEWSLETTER DEBUG] Original subject from DB: {repr(template.subject)}")
+        logger.warning(f"[NEWSLETTER DEBUG] Subject bytes: {template.subject.encode('utf-8')}")
+        
         for subscriber in queryset:
             try:
-                # Generate discount code
-                discount_code = LoyaltyService.generate_newsletter_code(subscriber.email)
+                # Plain text fallback (MUST be clean, no problematic Unicode)
+                plain_text = f"""
+Ahoj,
+
+Prinášame vám novinky z WAKE TF UP. Prečítajte si článoky na našom webe:
+
+{base_url}/blog
+
+Ďakujeme za vašu pozornosť!
+
+WAKE TF UP tím
+
+Odhlásiť sa: {base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}
+                """.strip()
                 
-                # Send email with code
-                subject = "Your Exclusive Discount Code!"
-                message = f"""
-Dear Subscriber,
-
-We have a special offer for you!
-
-Your discount code: {discount_code.code}
-Discount: {discount_code.discount_percentage}%
-Minimum order: {discount_code.minimum_order_value}€
-Valid until: {discount_code.valid_until.strftime('%Y-%m-%d')}
-
-Use this code at checkout to enjoy your discount!
-
-Best regards,
-Wake TF Up Team
-                """
+                # Replace placeholders in HTML using Django template
+                html_content = template.content_html
+                unsubscribe_link = f"{base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}"
                 
-                send_mail(
+                # Render template variables and clean HTML
+                html_content = Template(html_content).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
+                html_content = clean_text_for_email(html_content)
+                subject = template.subject
+                
+                # Create email EXACTLY like accounts/views.py does it
+                email = EmailMultiAlternatives(
                     subject=subject,
-                    message=message,
+                    body=plain_text,
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[subscriber.email],
-                    fail_silently=False,
+                    to=[subscriber.email],
                 )
+                email.attach_alternative(html_content, "text/html")
+                email.send(fail_silently=False)
                 sent_count += 1
             except Exception as e:
-                self.message_user(request, f"Failed to send to {subscriber.email}: {str(e)}", level=messages.ERROR)
+                failed_count += 1
+                self.message_user(
+                    request,
+                    f"Nepodarilo sa odoslať na {subscriber.email}: {str(e)}",
+                    level=messages.WARNING
+                )
         
-        self.message_user(request, f"Successfully sent {sent_count} discount codes")
-    send_discount_codes.short_description = "Send discount codes to selected subscribers"
+        # Update last_sent timestamp
+        template.last_sent = datetime.now()
+        template.save()
+        
+        self.message_user(
+            request,
+            f"Úspešne odoslané na {sent_count} emailov. Neúspešných: {failed_count}",
+            level=messages.SUCCESS
+        )
+    send_bulk_newsletter_news.short_description = "Hromadný email s novinkami"
+    
+    def send_bulk_discount_codes(self, request, queryset):
+        """Send discount code HTML template to selected subscribers"""
+        from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
+        
+        # Get the discount code template
+        try:
+            template = DiscountCodeTemplate.objects.get(pk=1)
+        except DiscountCodeTemplate.DoesNotExist:
+            self.message_user(
+                request,
+                "Šablóna zľavového kódu neexistuje. Vytvorte ju najprv.",
+                level=messages.ERROR
+            )
+            return
+        
+        if not template.content_html:
+            self.message_user(
+                request,
+                "Šablóna zľavového kódu nemá žiadny HTML obsah.",
+                level=messages.ERROR
+            )
+            return
+        
+        sent_count = 0
+        failed_count = 0
+        
+        # Get base URL once
+        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.sk'
+        
+        for subscriber in queryset:
+            try:
+                # Plain text fallback (MUST be clean, no problematic Unicode)
+                discount_code_clean = clean_text_for_email(template.discount_code or '')
+                plain_text = f"""
+Ahoj,
+
+Máte špeciálnu zľavu! 
+
+Zľavový kód: {discount_code_clean}
+Zľava: {template.discount_percentage or ''}%
+Platný do: {template.valid_until.strftime('%d.%m.%Y') if template.valid_until else 'neznámo'}
+
+Nakupovať: {base_url}/produkty
+
+Odhlásiť sa: {base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}
+                """.strip()
+                
+                # Replace placeholders in HTML using Django template
+                html_content = template.content_html
+                unsubscribe_link = f"{base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}"
+                
+                # Render template variables and clean HTML
+                html_content = Template(html_content).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email, 'discount_code': template.discount_code or '', 'discount_percentage': str(template.discount_percentage or ''), 'valid_until': template.valid_until.strftime('%d.%m.%Y') if template.valid_until else ''}))
+                html_content = clean_text_for_email(html_content)
+                subject = template.subject
+                
+                # Create email EXACTLY like accounts/views.py does it
+                email = EmailMultiAlternatives(
+                    subject=subject,
+                    body=plain_text,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[subscriber.email]
+                )
+                email.attach_alternative(html_content, "text/html")
+                email.send(fail_silently=False)
+                sent_count += 1
+            except Exception as e:
+                failed_count += 1
+                self.message_user(
+                    request,
+                    f"Nepodarilo sa odoslať na {subscriber.email}: {str(e)}",
+                    level=messages.WARNING
+                )
+        
+        # Update last_sent timestamp
+        template.last_sent = datetime.now()
+        template.save()
+        
+        self.message_user(
+            request,
+            f"Úspešne odoslané na {sent_count} emailov. Neúspešných: {failed_count}",
+            level=messages.SUCCESS
+        )
+    send_bulk_discount_codes.short_description = "Hromadný email so zľavovými kódmi"
 
 
 @admin.register(NewsletterPopupStat)
@@ -199,3 +287,346 @@ class NewsletterPopupStatAdmin(admin.ModelAdmin):
         }
         
         return super().changelist_view(request, extra_context)
+
+
+class SingletonModelAdmin(admin.ModelAdmin):
+    """Base admin for singleton models - only one instance allowed"""
+    
+    def has_add_permission(self, request):
+        # Allow add only if no instance exists
+        return not self.model.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        # Prevent deletion in admin
+        return False
+
+
+@admin.register(NewsletterTemplate)
+class NewsletterTemplateAdmin(SingletonModelAdmin):
+    fieldsets = (
+        ('Email Settings', {
+            'fields': ('subject',)
+        }),
+        ('Content', {
+            'fields': ('content_html',),
+            'description': 'Vložte HTML email šablónu. Dostupné Jinja2 premenné: {{site_url}} (automaticky generované z FRONTEND_URL), {{unsubscribe_url}} (jednostranný unsubscribe link), {{discount_code}}, {{discount_percentage}}, {{valid_until}}. Server automaticky nahradí tieto premenné reálnymi hodnotami.<br><br><strong>Príklady:</strong><br>&lt;a href="{{site_url}}/produkty"&gt;Produkty&lt;/a&gt;<br>&lt;a href="{{unsubscribe_url}}"&gt;Odhlásiť sa&lt;/a&gt;'
+        }),
+        ('Statistics', {
+            'fields': ('last_sent', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    readonly_fields = ('last_sent', 'created_at', 'updated_at')
+    
+    def save_model(self, request, obj, form, change):
+        """Clean Unicode characters before saving"""
+        obj.full_clean()  # This calls obj.clean()
+        super().save_model(request, obj, form, change)
+    
+    actions = ['send_to_all_subscribers']
+    
+    class Media:
+        css = {
+            'all': ('admin/css/newsletter_images_helper.css',)
+        }
+        js = ('admin/js/newsletter_images_helper.js',)
+    
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        if object_id:
+            obj = self.get_object(request, object_id)
+            if obj and obj.content_html:
+                preview_url = reverse('newsletter:newsletter_template_preview', args=[object_id])
+                extra_context['preview_url'] = preview_url
+                # Add preview button HTML
+                extra_context['show_preview'] = True
+        
+        # Add available images to context
+        extra_context['newsletter_images'] = NewsletterImage.objects.all().order_by('-created_at')
+        
+        return super().changeform_view(request, object_id, form_url, extra_context)
+    
+    def send_to_all_subscribers(self, request, queryset):
+        """Send newsletter to all active subscribers"""
+        from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
+        
+        template = queryset.first()
+        if not template:
+            self.message_user(request, "No template selected", level=messages.ERROR)
+            return
+        
+        if not template.content_html:
+            self.message_user(request, "Template has no content", level=messages.ERROR)
+            return
+        
+        # Get all active subscribers
+        subscribers = Subscriber.objects.filter(is_active=True)
+        
+        if not subscribers.exists():
+            self.message_user(request, "No active subscribers found", level=messages.ERROR)
+            return
+        
+        sent_count = 0
+        failed_count = 0
+        
+        # Get base URL once
+        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
+        
+        for subscriber in subscribers:
+            try:
+                # Plain text fallback (MUST be clean, no problematic Unicode)
+                plain_text = f"""
+Ahoj,
+
+Prinášame vám novinky z WAKE TF UP. Prečítajte si články na našom webe:
+
+{base_url}/blog
+
+Ďakujeme za vašu pozornosť!
+
+WAKE TF UP tím
+
+Odhlásiť sa: {base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}
+                """.strip()
+                
+                # Replace placeholders in HTML
+                html_content = template.content_html
+                unsubscribe_link = f"{base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}"
+                
+                # Clean HTML content and subject from problematic Unicode characters
+                html_content = Template(html_content).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
+                html_content = clean_text_for_email(html_content)
+                subject = template.subject
+                
+                # Create email exactly like accounts/views.py does it
+                email = EmailMultiAlternatives(
+                    subject=subject,
+                    body=plain_text,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[subscriber.email],
+                )
+                email.attach_alternative(html_content, "text/html")
+                email.send(fail_silently=False)
+                sent_count += 1
+            except Exception as e:
+                failed_count += 1
+                self.message_user(
+                    request,
+                    f"Failed to send to {subscriber.email}: {str(e)}",
+                    level=messages.WARNING
+                )
+        
+        # Update last_sent timestamp
+        template.last_sent = datetime.now()
+        template.save()
+        
+        self.message_user(
+            request,
+            f"Successfully sent to {sent_count} subscribers. Failed: {failed_count}",
+            level=messages.SUCCESS
+        )
+    
+    send_to_all_subscribers.short_description = "Odoslať newsletter všetkým aktivným odberateľom"
+
+
+@admin.register(DiscountCodeTemplate)
+class DiscountCodeTemplateAdmin(SingletonModelAdmin):
+    fieldsets = (
+        ('Email Settings', {
+            'fields': ('subject',)
+        }),
+        ('Discount Information', {
+            'fields': ('discount_code', 'discount_percentage', 'valid_until')
+        }),
+        ('Content', {
+            'fields': ('content_html',),
+            'description': 'Vložte HTML email šablónu. Dostupné Jinja2 premenné: {{site_url}} (automaticky z FRONTEND_URL), {{unsubscribe_url}} (jednostranný unsubscribe), {{discount_code}}, {{discount_percentage}}, {{valid_until}}. Server automaticky nahradí všetky premenné reálnymi hodnotami.<br><br><strong>Príklady:</strong><br>&lt;a href=\"{{site_url}}/produkty\"&gt;Produkty&lt;/a&gt;<br>&lt;a href=\"{{unsubscribe_url}}\"&gt;Odhlásiť sa&lt;/a&gt;'
+        }),
+        ('Statistics', {
+            'fields': ('last_sent', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    readonly_fields = ('last_sent', 'created_at', 'updated_at')
+    
+    def save_model(self, request, obj, form, change):
+        """Clean Unicode characters before saving"""
+        obj.full_clean()  # This calls obj.clean()
+        super().save_model(request, obj, form, change)
+    
+    actions = ['send_to_all_subscribers']
+    
+    class Media:
+        css = {
+            'all': ('admin/css/newsletter_images_helper.css',)
+        }
+        js = ('admin/js/newsletter_images_helper.js',)
+    
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        if object_id:
+            obj = self.get_object(request, object_id)
+            if obj and obj.content_html:
+                preview_url = reverse('newsletter:discount_template_preview', args=[object_id])
+                extra_context['preview_url'] = preview_url
+                extra_context['show_preview'] = True
+        
+        # Add available images to context
+        extra_context['newsletter_images'] = NewsletterImage.objects.all().order_by('-created_at')
+        
+        return super().changeform_view(request, object_id, form_url, extra_context)
+    
+    def send_to_all_subscribers(self, request, queryset):
+        """Send discount code email to all active subscribers"""
+        from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
+        
+        template = queryset.first()
+        if not template:
+            self.message_user(request, "No template selected", level=messages.ERROR)
+            return
+        
+        if not template.content_html:
+            self.message_user(request, "Template has no content", level=messages.ERROR)
+            return
+        
+        # Get all active subscribers
+        subscribers = Subscriber.objects.filter(is_active=True)
+        
+        if not subscribers.exists():
+            self.message_user(request, "No active subscribers found", level=messages.ERROR)
+            return
+        
+        sent_count = 0
+        failed_count = 0
+        
+        # Get base URL once
+        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.sk'
+        
+        for subscriber in subscribers:
+            try:
+                # Plain text fallback (MUST be clean, no problematic Unicode)
+                discount_code_clean = clean_text_for_email(template.discount_code or '')
+                plain_text = f"""
+Ahoj,
+
+Máte špeciálnu zľavu! 
+
+Zľavový kód: {discount_code_clean}
+Zľava: {template.discount_percentage or ''}%
+Platný do: {template.valid_until.strftime('%d.%m.%Y') if template.valid_until else 'neznámo'}
+
+Nakupovať: {base_url}/produkty
+
+Odhlásiť sa: {base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}
+                """.strip()
+                
+                # Replace placeholders in HTML using Django template
+                html_content = template.content_html
+                unsubscribe_link = f"{base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}"
+                
+                # Render template variables and clean HTML
+                html_content = Template(html_content).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email, 'discount_code': template.discount_code or '', 'discount_percentage': str(template.discount_percentage or ''), 'valid_until': template.valid_until.strftime('%d.%m.%Y') if template.valid_until else ''}))
+                html_content = clean_text_for_email(html_content)
+                subject = template.subject
+                
+                # Create email exactly like accounts/views.py does it
+                email = EmailMultiAlternatives(
+                    subject=subject,
+                    body=plain_text,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[subscriber.email]
+                )
+                email.attach_alternative(html_content, "text/html")
+                email.send(fail_silently=False)
+                sent_count += 1
+            except Exception as e:
+                failed_count += 1
+                self.message_user(
+                    request,
+                    f"Failed to send to {subscriber.email}: {str(e)}",
+                    level=messages.WARNING
+                )
+        
+        # Update last_sent timestamp
+        template.last_sent = datetime.now()
+        template.save()
+        
+        self.message_user(
+            request,
+            f"Successfully sent to {sent_count} subscribers. Failed: {failed_count}",
+            level=messages.SUCCESS
+        )
+    
+    send_to_all_subscribers.short_description = "Send discount email to all active subscribers"
+    
+
+
+
+@admin.register(NewsletterImage)
+class NewsletterImageAdmin(admin.ModelAdmin):
+    list_display = ('title', 'image_preview', 'filename', 'created_at', 'copy_url_button')
+    list_filter = ('created_at',)
+    search_fields = ('title', 'alt_text', 'caption')
+    readonly_fields = ('image_preview', 'created_at', 'updated_at', 'full_url_display')
+    
+    fieldsets = (
+        ('Image Information', {
+            'fields': ('title', 'image', 'image_preview', 'alt_text', 'caption')
+        }),
+        ('URL for Email', {
+            'fields': ('full_url_display',),
+            'description': 'Copy this URL to use in your newsletter HTML'
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="max-height: 100px; max-width: 200px;" />',
+                obj.image.url
+            )
+        return "No image"
+    image_preview.short_description = 'Preview'
+    
+    def copy_url_button(self, obj):
+        if obj.image:
+            url = obj.image.url
+            return format_html(
+                '<button onclick="navigator.clipboard.writeText(\'{}\'); '
+                'alert(\'URL copied to clipboard!\'); return false;" '
+                'style="padding: 5px 10px; cursor: pointer;">📋 Copy URL</button>',
+                url
+            )
+        return "-"
+    copy_url_button.short_description = 'Copy URL'
+    
+    def full_url_display(self, obj):
+        if obj.image:
+            url = obj.image.url
+            return format_html(
+                '<div style="background: #f5f5f5; padding: 10px; margin: 10px 0; '
+                'border: 1px solid #ddd; border-radius: 4px;">'
+                '<strong>Relative URL:</strong><br>'
+                '<code style="background: white; padding: 5px; display: block; '
+                'margin: 5px 0; user-select: all;">{}</code>'
+                '<button onclick="navigator.clipboard.writeText(\'{}\'); '
+                'alert(\'URL copied!\'); return false;" '
+                'style="margin-top: 10px; padding: 8px 15px; cursor: pointer; '
+                'background: #417690; color: white; border: none; border-radius: 3px;">'
+                '📋 Copy URL</button>'
+                '<br><br>'
+                '<em style="color: #666;">Note: For emails, prepend your domain: '
+                'https://yourdomain.com{}</em>'
+                '</div>',
+                url, url, url
+            )
+        return "No image uploaded"
+    full_url_display.short_description = 'Image URL'

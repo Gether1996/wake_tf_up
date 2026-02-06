@@ -14,8 +14,8 @@ class Category(models.Model):
     
     class Meta:
         db_table = 'categories'
-        verbose_name = 'Category'
-        verbose_name_plural = 'Categories'
+        verbose_name = 'Kategória'
+        verbose_name_plural = 'Kategórie'
         ordering = ['name']
     
     def save(self, *args, **kwargs):
@@ -36,8 +36,8 @@ class Color(models.Model):
     
     class Meta:
         db_table = 'colors'
-        verbose_name = 'Color'
-        verbose_name_plural = 'Colors'
+        verbose_name = 'Farba'
+        verbose_name_plural = 'Farby'
         ordering = ['name']
     
     def __str__(self):
@@ -107,8 +107,8 @@ class Product(models.Model):
     
     class Meta:
         db_table = 'products'
-        verbose_name = 'Product'
-        verbose_name_plural = 'Products'
+        verbose_name = 'Produkt'
+        verbose_name_plural = 'Produkty'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['slug']),
@@ -175,8 +175,8 @@ class ProductImage(models.Model):
     class Meta:
         db_table = 'product_images'
         ordering = ['order', 'created_at']
-        verbose_name = 'Product Image'
-        verbose_name_plural = 'Product Images'
+        verbose_name = 'Obrázok produktu'
+        verbose_name_plural = 'Obrázky produktov'
     
     def __str__(self):
         return f"Image for {self.product.name}"
@@ -201,8 +201,8 @@ class ProductVideo(models.Model):
     class Meta:
         db_table = 'product_videos'
         ordering = ['order', 'created_at']
-        verbose_name = 'Product Video'
-        verbose_name_plural = 'Product Videos'
+        verbose_name = 'Video produktu'
+        verbose_name_plural = 'Videá produktov'
     
     def __str__(self):
         return f"Video {self.order + 1} for {self.product.name}"

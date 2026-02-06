@@ -59,18 +59,6 @@ import { LanguageService } from '../../core/services/language.service';
               }
             </button>
 
-            <!-- Demo Logout (Temporary) - Desktop Only -->
-            @if (hasDemoAccess()) {
-              <button 
-                (click)="demoLogout()" 
-                class="hidden md:block hover:text-danger transition-colors"
-                title="Exit Demo Access">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                </svg>
-              </button>
-            }
-
             <!-- Cart -->
             <a [routerLink]="cartLink()" class="relative hover:text-accent transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,15 +173,6 @@ import { LanguageService } from '../../core/services/language.service';
               }
             </button>
 
-            <!-- Demo Logout - Mobile -->
-            @if (hasDemoAccess()) {
-              <button 
-                (click)="demoLogout(); closeMobileMenu()" 
-                class="w-full text-left text-sm uppercase tracking-wide hover:text-danger transition-colors py-2">
-                Exit Demo Access
-              </button>
-            }
-
             <!-- Logout - Mobile -->
             @if (isAuthenticated()) {
               <button 
@@ -225,18 +204,8 @@ export class HeaderComponent {
   cartItemCount = this.cartService.itemCount;
   isDark = this.themeService.isDark;
   currentLang = this.languageService.currentLang;
-  
-  // Demo access check
-  hasDemoAccess = signal(false);
 
   constructor() {
-    // Check demo access on init
-    this.checkDemoAccess();
-  }
-
-  checkDemoAccess() {
-    const demoAccess = localStorage.getItem('demo_access');
-    this.hasDemoAccess.set(demoAccess === 'true');
   }
 
   // Computed localized paths
@@ -283,14 +252,4 @@ export class HeaderComponent {
     this.closeUserMenu();
   }
 
-  demoLogout() {
-    // Clear demo access
-    localStorage.removeItem('demo_access');
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    
-    // Redirect to demo login
-    this.router.navigate(['/demo-login']);
-  }
 }

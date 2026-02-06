@@ -141,8 +141,8 @@ class ReviewTokenAdmin(admin.ModelAdmin):
     # Custom actions
     @admin.action(description='Mark tokens as used')
     def mark_as_used(self, request, queryset):
-        from django.utils import timezone
-        updated = queryset.update(is_used=True, used_at=timezone.now())
+        from datetime import datetime
+        updated = queryset.update(is_used=True, used_at=datetime.now())
         self.message_user(request, f'{updated} tokens marked as used.')
     
     @admin.action(description='Resend review request email')

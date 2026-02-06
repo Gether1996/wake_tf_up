@@ -113,8 +113,8 @@ class Order(models.Model):
     
     class Meta:
         db_table = 'orders'
-        verbose_name = 'Order'
-        verbose_name_plural = 'Orders'
+        verbose_name = 'Objednávka'
+        verbose_name_plural = 'Objednávky'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['user', 'status']),
@@ -204,8 +204,8 @@ class OrderItem(models.Model):
     
     class Meta:
         db_table = 'order_items'
-        verbose_name = 'Order Item'
-        verbose_name_plural = 'Order Items'
+        verbose_name = 'Položka objednávky'
+        verbose_name_plural = 'Položky objednávky'
     
     def __str__(self):
         return f"{self.product.name} x{self.quantity}"

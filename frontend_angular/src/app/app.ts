@@ -1,7 +1,6 @@
 import { Component, inject, signal, effect } from '@angular/core';
-import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { RouterOutlet, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { filter } from 'rxjs/operators';
 import { HeaderComponent } from './layout/header/header.component';
 import { FooterComponent } from './layout/footer/footer.component';
 import { NotificationContainerComponent } from './shared/notification-container/notification-container.component';
@@ -26,14 +25,7 @@ export class App {
     // Initialize theme
     this.themeService.initTheme();
     
-    // Check current route on navigation
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: any) => {
-      this.showLayout.set(!event.url.includes('/demo-login'));
-    });
-    
-    // Check initial route
-    this.showLayout.set(!this.router.url.includes('/demo-login'));
+    // Show layout on all routes
+    this.showLayout.set(true);
   }
 }

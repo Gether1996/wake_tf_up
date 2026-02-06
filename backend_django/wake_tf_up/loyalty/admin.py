@@ -62,15 +62,15 @@ class DiscountCodeAdmin(admin.ModelAdmin):
     # Actions
     def activate_codes(self, request, queryset):
         queryset.update(is_active=True)
-    activate_codes.short_description = "Activate selected codes"
+    activate_codes.short_description = "Aktivovať vybrané kódy"
     
     def deactivate_codes(self, request, queryset):
         queryset.update(is_active=False)
-    deactivate_codes.short_description = "Deactivate selected codes"
+    deactivate_codes.short_description = "Deaktivovať vybrané kódy"
     
     def mark_as_unused(self, request, queryset):
         queryset.update(is_used=False, used_at=None)
-    mark_as_unused.short_description = "Mark selected codes as Unused"
+    mark_as_unused.short_description = "Označiť vybrané kódy ako nepoužité"
     
     def extend_validity(self, request, queryset):
         count = 0
@@ -212,15 +212,15 @@ class QRCodeAdmin(admin.ModelAdmin):
     # Actions
     def activate_qr_codes(self, request, queryset):
         count = queryset.update(is_active=True)
-        self.message_user(request, f"Activated {count} QR codes")
-    activate_qr_codes.short_description = "Activate selected QR codes"
+        self.message_user(request, f"Aktivované {count} QR kódov")
+    activate_qr_codes.short_description = "Aktivovať vybrané QR kódy"
     
     def deactivate_qr_codes(self, request, queryset):
         count = queryset.update(is_active=False)
-        self.message_user(request, f"Deactivated {count} QR codes")
-    deactivate_qr_codes.short_description = "Deactivate selected QR codes"
+        self.message_user(request, f"Deaktivované {count} QR kódov")
+    deactivate_qr_codes.short_description = "Deaktivovať vybrané QR kódy"
     
     def reset_scan_count(self, request, queryset):
         count = queryset.update(scan_count=0, last_scanned_at=None)
-        self.message_user(request, f"Reset scan count for {count} QR codes")
-    reset_scan_count.short_description = "Reset scan count"
+        self.message_user(request, f"Resetovaný počet skenovaní pre {count} QR kódov")
+    reset_scan_count.short_description = "Resetovať počet skenovaní"

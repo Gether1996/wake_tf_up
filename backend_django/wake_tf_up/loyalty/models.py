@@ -65,8 +65,8 @@ class DiscountCode(models.Model):
     
     class Meta:
         db_table = 'discount_codes'
-        verbose_name = 'Discount Code'
-        verbose_name_plural = 'Discount Codes'
+        verbose_name = 'Zľavový kód'
+        verbose_name_plural = 'Zľavové kódy'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['code']),
@@ -316,8 +316,8 @@ class QRCode(models.Model):
     
     class Meta:
         db_table = 'qr_codes'
-        verbose_name = 'QR Code'
-        verbose_name_plural = 'QR Codes'
+        verbose_name = 'QR kód'
+        verbose_name_plural = 'QR kódy'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['code']),
@@ -337,9 +337,9 @@ class QRCode(models.Model):
     
     def increment_scan_count(self):
         """Increment scan count and update last scanned timestamp"""
-        from django.utils import timezone
+        from datetime import datetime
         self.scan_count += 1
-        self.last_scanned_at = timezone.now()
+        self.last_scanned_at = datetime.now()
         self.save(update_fields=['scan_count', 'last_scanned_at'])
     
     def get_qr_image_data(self):

@@ -1,8 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 import secrets
 from shop.models import Product
 
@@ -42,8 +41,8 @@ class Review(models.Model):
     
     class Meta:
         db_table = 'reviews'
-        verbose_name = 'Review'
-        verbose_name_plural = 'Reviews'
+        verbose_name = 'Recenzia'
+        verbose_name_plural = 'Recenzie'
         ordering = ['-created_at']
         unique_together = ['product', 'user']  # One review per user per product
         indexes = [
@@ -114,8 +113,8 @@ class ReviewToken(models.Model):
     
     class Meta:
         db_table = 'review_tokens'
-        verbose_name = 'Review Token'
-        verbose_name_plural = 'Review Tokens'
+        verbose_name = 'Token recenzie'
+        verbose_name_plural = 'Tokeny recenzii'
         ordering = ['-created_at']
         unique_together = ['order', 'product']  # One token per product per order
         indexes = [
@@ -146,7 +145,7 @@ class ReviewToken(models.Model):
         from orders.models import OrderItem
         
         tokens = []
-        expires_at = timezone.now() + timedelta(days=expiration_days)
+        expires_at = datetime.now() + timedelta(days=expiration_days)
         
         # Get all unique products from order
         order_items = OrderItem.objects.filter(order=order).select_related('product')
@@ -168,10 +167,10 @@ class ReviewToken(models.Model):
     
     def is_valid(self):
         """Check if token is still valid (not used and not expired)"""
-        return not self.is_used and timezone.now() < self.expires_at
+        return not self.is_used and datetime.now() < self.expires_at
     
     def mark_used(self):
         """Mark token as used"""
         self.is_used = True
-        self.used_at = timezone.now()
+        self.used_at = datetime.now()
         self.save(update_fields=['is_used', 'used_at'])

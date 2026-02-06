@@ -119,8 +119,8 @@ class User(AbstractUser):
     
     class Meta:
         db_table = 'users'
-        verbose_name = 'User'
-        verbose_name_plural = 'Users'
+        verbose_name = 'Užívateľ'
+        verbose_name_plural = 'Užívatelia'
     
     def __str__(self):
         return self.email

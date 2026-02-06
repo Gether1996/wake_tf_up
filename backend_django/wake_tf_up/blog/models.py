@@ -18,8 +18,8 @@ class BlogPost(models.Model):
     
     class Meta:
         db_table = 'blog_posts'
-        verbose_name = 'Blog Post'
-        verbose_name_plural = 'Blog Posts'
+        verbose_name = 'Blog článok'
+        verbose_name_plural = 'Blog články'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['is_published', 'created_at']),
@@ -66,8 +66,8 @@ class BlogImage(models.Model):
     
     class Meta:
         db_table = 'blog_images'
-        verbose_name = 'Blog Image'
-        verbose_name_plural = 'Blog Images'
+        verbose_name = 'Blog obrázok'
+        verbose_name_plural = 'Blog obrázky'
         ordering = ['-created_at']
     
     def __str__(self):

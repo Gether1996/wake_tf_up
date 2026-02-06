@@ -6,7 +6,6 @@ import threading
 import time
 from django.core.mail import send_mail
 from django.conf import settings
-from django.template.loader import render_to_string
 
 
 def send_newsletter_discount_code_delayed(email, delay_seconds=300):

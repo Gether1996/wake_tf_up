@@ -60,8 +60,8 @@ class PaymentTransaction(models.Model):
     
     class Meta:
         db_table = 'payment_transactions'
-        verbose_name = 'Payment Transaction'
-        verbose_name_plural = 'Payment Transactions'
+        verbose_name = 'Platobná transakcia'
+        verbose_name_plural = 'Platobné transakcie'
         ordering = ['-created_at']
     
     def __str__(self):

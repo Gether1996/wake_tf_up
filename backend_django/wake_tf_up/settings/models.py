@@ -108,8 +108,8 @@ class MainSettings(models.Model):
     
     class Meta:
         db_table = 'main_settings'
-        verbose_name = 'Main Settings'
-        verbose_name_plural = 'Main Settings'
+        verbose_name = 'Hlavné nastavenia'
+        verbose_name_plural = 'Hlavné nastavenia'
     
     def clean(self):
         """Ensure only one instance exists"""

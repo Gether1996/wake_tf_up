@@ -1,5 +1,14 @@
 from rest_framework import serializers
-from .models import Subscriber, NewsletterPopupStat
+from .models import Subscriber, NewsletterPopupStat, NewsletterImage
+
+
+class RelativeImageField(serializers.ImageField):
+    """Custom ImageField that returns relative URLs instead of absolute"""
+    def to_representation(self, value):
+        if not value:
+            return None
+        # Return relative URL path (nginx handles the domain)
+        return value.url
 
 
 class SubscriberSerializer(serializers.ModelSerializer):
@@ -21,3 +30,23 @@ class NewsletterPopupStatSerializer(serializers.ModelSerializer):
             'ip_address': {'required': False},
             'user_agent': {'required': False},
         }
+
+
+class NewsletterImageSerializer(serializers.ModelSerializer):
+    """Serializer for newsletter images"""
+    image = RelativeImageField()
+    image_url = serializers.SerializerMethodField()
+    filename = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = NewsletterImage
+        fields = (
+            'id', 'title', 'image', 'image_url', 'alt_text', 
+            'caption', 'filename', 'created_at'
+        )
+    
+    def get_image_url(self, obj):
+        """Get relative URL for the image (Nginx handles domain)"""
+        if obj.image:
+            return obj.image.url
+        return None
