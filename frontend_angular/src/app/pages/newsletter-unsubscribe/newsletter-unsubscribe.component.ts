@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api/api.service';
@@ -77,11 +77,8 @@ export class NewsletterUnsubscribeComponent implements OnInit {
   private api = inject(ApiService);
   private route = inject(ActivatedRoute);
   
-  unsubscribed: any = () => this.isUnsubscribed;
-  error: any = () => this.errorMessage;
-  
-  private isUnsubscribed = false;
-  private errorMessage = '';
+  unsubscribed = signal(false);
+  error = signal('');
 
   ngOnInit() {
     // Get email from query parameter
@@ -89,18 +86,18 @@ export class NewsletterUnsubscribeComponent implements OnInit {
       const email = params['email'];
       
       if (!email) {
-        this.errorMessage = 'Email nie je zadaný.';
+        this.error.set('Email nie je zadaný.');
         return;
       }
       
       // Call unsubscribe API
       this.api.get(`newsletter/unsubscribe/?email=${email}`).subscribe({
         next: (response: any) => {
-          this.isUnsubscribed = true;
+          this.unsubscribed.set(true);
         },
-        error: (error) => {
-          console.error('Unsubscribe error:', error);
-          this.errorMessage = error.error?.message || 'Nie je možné ťa odhlásiť z newsletteru. Skús neskôr.';
+        error: (err) => {
+          console.error('Unsubscribe error:', err);
+          this.error.set(err.error?.error || err.error?.message || 'Nie je možné ťa odhlásiť z newsletteru. Skús to neskôr.');
         }
       });
     });
