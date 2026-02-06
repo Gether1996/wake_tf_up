@@ -54,6 +54,15 @@
     "subscribed_success": "Skvelé! Zľavový kód dostanete emailom o 5 minút.",
     "subscription_error": "Niečo sa pokazilo. Skúste prosím znova."
   },
+  "newsletter_unsubscribe": {
+    "title_success": "Odhlásený zo newsletteru",
+    "description_success": "Bol si úspešne odhlásený zo newsletteru. Už ti nebudeme posielať noviny a zľavy.",
+    "title_error": "Chyba pri odhlasovaní",
+    "unsubscribing": "Odhlasovanie...",
+    "email_missing": "Email nie je zadaný.",
+    "error_generic": "Nie je možné ťa odhlásiť z newsletteru. Skús to neskôr.",
+    "back_home": "Späť na domovskú stránku"
+  },
   "badges": {
     "drop": "DROP",
     "recycled": "RECYKLOVANÉ",

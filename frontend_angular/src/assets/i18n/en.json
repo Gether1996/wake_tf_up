@@ -54,6 +54,15 @@
     "subscribed_success": "Great! You'll receive your discount code via email in 5 minutes.",
     "subscription_error": "Something went wrong. Please try again."
   },
+  "newsletter_unsubscribe": {
+    "title_success": "Unsubscribed from Newsletter",
+    "description_success": "You have been successfully unsubscribed from the newsletter. We won't send you any more emails.",
+    "title_error": "Unsubscribe Error",
+    "unsubscribing": "Unsubscribing...",
+    "email_missing": "Email is missing.",
+    "error_generic": "Unable to unsubscribe you from the newsletter. Please try again later.",
+    "back_home": "Back to home page"
+  },
   "badges": {
     "drop": "DROP",
     "recycled": "RECYCLED",

@@ -2,11 +2,12 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api/api.service';
+import { TranslocoModule } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-newsletter-unsubscribe',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslocoModule],
   template: `
     <div class="min-h-screen flex items-center justify-center bg-background px-4">
       <div class="max-w-md w-full">
@@ -20,14 +21,14 @@ import { ApiService } from '../../core/api/api.service';
                 </svg>
               </div>
               
-              <h1 class="text-2xl font-bold mb-2">Odhlásený zo newsletteru</h1>
+              <h1 class="text-2xl font-bold mb-2">{{ 'newsletter_unsubscribe.title_success' | transloco }}</h1>
               <p class="text-muted-foreground mb-6">
-                Bol si úspešne odhlásený zo newsletteru. Už ti nebudeme posielať noviny a zľavy.
+                {{ 'newsletter_unsubscribe.description_success' | transloco }}
               </p>
               
               <a [routerLink]="['/en']" class="block">
                 <button class="w-full bg-foreground text-background py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
-                  Späť na domovskú stránku
+                  {{ 'newsletter_unsubscribe.back_home' | transloco }}
                 </button>
               </a>
             </div>
@@ -41,7 +42,7 @@ import { ApiService } from '../../core/api/api.service';
                   <div class="animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
                 </div>
               </div>
-              <p class="text-muted-foreground">Odhlasovanie...</p>
+              <p class="text-muted-foreground">{{ 'newsletter_unsubscribe.unsubscribing' | transloco }}</p>
             </div>
           }
           
@@ -54,14 +55,14 @@ import { ApiService } from '../../core/api/api.service';
                 </svg>
               </div>
               
-              <h1 class="text-2xl font-bold mb-2 text-danger">Chyba pri odhlasovaní</h1>
+              <h1 class="text-2xl font-bold mb-2 text-danger">{{ 'newsletter_unsubscribe.title_error' | transloco }}</h1>
               <p class="text-muted-foreground mb-4">
-                {{ error() }}
+                {{ error() | transloco }}
               </p>
               
               <a [routerLink]="['/en']" class="block">
                 <button class="w-full bg-foreground text-background py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
-                  Späť na domovskú stránku
+                  {{ 'newsletter_unsubscribe.back_home' | transloco }}
                 </button>
               </a>
             </div>
@@ -85,7 +86,7 @@ export class NewsletterUnsubscribeComponent implements OnInit {
       const email = params['email'];
       
       if (!email) {
-        this.error.set('Email nie je zadaný.');
+        this.error.set('newsletter_unsubscribe.email_missing');
         return;
       }
       
@@ -96,7 +97,7 @@ export class NewsletterUnsubscribeComponent implements OnInit {
         },
         error: (err) => {
           console.error('Unsubscribe error:', err);
-          this.error.set(err.error?.error || err.error?.message || 'Nie je možné ťa odhlásiť z newsletteru. Skús to neskôr.');
+          this.error.set(err.error?.error || err.error?.message || 'newsletter_unsubscribe.error_generic');
         }
       });
     });
