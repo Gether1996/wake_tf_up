@@ -96,6 +96,11 @@ const appRoutes: Routes = [
 ];
 
 export const routes: Routes = [
+  // Newsletter unsubscribe (no language guard)
+  {
+    path: 'newsletter/unsubscribe',
+    loadComponent: () => import('./pages/newsletter-unsubscribe/newsletter-unsubscribe.component').then(m => m.NewsletterUnsubscribeComponent)
+  },
   // All routes protected by language guard
   {
     path: ':lang',

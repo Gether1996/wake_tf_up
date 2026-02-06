@@ -106,12 +106,12 @@ Prinášame vám novinky z WAKE TF UP. Prečítajte si článoky na našom webe:
 
 WAKE TF UP tím
 
-Odhlásiť sa: {base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}
+Odhlásiť sa: {base_url}/newsletter/unsubscribe?email={subscriber.email}
                 """.strip()
                 
                 # Replace placeholders in HTML using Django template
                 html_content = template.content_html
-                unsubscribe_link = f"{base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}"
+                unsubscribe_link = f"{base_url}/newsletter/unsubscribe?email={subscriber.email}"
                 
                 # Render template variables and clean HTML
                 html_content = Template(html_content).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
@@ -192,12 +192,12 @@ Platný do: {template.valid_until.strftime('%d.%m.%Y') if template.valid_until e
 
 Nakupovať: {base_url}/produkty
 
-Odhlásiť sa: {base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}
+Odhlásiť sa: {base_url}/newsletter/unsubscribe?email={subscriber.email}
                 """.strip()
                 
                 # Replace placeholders in HTML using Django template
                 html_content = template.content_html
-                unsubscribe_link = f"{base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}"
+                unsubscribe_link = f"{base_url}/newsletter/unsubscribe?email={subscriber.email}"
                 
                 # Render template variables and clean HTML
                 html_content = Template(html_content).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email, 'discount_code': template.discount_code or '', 'discount_percentage': str(template.discount_percentage or ''), 'valid_until': template.valid_until.strftime('%d.%m.%Y') if template.valid_until else ''}))
@@ -388,18 +388,17 @@ Prinášame vám novinky z WAKE TF UP. Prečítajte si články na našom webe:
 
 WAKE TF UP tím
 
-Odhlásiť sa: {base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}
+Odhlásiť sa: {base_url}/newsletter/unsubscribe?email={subscriber.email}
                 """.strip()
                 
                 # Replace placeholders in HTML
                 html_content = template.content_html
-                unsubscribe_link = f"{base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}"
+                unsubscribe_link = f"{base_url}/newsletter/unsubscribe?email={subscriber.email}"
                 
                 # Clean HTML content and subject from problematic Unicode characters
                 html_content = Template(html_content).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
                 html_content = clean_text_for_email(html_content)
-                subject = template.subject
-                
+                subject = template.subject                
                 # Create email exactly like accounts/views.py does it
                 email = EmailMultiAlternatives(
                     subject=subject,
@@ -521,12 +520,12 @@ Platný do: {template.valid_until.strftime('%d.%m.%Y') if template.valid_until e
 
 Nakupovať: {base_url}/produkty
 
-Odhlásiť sa: {base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}
+Odhlásiť sa: {base_url}/newsletter/unsubscribe?email={subscriber.email}
                 """.strip()
                 
                 # Replace placeholders in HTML using Django template
                 html_content = template.content_html
-                unsubscribe_link = f"{base_url}/api/v1/newsletter/unsubscribe/?email={subscriber.email}"
+                unsubscribe_link = f"{base_url}/newsletter/unsubscribe?email={subscriber.email}"
                 
                 # Render template variables and clean HTML
                 html_content = Template(html_content).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email, 'discount_code': template.discount_code or '', 'discount_percentage': str(template.discount_percentage or ''), 'valid_until': template.valid_until.strftime('%d.%m.%Y') if template.valid_until else ''}))
