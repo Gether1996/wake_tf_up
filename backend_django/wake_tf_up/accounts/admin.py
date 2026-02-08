@@ -33,4 +33,11 @@ class UserAdmin(BaseUserAdmin):
             'classes': ('wide',),
             'fields': ('first_name', 'last_name', 'street', 'city', 'postal_code', 'country'),
         }),
-    )
+    )    
+    def save_model(self, request, obj, form, change):
+        """
+        Automatically set is_staff=True when is_superuser=True
+        """
+        if obj.is_superuser:
+            obj.is_staff = True
+        super().save_model(request, obj, form, change)
