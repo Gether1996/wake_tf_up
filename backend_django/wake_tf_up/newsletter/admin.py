@@ -2,10 +2,40 @@ from django.contrib import admin, messages
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.urls import reverse
+from django import forms
 from .models import Subscriber, NewsletterPopupStat, NewsletterTemplate, DiscountCodeTemplate, NewsletterImage
 from datetime import datetime
 import re
 from django.template import Template, Context
+
+
+class DiscountCodeChoiceField(forms.ModelChoiceField):
+    """Custom ModelChoiceField with formatted labels for discount codes"""
+    def label_from_instance(self, obj):
+        return f"{obj.code} - {obj.discount_percentage}% (platný do: {obj.valid_until.strftime('%d.%m.%Y %H:%M') if obj.valid_until else 'neobmedzene'})"
+
+
+class DiscountCodeTemplateAdminForm(forms.ModelForm):
+    """Admin form that keeps auto-filled fields readonly but editable via JS"""
+
+    class Meta:
+        model = DiscountCodeTemplate
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name in ('discount_code', 'discount_percentage', 'valid_until'):
+            field = self.fields.get(field_name)
+            if not field:
+                continue
+            widget = field.widget
+            if hasattr(widget, 'widgets'):  # SplitDateTimeWidget etc.
+                for subwidget in widget.widgets:
+                    subwidget.attrs['readonly'] = 'readonly'
+                widget.attrs = getattr(widget, 'attrs', {})
+                widget.attrs['data-readonly'] = 'true'
+            else:
+                widget.attrs['readonly'] = 'readonly'
 
 
 def clean_text_for_email(text):
@@ -326,21 +356,18 @@ class NewsletterTemplateAdmin(SingletonModelAdmin):
     
     actions = ['send_to_all_subscribers']
     
-    class Media:
-        css = {
-            'all': ('admin/css/newsletter_images_helper.css',)
-        }
-        js = ('admin/js/newsletter_images_helper.js',)
-    
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         extra_context = extra_context or {}
-        if object_id:
-            obj = self.get_object(request, object_id)
+        
+        # For singleton models, always use pk=1
+        try:
+            obj = self.model.objects.get(pk=1)
             if obj and obj.content_html:
-                preview_url = reverse('newsletter:newsletter_template_preview', args=[object_id])
+                preview_url = reverse('newsletter:newsletter_template_preview', args=[1])
                 extra_context['preview_url'] = preview_url
-                # Add preview button HTML
                 extra_context['show_preview'] = True
+        except self.model.DoesNotExist:
+            pass
         
         # Add available images to context (limit to 50 recent, only load necessary fields)
         extra_context['newsletter_images'] = NewsletterImage.objects.only(
@@ -434,12 +461,29 @@ Odhlásiť sa: {base_url}/newsletter/unsubscribe?email={subscriber.email}
 
 @admin.register(DiscountCodeTemplate)
 class DiscountCodeTemplateAdmin(SingletonModelAdmin):
+    form = DiscountCodeTemplateAdminForm
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Customize the discount code dropdown to show detailed info"""
+        if db_field.name == "selected_discount_code":
+            from loyalty.models import DiscountCode
+            kwargs["queryset"] = DiscountCode.objects.filter(is_active=True).order_by('-created_at')
+            kwargs["required"] = False
+            # Use custom choice field with formatted labels
+            return DiscountCodeChoiceField(queryset=kwargs["queryset"], required=False)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    
     fieldsets = (
         ('Email Settings', {
             'fields': ('subject',)
         }),
-        ('Discount Information', {
-            'fields': ('discount_code', 'discount_percentage', 'valid_until')
+        ('Discount Code Selection', {
+            'fields': ('selected_discount_code',),
+            'description': 'Vyberte existujúci zľavový kód. Informácie sa automaticky vyplnia po uložení.'
+        }),
+        ('Discount Information (Auto-filled)', {
+            'fields': ('discount_code', 'discount_percentage', 'valid_until'),
+            'description': 'Tieto polia sa automaticky vyplnia po uložení.'
         }),
         ('Content', {
             'fields': ('content_html',),
@@ -454,26 +498,36 @@ class DiscountCodeTemplateAdmin(SingletonModelAdmin):
     readonly_fields = ('last_sent', 'created_at', 'updated_at')
     
     def save_model(self, request, obj, form, change):
-        """Clean Unicode characters before saving"""
+        """Auto-fill discount fields from selected discount code and clean Unicode"""
+        if obj.selected_discount_code:
+            obj.discount_code = obj.selected_discount_code.code
+            obj.discount_percentage = int(obj.selected_discount_code.discount_percentage)
+            obj.valid_until = obj.selected_discount_code.valid_until
+        else:
+            obj.discount_code = ''
+            obj.discount_percentage = None
+            obj.valid_until = None
+        
         obj.full_clean()  # This calls obj.clean()
         super().save_model(request, obj, form, change)
     
     actions = ['send_to_all_subscribers']
     
     class Media:
-        css = {
-            'all': ('admin/css/newsletter_images_helper.css',)
-        }
-        js = ('admin/js/newsletter_images_helper.js',)
+        js = ('newsletter/admin/js/discount_code_selector.js',)
     
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         extra_context = extra_context or {}
-        if object_id:
-            obj = self.get_object(request, object_id)
+        
+        # For singleton models, always use pk=1
+        try:
+            obj = self.model.objects.get(pk=1)
             if obj and obj.content_html:
-                preview_url = reverse('newsletter:discount_template_preview', args=[object_id])
+                preview_url = reverse('newsletter:discount_template_preview', args=[1])
                 extra_context['preview_url'] = preview_url
                 extra_context['show_preview'] = True
+        except self.model.DoesNotExist:
+            pass
         
         # Add available images to context (limit to 50 recent, only load necessary fields)
         extra_context['newsletter_images'] = NewsletterImage.objects.only(

@@ -1,6 +1,8 @@
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.authentication import SessionAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import redirect
 from .models import DiscountCode, LoyaltyService, QRCode
 from .serializers import (
@@ -79,6 +81,21 @@ class GenerateLoyaltyCodeView(APIView):
             return Response({
                 'message': 'You do not qualify for a loyalty code yet. Need at least 3 paid orders.'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DiscountCodeDetailView(generics.RetrieveAPIView):
+    """
+    Get discount code details by ID (for admin use).
+    GET /api/v1/loyalty/discount-codes/<id>/
+    """
+    serializer_class = DiscountCodeSerializer
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    authentication_classes = [SessionAuthentication, JWTAuthentication]
+    queryset = DiscountCode.objects.all()
+    
+    def get_permissions(self):
+        # Allow both DRF token auth and Django session auth for admin
+        return [permissions.IsAuthenticated(), permissions.IsAdminUser()]
 
 
 class QRCodeScanView(APIView):

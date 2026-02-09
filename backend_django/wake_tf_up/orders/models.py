@@ -147,9 +147,16 @@ class Order(models.Model):
         
         Returns:
             bool: True if discount applied successfully, False otherwise
+        
+        Raises:
+            ValidationError: If a discount code is already applied
         """
         from loyalty.models import LoyaltyService
         from decimal import Decimal
+        
+        # Prevent combining discount codes
+        if self.discount_code is not None:
+            raise ValidationError("Discount code already applied. Only one discount code per order is allowed.")
         
         # Calculate subtotal from items
         subtotal = sum(item.price_at_purchase * item.quantity for item in self.items.all())
@@ -172,6 +179,30 @@ class Order(models.Model):
             if discount_code_obj.usage_count >= discount_code_obj.max_uses:
                 discount_code_obj.is_used = True
             discount_code_obj.save()
+            
+            return True
+        return False
+    
+    def remove_discount(self):
+        """
+        Remove applied discount code from this order.
+        Recalculates total without discount.
+        """
+        if self.discount_code:
+            # Decrement usage count
+            self.discount_code.usage_count = max(0, self.discount_code.usage_count - 1)
+            if self.discount_code.usage_count < self.discount_code.max_uses:
+                self.discount_code.is_used = False
+            self.discount_code.save()
+            
+            # Remove discount
+            self.discount_code = None
+            self.discount_amount = 0
+            
+            # Recalculate total
+            subtotal = sum(item.price_at_purchase * item.quantity for item in self.items.all())
+            self.total_amount = subtotal
+            self.save()
             
             return True
         return False

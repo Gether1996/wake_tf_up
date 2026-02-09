@@ -35,6 +35,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         from .models import StockReservationService
+        from rest_framework.exceptions import ValidationError as DRFValidationError
         
         items_data = validated_data.pop('items')
         discount_code_str = validated_data.pop('discount_code_str', None)
@@ -50,11 +51,16 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         # Apply discount code if provided
         if discount_code_str:
             from loyalty.models import DiscountCode
+            from django.core.exceptions import ValidationError
             try:
                 discount_code = DiscountCode.objects.get(code=discount_code_str)
                 order.apply_discount(discount_code)
             except DiscountCode.DoesNotExist:
-                pass  # Silently ignore invalid codes
+                # Silently ignore invalid codes
+                pass
+            except ValidationError as e:
+                # Raise DRF ValidationError if discount code already applied
+                raise DRFValidationError({'discount_code': str(e)})
         
         return order
 

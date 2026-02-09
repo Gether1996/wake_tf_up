@@ -85,16 +85,28 @@ class DiscountCodeTemplate(SingletonModel):
         default='',
         help_text="HTML šablóna emailu. Dostupné Jinja2 premenné: {{site_url}}, {{unsubscribe_url}}, {{discount_code}}, {{discount_percentage}}, {{valid_until}}, {{email}}. Príklady: <a href=\"{{site_url}}/produkty\">Produkty</a>, <a href=\"{{unsubscribe_url}}\">Odhlásiť sa</a>"
     )
+    
+    # Link to actual discount code
+    selected_discount_code = models.ForeignKey(
+        'loyalty.DiscountCode',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='newsletter_templates',
+        help_text="Vyberte existujúci zľavový kód"
+    )
+    
+    # These fields are auto-filled from selected_discount_code
     discount_code = models.CharField(
         max_length=50,
         blank=True,
         default='',
-        help_text="Zľavový kód, ktorý sa vloží do emailu"
+        help_text="Zľavový kód (vyplní sa automaticky)"
     )
     discount_percentage = models.IntegerField(
         null=True,
         blank=True,
-        help_text="Discount percentage (e.g., 10 for 10%)"
+        help_text="Discount percentage (vyplní sa automaticky)"
     )
     valid_until = models.DateTimeField(
         null=True,
