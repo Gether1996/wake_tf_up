@@ -622,28 +622,30 @@ import { environment } from '../../../environments/environment';
               <!-- Items -->
               <div class="space-y-3 mb-6 pb-6 border-b border-border max-h-[300px] overflow-y-auto">
                 @for (item of cartService.items(); track item.product.id) {
-                  <div class="flex gap-3">
+                  <a 
+                    [routerLink]="'/' + currentLang() + '/products/' + item.product.slug"
+                    class="flex gap-3 hover:opacity-70 transition-opacity cursor-pointer group">
                     <div class="w-16 h-20 bg-muted overflow-hidden flex-shrink-0">
                       @if (item.product.images && item.product.images.length > 0) {
                         <img 
                           [src]="getImageUrl(item.product.images[0].image)" 
                           [alt]="item.product.name"
-                          class="w-full h-full object-cover">
+                          class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                       } @else if (item.product.primary_image) {
                         <img 
                           [src]="getImageUrl(item.product.primary_image)" 
                           [alt]="item.product.name"
-                          class="w-full h-full object-cover">
+                          class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                       }
                     </div>
                     <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium truncate">{{ item.product.name }}</p>
+                      <p class="text-sm font-medium truncate group-hover:text-accent transition-colors">{{ item.product.name }}</p>
                       <p class="text-xs text-muted-foreground">{{ 'checkout.qty' | transloco }}: {{ item.quantity }}</p>
                       <p class="text-sm font-medium mt-1">
                         {{ (item.product.discount_price || item.product.price) | currency: 'EUR' }}
                       </p>
                     </div>
-                  </div>
+                  </a>
                 }
               </div>
 
@@ -1008,32 +1010,64 @@ export class CheckoutComponent implements OnInit {
       this.currentStep.set(2);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (this.currentStep() === 2) {
+      console.log('=== STEP 2 VALIDATION DEBUG ===');
+      console.log('Company Purchase Enabled:', this.isCompanyPurchase());
+      
       // Validate contact and address fields
       const requiredFields = ['email', 'fullName', 'phone', 'address', 'city', 'postalCode', 'country'];
+      
+      // Add company fields if company purchase is enabled
+      if (this.isCompanyPurchase()) {
+        requiredFields.push('billingCompany', 'billingIco');
+      }
+      
+      console.log('Required Fields:', requiredFields);
+      
       let isValid = true;
+      const emptyFields: string[] = [];
       
       requiredFields.forEach(field => {
         const control = this.checkoutForm.get(field);
-        if (!control?.value) {
+        const value = control?.value;
+        console.log(`Field "${field}":`, value, '| Valid:', control?.valid, '| Errors:', control?.errors);
+        if (!value) {
           control?.markAsTouched();
           isValid = false;
+          emptyFields.push(field);
         }
       });
 
+      console.log('Empty Fields:', emptyFields);
+      console.log('Basic Required Fields Valid:', isValid);
+
       if (!isValid) {
+        console.log('❌ Validation failed: Empty required fields');
         this.error.set(this.currentLang() === 'sk' 
           ? 'Prosím vyplňte všetky povinné polia' 
           : 'Please fill in all required fields');
         return;
       }
 
+      console.log('Form Valid Status:', this.checkoutForm.valid);
+      console.log('Form Invalid Status:', this.checkoutForm.invalid);
+      
       if (this.checkoutForm.invalid) {
+        console.log('❌ Form is invalid. Checking all controls:');
         Object.keys(this.checkoutForm.controls).forEach(key => {
+          const control = this.checkoutForm.get(key);
+          if (control?.invalid) {
+            console.log(`  - "${key}" is INVALID:`, control.value, '| Errors:', control.errors);
+          }
           this.checkoutForm.get(key)?.markAsTouched();
         });
+        
+        this.error.set(this.currentLang() === 'sk' 
+          ? 'Niektoré polia obsahujú neplatné údaje' 
+          : 'Some fields contain invalid data');
         return;
       }
 
+      console.log('✅ Step 2 validation passed');
       this.error.set('');
       this.currentStep.set(3);
       window.scrollTo({ top: 0, behavior: 'smooth' });

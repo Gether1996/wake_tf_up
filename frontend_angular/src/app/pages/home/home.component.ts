@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -216,6 +216,17 @@ export class HomeComponent implements OnInit {
   reviewsLoading = signal(false);
   dropsLoading = signal(false);
   error = signal('');
+
+  constructor() {
+    // Watch for language changes and reload products
+    effect(() => {
+      this.languageService.currentLang(); // Track the signal
+      if (this.featuredProducts().length > 0 || this.limitedDrops().length > 0) {
+        this.loadFeatured();
+        this.loadDrops();
+      }
+    });
+  }
 
   ngOnInit() {
     this.loadFeatured();

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, OnDestroy, HostListener, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -344,11 +344,24 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   lightboxOpen = signal(false);
   currentImageIndex = signal(0);
   zoomLevel = signal(1);
+  private currentSlug = signal<string>('');
+
+  constructor() {
+    // Watch for language changes and reload product
+    effect(() => {
+      const lang = this.languageService.currentLang(); // Track the signal
+      const slug = this.currentSlug();
+      if (slug) {
+        this.loadProduct(slug);
+      }
+    });
+  }
 
   ngOnInit() {
     this.route.params.subscribe(params => {
       const slug = params['slug'];
       if (slug) {
+        this.currentSlug.set(slug);
         this.loadProduct(slug);
       }
     });

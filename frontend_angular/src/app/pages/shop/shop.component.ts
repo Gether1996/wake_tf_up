@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,7 @@ import { CatalogService, ProductFilters } from '../../core/api/catalog.service';
 import { Product, Category, Color } from '../../core/api/api.models';
 import { ProductCardComponent } from '../../shared/product-card/product-card.component';
 import { ButtonComponent } from '../../shared/button/button.component';
+import { LanguageService } from '../../core/services/language.service';
 
 @Component({
   selector: 'app-shop',
@@ -211,6 +212,7 @@ export class ShopComponent implements OnInit {
   private catalogService = inject(CatalogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private languageService = inject(LanguageService);
 
   products = signal<Product[]>([]);
   categories = signal<Category[]>([]);
@@ -262,6 +264,16 @@ export class ShopComponent implements OnInit {
     
     return pages;
   });
+
+  constructor() {
+    // Watch for language changes and reload categories/colors/products
+    effect(() => {
+      this.languageService.currentLang(); // Track the signal
+      this.loadCategories();
+      this.loadColors();
+      this.loadProducts();
+    });
+  }
 
   ngOnInit() {
     this.loadCategories();

@@ -2,8 +2,7 @@ import { Injectable, signal, computed, effect, PLATFORM_ID, inject } from '@angu
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { CartItem, Product } from '../api/api.models';
-import { NotificationService } from '../services/notification.service';
-import { environment } from '../../../environments/environment';
+import { NotificationService } from '../services/notification.service';import { LanguageService } from '../services/language.service';import { environment } from '../../../environments/environment';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -14,6 +13,7 @@ export class CartService {
   private platformId = inject(PLATFORM_ID);
   private http = inject(HttpClient);
   private notificationService = inject(NotificationService);
+  private languageService = inject(LanguageService);
   private readonly CART_KEY = 'cart';
   private apiUrl = `${environment.apiUrl}/products`;
   
@@ -38,6 +38,14 @@ export class CartService {
     // Persist cart to localStorage on every change
     effect(() => {
       this.saveCart(this.cartItems());
+    });
+
+    // Refresh cart products when language changes
+    effect(() => {
+      this.languageService.currentLang(); // Track the signal
+      if (this.items().length > 0) {
+        this.refreshCartProducts();
+      }
     });
   }
 
