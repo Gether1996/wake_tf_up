@@ -243,7 +243,7 @@ export class HomeComponent implements OnInit {
     this.loading.set(true);
     this.error.set('');
 
-    this.catalogService.getProducts({ is_limited_drop: 'true', ordering: '-created_at', page: 1 }).subscribe({
+    this.catalogService.getProducts({ ordering: '-created_at', page: 1 }).subscribe({
       next: (response) => {
         this.featuredProducts.set(response.results);
         this.loading.set(false);

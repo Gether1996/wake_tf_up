@@ -145,11 +145,11 @@ class ProductAdmin(admin.ModelAdmin):
     
     def mark_as_limited_drop(self, request, queryset):
         queryset.update(is_limited_drop=True)
-    mark_as_limited_drop.short_description = "Mark as Limited Drop"
+    mark_as_limited_drop.short_description = "Mark as Limited"
     
     def unmark_as_limited_drop(self, request, queryset):
         queryset.update(is_limited_drop=False)
-    unmark_as_limited_drop.short_description = "Unmark as Limited Drop"
+    unmark_as_limited_drop.short_description = "Unmark as Limited"
     
     def mark_as_recycled(self, request, queryset):
         queryset.update(is_recycled=True)
