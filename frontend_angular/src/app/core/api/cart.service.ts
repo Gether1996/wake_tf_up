@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, effect, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, signal, computed, effect, untracked, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { CartItem, Product } from '../api/api.models';
@@ -43,7 +43,8 @@ export class CartService {
     // Refresh cart products when language changes
     effect(() => {
       this.languageService.currentLang(); // Track the signal
-      if (this.items().length > 0) {
+      // Use untracked to avoid re-triggering when cart items change
+      if (untracked(() => this.items().length) > 0) {
         this.refreshCartProducts();
       }
     });

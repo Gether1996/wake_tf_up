@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -105,7 +105,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
             {{ 'common.retry' | transloco }}
           </app-button>
         </div>
-      } @else {
+      } @else if (featuredProducts().length > 0) {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           @for (product of featuredProducts(); track product.id) {
             <app-product-card [product]="product" />
@@ -118,6 +118,10 @@ import { ButtonComponent } from '../../shared/button/button.component';
               {{ 'home.featured.view_all' | transloco }}
             </app-button>
           </a>
+        </div>
+      } @else {
+        <div class="text-center text-muted-foreground py-12">
+          {{ 'home.featured.no_drops' | transloco }}
         </div>
       }
     </section>
@@ -221,7 +225,8 @@ export class HomeComponent implements OnInit {
     // Watch for language changes and reload products
     effect(() => {
       this.languageService.currentLang(); // Track the signal
-      if (this.featuredProducts().length > 0 || this.limitedDrops().length > 0) {
+      // Use untracked to avoid re-triggering when products change
+      if (untracked(() => this.featuredProducts().length > 0 || this.limitedDrops().length > 0)) {
         this.loadFeatured();
         this.loadDrops();
       }
@@ -238,7 +243,7 @@ export class HomeComponent implements OnInit {
     this.loading.set(true);
     this.error.set('');
 
-    this.catalogService.getProducts({ ordering: '-created_at', page: 1 }).subscribe({
+    this.catalogService.getProducts({ is_limited_drop: 'true', ordering: '-created_at', page: 1 }).subscribe({
       next: (response) => {
         this.featuredProducts.set(response.results);
         this.loading.set(false);
@@ -272,7 +277,9 @@ export class HomeComponent implements OnInit {
         this.limitedDrops.set(response.results);
         this.dropsLoading.set(false);
       },
-      error: () => {
+      error: (err) => {
+        console.warn('Limited drops unavailable:', err);
+        this.limitedDrops.set([]); // Set empty array on error
         this.dropsLoading.set(false);
       }
     });

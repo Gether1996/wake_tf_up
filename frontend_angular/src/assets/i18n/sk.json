@@ -81,7 +81,8 @@
     "featured": {
       "title": "Najnovšie Dropy",
       "subtitle": "Čerstvé prírastky, limitované množstvá",
-      "view_all": "Zobraziť Všetko"
+      "view_all": "Zobraziť Všetko",
+      "no_drops": "Zatiaľ žiadne dropy"
     },
     "drops": {
       "title": "Limitovaná Edícia",

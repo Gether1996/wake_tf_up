@@ -81,7 +81,8 @@
     "featured": {
       "title": "Latest Drops",
       "subtitle": "Fresh arrivals, limited quantities",
-      "view_all": "View All"
+      "view_all": "View All",
+      "no_drops": "No drops yet"
     },
     "drops": {
       "title": "Limited Edition",
