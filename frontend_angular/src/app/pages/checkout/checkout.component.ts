@@ -623,7 +623,7 @@ import { environment } from '../../../environments/environment';
               <div class="space-y-3 mb-6 pb-6 border-b border-border max-h-[300px] overflow-y-auto">
                 @for (item of cartService.items(); track item.product.id) {
                   <a 
-                    [routerLink]="'/' + currentLang() + '/products/' + item.product.slug"
+                    [routerLink]="'/' + currentLang() + '/product/' + item.product.slug"
                     class="flex gap-3 hover:opacity-70 transition-opacity cursor-pointer group">
                     <div class="w-16 h-20 bg-muted overflow-hidden flex-shrink-0">
                       @if (item.product.images && item.product.images.length > 0) {
