@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { Product, Category, Color } from './api.models';
+import { LanguageService } from '../services/language.service';
 
 export interface ProductFilters {
   category?: string;
@@ -29,10 +30,15 @@ export interface PaginatedResponse<T> {
   providedIn: 'root'
 })
 export class CatalogService {
+  private languageService = inject(LanguageService);
+  
   constructor(private api: ApiService) {}
 
   getProducts(filters?: ProductFilters): Observable<PaginatedResponse<Product>> {
     let params = new HttpParams();
+    
+    // Add language parameter
+    params = params.set('lang', this.languageService.currentLang());
     
     if (filters) {
       if (filters.category) params = params.set('category', filters.category);
@@ -52,19 +58,24 @@ export class CatalogService {
   }
 
   getProduct(slug: string): Observable<Product> {
-    return this.api.get<Product>(`products/${slug}/`);
+    const params = new HttpParams().set('lang', this.languageService.currentLang());
+    return this.api.get<Product>(`products/${slug}/`, params);
   }
 
   getCategories(): Observable<Category[]> {
-    return this.api.get<Category[]>('categories/');
+    const params = new HttpParams().set('lang', this.languageService.currentLang());
+    return this.api.get<Category[]>('categories/', params);
   }
 
   getColors(): Observable<Color[]> {
-    return this.api.get<Color[]>('colors/');
+    const params = new HttpParams().set('lang', this.languageService.currentLang());
+    return this.api.get<Color[]>('colors/', params);
   }
 
   searchProducts(query: string): Observable<Product[]> {
-    const params = new HttpParams().set('search', query);
+    let params = new HttpParams()
+      .set('search', query)
+      .set('lang', this.languageService.currentLang());
     return this.api.get<Product[]>('products/', params);
   }
 }

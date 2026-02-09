@@ -5,7 +5,10 @@ from .serializers import (
     ProductListSerializer,
     ProductDetailSerializer,
     CategorySerializer,
-    ColorSerializer
+    ColorSerializer,
+    ProductAdminSerializer,
+    CategoryAdminSerializer,
+    ColorAdminSerializer
 )
 
 
@@ -115,7 +118,7 @@ class ProductAdminViewSet(viewsets.ModelViewSet):
     DELETE /api/v1/admin/products/{id}/  - Delete product
     """
     queryset = Product.objects.all().select_related('category', 'color')
-    serializer_class = ProductDetailSerializer
+    serializer_class = ProductAdminSerializer
     permission_classes = [IsSuperuser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'slug', 'description']
@@ -129,7 +132,7 @@ class CategoryAdminViewSet(viewsets.ModelViewSet):
     Admin-only CRUD operations for categories.
     """
     queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+    serializer_class = CategoryAdminSerializer
     permission_classes = [IsSuperuser]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'slug']
@@ -141,7 +144,7 @@ class ColorAdminViewSet(viewsets.ModelViewSet):
     Admin-only CRUD operations for colors.
     """
     queryset = Color.objects.all()
-    serializer_class = ColorSerializer
+    serializer_class = ColorAdminSerializer
     permission_classes = [IsSuperuser]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'hex_code']

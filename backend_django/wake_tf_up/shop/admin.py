@@ -5,9 +5,10 @@ from .models import Category, Color, Product, ProductImage, ProductVideo
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'product_count', 'created_at')
-    search_fields = ('name', 'slug')
+    list_display = ('name', 'en_name', 'slug', 'product_count', 'created_at')
+    search_fields = ('name', 'en_name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
+    fields = ('name', 'en_name', 'slug')
     list_per_page = 50
     
     class Meta:
@@ -21,8 +22,9 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Color)
 class ColorAdmin(admin.ModelAdmin):
-    list_display = ('name', 'hex_code', 'color_preview', 'product_count', 'created_at')
-    search_fields = ('name', 'hex_code')
+    list_display = ('name', 'en_name', 'hex_code', 'color_preview', 'product_count', 'created_at')
+    search_fields = ('name', 'en_name', 'hex_code')
+    fields = ('name', 'en_name', 'hex_code')
     list_filter = ('created_at',)
     list_per_page = 50
     
@@ -71,7 +73,7 @@ class ProductAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'description', 'slug', 'category', 'color')
+            'fields': ('name', 'en_name', 'description', 'en_description', 'slug', 'category', 'color')
         }),
         ('Pricing & Stock', {
             'fields': ('price', 'discount_price', 'total_stock', 'available_stock', 'sold_quantity')

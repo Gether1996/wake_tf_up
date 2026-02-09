@@ -2,6 +2,26 @@ from rest_framework import serializers
 from .models import Product, Category, Color, ProductImage, ProductVideo
 
 
+class TranslatableSerializerMixin:
+    """Mixin to handle language selection in serializers"""
+    def get_language(self):
+        """Get language from request context (query param or Accept-Language header)"""
+        request = self.context.get('request')
+        if request:
+            # Try query parameter first (e.g., ?lang=en)
+            lang = request.query_params.get('lang')
+            if lang:
+                return lang.lower()
+            
+            # Try Accept-Language header
+            accept_lang = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
+            if 'en' in accept_lang.lower():
+                return 'en'
+        
+        # Default to Slovak
+        return 'sk'
+
+
 class RelativeImageField(serializers.ImageField):
     """Custom ImageField that returns relative URLs instead of absolute"""
     def to_representation(self, value):
@@ -20,18 +40,36 @@ class RelativeFileField(serializers.FileField):
         return value.url
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategorySerializer(TranslatableSerializerMixin, serializers.ModelSerializer):
     """Serializer for categories"""
+    name = serializers.SerializerMethodField()
+    
     class Meta:
         model = Category
         fields = ('id', 'name', 'slug')
+    
+    def get_name(self, obj):
+        """Return name based on language"""
+        lang = self.get_language()
+        if lang == 'en' and obj.en_name:
+            return obj.en_name
+        return obj.name
 
 
-class ColorSerializer(serializers.ModelSerializer):
+class ColorSerializer(TranslatableSerializerMixin, serializers.ModelSerializer):
     """Serializer for colors"""
+    name = serializers.SerializerMethodField()
+    
     class Meta:
         model = Color
         fields = ('id', 'name', 'hex_code')
+    
+    def get_name(self, obj):
+        """Return name based on language"""
+        lang = self.get_language()
+        if lang == 'en' and obj.en_name:
+            return obj.en_name
+        return obj.name
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -53,10 +91,12 @@ class ProductVideoSerializer(serializers.ModelSerializer):
         fields = ('id', 'video', 'thumbnail', 'order')
 
 
-class ProductListSerializer(serializers.ModelSerializer):
+class ProductListSerializer(TranslatableSerializerMixin, serializers.ModelSerializer):
     """Serializer for product list view"""
-    category = CategorySerializer(read_only=True)
-    color = ColorSerializer(read_only=True)
+    name = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
+    color = serializers.SerializerMethodField()
     primary_image = serializers.SerializerMethodField()
     available_stock = serializers.ReadOnlyField()
     is_in_stock = serializers.ReadOnlyField()
@@ -69,6 +109,28 @@ class ProductListSerializer(serializers.ModelSerializer):
             'pre_order_enabled', 'is_limited_drop', 'is_recycled', 'primary_image', 'created_at'
         )
     
+    def get_name(self, obj):
+        """Return name based on language"""
+        lang = self.get_language()
+        if lang == 'en' and obj.en_name:
+            return obj.en_name
+        return obj.name
+    
+    def get_description(self, obj):
+        """Return description based on language"""
+        lang = self.get_language()
+        if lang == 'en' and obj.en_description:
+            return obj.en_description
+        return obj.description
+    
+    def get_category(self, obj):
+        """Return category with correct language"""
+        return CategorySerializer(obj.category, context=self.context).data
+    
+    def get_color(self, obj):
+        """Return color with correct language"""
+        return ColorSerializer(obj.color, context=self.context).data
+    
     def get_primary_image(self, obj):
         """Get the first image as primary"""
         image = obj.images.first()
@@ -79,10 +141,12 @@ class ProductListSerializer(serializers.ModelSerializer):
         return None
 
 
-class ProductDetailSerializer(serializers.ModelSerializer):
+class ProductDetailSerializer(TranslatableSerializerMixin, serializers.ModelSerializer):
     """Detailed serializer for product detail view"""
-    category = CategorySerializer(read_only=True)
-    color = ColorSerializer(read_only=True)
+    name = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
+    color = serializers.SerializerMethodField()
     images = ProductImageSerializer(many=True, read_only=True)
     videos = ProductVideoSerializer(many=True, read_only=True)
     available_stock = serializers.ReadOnlyField()
@@ -97,3 +161,75 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             'is_in_stock', 'pre_order_enabled', 'is_limited_drop', 'is_recycled', 'is_published',
             'images', 'videos', 'created_at', 'updated_at'
         )
+    
+    def get_name(self, obj):
+        """Return name based on language"""
+        lang = self.get_language()
+        if lang == 'en' and obj.en_name:
+            return obj.en_name
+        return obj.name
+    
+    def get_description(self, obj):
+        """Return description based on language"""
+        lang = self.get_language()
+        if lang == 'en' and obj.en_description:
+            return obj.en_description
+        return obj.description
+    
+    def get_category(self, obj):
+        """Return category with correct language"""
+        return CategorySerializer(obj.category, context=self.context).data
+    
+    def get_color(self, obj):
+        """Return color with correct language"""
+        return ColorSerializer(obj.color, context=self.context).data
+
+
+# ============ ADMIN SERIALIZERS (return all fields for editing) ============
+
+class CategoryAdminSerializer(serializers.ModelSerializer):
+    """Admin serializer for categories - returns all language fields"""
+    class Meta:
+        model = Category
+        fields = ('id', 'name', 'en_name', 'slug', 'created_at', 'updated_at')
+        read_only_fields = ('created_at', 'updated_at')
+
+
+class ColorAdminSerializer(serializers.ModelSerializer):
+    """Admin serializer for colors - returns all language fields"""
+    class Meta:
+        model = Color
+        fields = ('id', 'name', 'en_name', 'hex_code', 'created_at', 'updated_at')
+        read_only_fields = ('created_at', 'updated_at')
+
+
+class ProductAdminSerializer(serializers.ModelSerializer):
+    """Admin serializer for products - returns all language fields"""
+    category = CategoryAdminSerializer(read_only=True)
+    color = ColorAdminSerializer(read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        source='category',
+        write_only=True
+    )
+    color_id = serializers.PrimaryKeyRelatedField(
+        queryset=Color.objects.all(),
+        source='color',
+        write_only=True
+    )
+    images = ProductImageSerializer(many=True, read_only=True)
+    videos = ProductVideoSerializer(many=True, read_only=True)
+    available_stock = serializers.ReadOnlyField()
+    sold_quantity = serializers.ReadOnlyField()
+    is_in_stock = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = Product
+        fields = (
+            'id', 'name', 'en_name', 'description', 'en_description', 'slug',
+            'category', 'category_id', 'color', 'color_id',
+            'price', 'discount_price', 'total_stock', 'sold_quantity', 'available_stock',
+            'is_in_stock', 'pre_order_enabled', 'is_limited_drop', 'is_recycled', 'is_published',
+            'images', 'videos', 'created_at', 'updated_at'
+        )
+        read_only_fields = ('created_at', 'updated_at', 'available_stock', 'sold_quantity', 'is_in_stock')

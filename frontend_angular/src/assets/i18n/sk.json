@@ -59,9 +59,9 @@
     "description_success": "Bol si úspešne odhlásený zo newsletteru. Už ti nebudeme posielať noviny a zľavy.",
     "title_error": "Chyba pri odhlasovaní",
     "unsubscribing": "Odhlasovanie...",
-    "email_missing": "Email nie je zadaný.",
-    "error_generic": "Nie je možné ťa odhlásiť z newsletteru. Skús to neskôr.",
-    "back_home": "Späť na domovskú stránku"
+    "email_missing": "Email nebol zadaný.",
+    "error_generic": "Nie je možné vás odhlásiť z newsletteru. Skúste to neskôr.",
+    "back_home": "Späť na hlavnú stránku"
   },
   "badges": {
     "drop": "DROP",
@@ -89,7 +89,7 @@
       "view_all": "Všetky Dropy"
     },
     "reviews": {
-      "title": "Ľuďom sa páčilo",
+      "title": "Čo hovoria zákazníci",
       "subtitle": "Reálne hodnotenia od našich zákazníkov",
       "no_reviews": "Zatiaľ žiadne hodnotenia"
     },
@@ -143,6 +143,8 @@
     "relatedProducts": "Mohlo by sa vám páčiť",
     "out_of_stock": "Vypredané",
     "low_stock": "Nízky sklad",
+    "last_pieces": "Posledné kusy",
+    "last_piece": "Posledný kus",
     "left": "zostáva",
     "limited": "Limitovaná edícia",
     "pieces_left": "ks",
@@ -171,7 +173,7 @@
     "order_summary": "Súhrn objednávky",
     "free": "ZDARMA",
     "free_shipping_info": "Doprava zdarma pri objednávkach nad {{ amount }}",
-    "free_shipping_unlocked": "Odomkli ste dopravu zdarma!",
+    "free_shipping_unlocked": "Máte dopravu zadarmo!",
     "free_shipping_remaining": "Pridajte ešte {{ amount }} pre dopravu zadarmo",
     "max_quantity": "Maximálne množstvo dosiahnuté"
   },
@@ -372,7 +374,7 @@
     "track": "Sledovať objednávku",
     "pay_now": "Zaplatiť teraz",
     "status_created": "Vytvorená",
-    "status_paid": "Zaplatenná",
+    "status_paid": "Zaplatená",
     "status_shipped": "Odoslaná",
     "status_delivered": "Doručená",
     "status_cancelled": "Zrušená",

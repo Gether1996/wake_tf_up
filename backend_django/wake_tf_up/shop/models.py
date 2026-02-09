@@ -8,6 +8,7 @@ from decimal import Decimal
 class Category(models.Model):
     """Product categories (e.g., T-shirts, Hoodies, Jackets)"""
     name = models.CharField(max_length=100)
+    en_name = models.CharField(max_length=100, blank=True, help_text="English name", default="")
     slug = models.SlugField(unique=True, max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -30,6 +31,7 @@ class Category(models.Model):
 class Color(models.Model):
     """Product colors"""
     name = models.CharField(max_length=50)
+    en_name = models.CharField(max_length=50, blank=True, help_text="English name", default="")
     hex_code = models.CharField(max_length=7, help_text="Hex color code, e.g., #FF0000")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -47,7 +49,9 @@ class Color(models.Model):
 class Product(models.Model):
     """Main product model for clothing items"""
     name = models.CharField(max_length=200)
+    en_name = models.CharField(max_length=200, blank=True, help_text="English name", default="")
     description = models.TextField(blank=True, help_text="Product description")
+    en_description = models.TextField(blank=True, help_text="English description", default="")
     slug = models.SlugField(unique=True, max_length=200, blank=True)
     
     category = models.ForeignKey(

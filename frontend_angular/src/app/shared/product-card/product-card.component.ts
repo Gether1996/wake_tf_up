@@ -79,9 +79,13 @@ import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
           } @else {
             @if (product().available_stock === 0) {
               <p class="text-sm text-danger font-mono uppercase">{{ 'product.out_of_stock' | transloco }}</p>
-            } @else if (product().available_stock < 5) {
+            } @else if (product().available_stock === 1) {
               <p class="text-sm text-warning font-mono uppercase">
-                {{ 'product.low_stock' | transloco }} ({{ product().available_stock }})
+                {{ 'product.last_piece' | transloco }}
+              </p>
+            } @else if (product().available_stock >= 2 && product().available_stock <= 5) {
+              <p class="text-sm text-warning font-mono uppercase">
+                {{ 'product.last_pieces' | transloco }} ({{ product().available_stock }})
               </p>
             } @else if (isInCart()) {
               <p class="text-sm text-accent font-mono uppercase flex items-center gap-1">

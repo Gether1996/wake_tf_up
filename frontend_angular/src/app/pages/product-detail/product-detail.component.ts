@@ -73,7 +73,7 @@ import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
                   class="w-full h-auto block cursor-pointer hover:opacity-90 transition-opacity">
                 <!-- Zoom hint -->
                 <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-black bg-opacity-20">
-                  <div class="bg-white text-foreground px-4 py-2 rounded-full font-mono text-sm flex items-center gap-2">
+                  <div class="bg-foreground text-background px-4 py-2 rounded-full font-mono text-sm flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                     </svg>
@@ -150,9 +150,13 @@ import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
             <div class="mb-6">
               @if (product()!.available_stock === 0 && !product()!.pre_order_enabled) {
                 <p class="text-danger font-mono uppercase text-sm">{{ 'product.out_of_stock' | transloco }}</p>
-              } @else if (product()!.available_stock < 5 && !product()!.pre_order_enabled) {
+              } @else if (product()!.available_stock === 1 && !product()!.pre_order_enabled) {
                 <p class="text-warning font-mono uppercase text-sm">
-                  {{ 'product.low_stock' | transloco }} ({{ product()!.available_stock }} {{ 'product.left' | transloco }})
+                  {{ 'product.last_piece' | transloco }}
+                </p>
+              } @else if (product()!.available_stock >= 2 && product()!.available_stock <= 5 && !product()!.pre_order_enabled) {
+                <p class="text-warning font-mono uppercase text-sm">
+                  {{ 'product.last_pieces' | transloco }} ({{ product()!.available_stock }} {{ 'product.left' | transloco }})
                 </p>
               } @else if (product()!.pre_order_enabled) {
                 <p class="text-info font-mono uppercase text-sm">{{ 'product.preorder_available' | transloco }}</p>
