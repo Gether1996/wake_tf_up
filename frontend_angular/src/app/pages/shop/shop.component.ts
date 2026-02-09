@@ -25,8 +25,8 @@ import { LanguageService } from '../../core/services/language.service';
           <div>
             <h3 class="font-mono text-sm uppercase tracking-wide mb-3">{{ 'shop.filters.category' | transloco }}</h3>
             <select 
-              [(ngModel)]="selectedCategory" 
-              (ngModelChange)="applyFilters()"
+              [ngModel]="selectedCategory()" 
+              (ngModelChange)="selectedCategory.set($event); applyFilters()"
               class="w-full px-3 py-2 bg-background border border-border focus:outline-none focus:border-foreground font-mono text-sm">
               <option value="">{{ 'shop.filters.all' | transloco }}</option>
               @for (category of categories(); track category.id) {
@@ -42,7 +42,7 @@ import { LanguageService } from '../../core/services/language.service';
               @for (color of colors(); track color.id) {
                 <button
                   (click)="toggleColor(color.id)"
-                  [class]="'w-8 h-8 rounded-full border-2 transition-all ' + (selectedColor === color.id ? 'border-foreground scale-110' : 'border-border')"
+                  [class]="'w-8 h-8 rounded-full border-2 transition-all ' + (selectedColor() === color.id ? 'border-foreground scale-110' : 'border-border')"
                   [style.background-color]="color.hex_code"
                   [attr.aria-label]="color.name"
                   [title]="color.name">
@@ -58,16 +58,16 @@ import { LanguageService } from '../../core/services/language.service';
               <label class="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="checkbox" 
-                  [(ngModel)]="showInStock" 
-                  (ngModelChange)="applyFilters()"
+                  [ngModel]="showInStock()" 
+                  (ngModelChange)="showInStock.set($event); applyFilters()"
                   class="w-4 h-4">
                 <span class="text-sm">{{ 'shop.filters.inStock' | transloco }}</span>
               </label>
               <label class="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="checkbox" 
-                  [(ngModel)]="showPreOrder" 
-                  (ngModelChange)="applyFilters()"
+                  [ngModel]="showPreOrder()" 
+                  (ngModelChange)="showPreOrder.set($event); applyFilters()"
                   class="w-4 h-4">
                 <span class="text-sm">{{ 'shop.filters.preOrder' | transloco }}</span>
               </label>
@@ -81,16 +81,16 @@ import { LanguageService } from '../../core/services/language.service';
               <label class="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="checkbox" 
-                  [(ngModel)]="showLimitedDrops" 
-                  (ngModelChange)="applyFilters()"
+                  [ngModel]="showLimitedDrops()" 
+                  (ngModelChange)="showLimitedDrops.set($event); applyFilters()"
                   class="w-4 h-4">
                 <span class="text-sm">{{ 'badges.drop' | transloco }}</span>
               </label>
               <label class="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="checkbox" 
-                  [(ngModel)]="showRecycled" 
-                  (ngModelChange)="applyFilters()"
+                  [ngModel]="showRecycled()" 
+                  (ngModelChange)="showRecycled.set($event); applyFilters()"
                   class="w-4 h-4">
                 <span class="text-sm">{{ 'badges.recycled' | transloco }}</span>
               </label>
@@ -111,21 +111,43 @@ import { LanguageService } from '../../core/services/language.service';
         <!-- Products Grid -->
         <div class="flex-1">
           <!-- Sort & Results Count -->
-          <div class="flex justify-between items-center mb-6">
-            <p class="text-sm text-muted-foreground">
-              @if (totalProducts() > 0) {
-                {{ totalProducts() }} {{ 'shop.products' | transloco }}
-              }
-            </p>
-            <select 
-              [(ngModel)]="sortBy" 
-              (ngModelChange)="applyFilters()"
-              class="px-3 py-2 bg-background border border-border focus:outline-none focus:border-foreground font-mono text-sm">
-              <option value="-created_at">{{ 'shop.sort.newest' | transloco }}</option>
-              <option value="price">{{ 'shop.sort.priceAsc' | transloco }}</option>
-              <option value="-price">{{ 'shop.sort.priceDesc' | transloco }}</option>
-              <option value="name">{{ 'shop.sort.nameAsc' | transloco }}</option>
-            </select>
+          <div class="flex flex-col gap-3 mb-6">
+            <div class="flex justify-between items-center">
+              <p class="text-sm text-muted-foreground">
+                @if (totalProducts() > 0) {
+                  {{ totalProducts() }} {{ 'shop.products' | transloco }}
+                }
+              </p>
+              <select 
+                [ngModel]="sortBy()" 
+                (ngModelChange)="sortBy.set($event); applyFilters()"
+                class="px-3 py-2 bg-background border border-border focus:outline-none focus:border-foreground font-mono text-sm">
+                <option value="-created_at">{{ 'shop.sort.newest' | transloco }}</option>
+                <option value="price">{{ 'shop.sort.priceAsc' | transloco }}</option>
+                <option value="-price">{{ 'shop.sort.priceDesc' | transloco }}</option>
+                <option value="name">{{ 'shop.sort.nameAsc' | transloco }}</option>
+              </select>
+            </div>
+            
+            <!-- Active Filters -->
+            @if (activeFilters().length > 0) {
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs text-muted-foreground font-mono uppercase">{{ 'shop.filters.active' | transloco }}:</span>
+                @for (filter of activeFilters(); track filter.type) {
+                  <button
+                    (click)="removeFilter(filter.type)"
+                    class="inline-flex items-center gap-1.5 px-3 py-1 bg-accent/10 text-accent border border-accent/20 text-xs font-mono uppercase transition-all hover:bg-accent hover:text-accent-foreground">
+                    <span>{{ filter.label | transloco }}</span>
+                    <span class="text-sm">×</span>
+                  </button>
+                }
+                <button
+                  (click)="clearFilters()"
+                  class="inline-flex items-center gap-1 px-3 py-1 bg-danger/10 text-danger border border-danger/20 text-xs font-mono uppercase transition-all hover:bg-danger hover:text-white">
+                  {{ 'shop.filters.clearAll' | transloco }}
+                </button>
+              </div>
+            }
           </div>
 
           <!-- Loading State -->
@@ -226,22 +248,64 @@ export class ShopComponent implements OnInit {
   totalPages = computed(() => Math.ceil(this.totalProducts() / this.pageSize));
   
   // Filters
-  selectedCategory: string | null = '';
-  selectedColor: number | null = null;
-  showInStock = false;
-  showPreOrder = false;
-  showLimitedDrops = false;
-  showRecycled = false;
-  sortBy = '-created_at';
+  selectedCategory = signal<string>('');
+  selectedColor = signal<number | null>(null);
+  showInStock = signal(false);
+  showPreOrder = signal(false);
+  showLimitedDrops = signal(false);
+  showRecycled = signal(false);
+  sortBy = signal('-created_at');
 
   hasActiveFilters = computed(() => 
-    (this.selectedCategory !== null && this.selectedCategory !== '') ||
-    this.selectedColor !== null ||
-    this.showInStock ||
-    this.showPreOrder ||
-    this.showLimitedDrops ||
-    this.showRecycled
+    (this.selectedCategory() !== null && this.selectedCategory() !== '') ||
+    this.selectedColor() !== null ||
+    this.showInStock() ||
+    this.showPreOrder() ||
+    this.showLimitedDrops() ||
+    this.showRecycled()
   );
+
+  activeFilters = computed(() => {
+    const filters: Array<{ type: string; label: string; value: any }> = [];
+    
+    if (this.selectedCategory() && this.selectedCategory() !== '') {
+      const category = this.categories().find(c => c.slug === this.selectedCategory());
+      // Show category filter even if not loaded yet
+      filters.push({ 
+        type: 'category', 
+        label: category ? category.name : this.selectedCategory(), 
+        value: this.selectedCategory() 
+      });
+    }
+    
+    if (this.selectedColor() !== null) {
+      const color = this.colors().find(c => c.id === this.selectedColor());
+      // Show color filter even if not loaded yet
+      filters.push({ 
+        type: 'color', 
+        label: color ? color.name : `Color #${this.selectedColor()}`, 
+        value: this.selectedColor() 
+      });
+    }
+    
+    if (this.showInStock()) {
+      filters.push({ type: 'inStock', label: 'shop.filters.inStock', value: true });
+    }
+    
+    if (this.showPreOrder()) {
+      filters.push({ type: 'preOrder', label: 'shop.filters.preOrder', value: true });
+    }
+    
+    if (this.showLimitedDrops()) {
+      filters.push({ type: 'limited', label: 'badges.drop', value: true });
+    }
+    
+    if (this.showRecycled()) {
+      filters.push({ type: 'recycled', label: 'badges.recycled', value: true });
+    }
+    
+    return filters;
+  });
 
   visiblePages = computed(() => {
     const current = this.currentPage();
@@ -281,13 +345,13 @@ export class ShopComponent implements OnInit {
     
     // Load filters from query params
     this.route.queryParams.subscribe(params => {
-      this.selectedCategory = params['category'] || '';
-      this.selectedColor = params['color'] ? +params['color'] : null;
-      this.showInStock = params['in_stock'] === 'true';
-      this.showPreOrder = params['pre_order'] === 'true';
-      this.showLimitedDrops = params['is_limited_drop'] === 'true';
-      this.showRecycled = params['is_recycled'] === 'true';
-      this.sortBy = params['ordering'] || '-created_at';
+      this.selectedCategory.set(params['category'] || '');
+      this.selectedColor.set(params['color'] ? +params['color'] : null);
+      this.showInStock.set(params['in_stock'] === 'true');
+      this.showPreOrder.set(params['pre_order'] === 'true');
+      this.showLimitedDrops.set(params['is_limited_drop'] === 'true');
+      this.showRecycled.set(params['is_recycled'] === 'true');
+      this.sortBy.set(params['ordering'] || '-created_at');
       this.currentPage.set(params['page'] ? +params['page'] : 1);
       
       this.loadProducts();
@@ -300,15 +364,15 @@ export class ShopComponent implements OnInit {
 
     const filters: ProductFilters = {
       page: this.currentPage(),
-      ordering: this.sortBy
+      ordering: this.sortBy()
     };
 
-    if (this.selectedCategory && this.selectedCategory !== '') filters.category = this.selectedCategory;
-    if (this.selectedColor) filters.color = this.selectedColor;
-    if (this.showInStock) filters.in_stock = true;
-    if (this.showPreOrder) filters.pre_order = true;
-    if (this.showLimitedDrops) filters.is_limited_drop = 'true';
-    if (this.showRecycled) filters.is_recycled = 'true';
+    if (this.selectedCategory() && this.selectedCategory() !== '') filters.category = this.selectedCategory();
+    if (this.selectedColor()) filters.color = this.selectedColor()!;
+    if (this.showInStock()) filters.in_stock = true;
+    if (this.showPreOrder()) filters.pre_order = true;
+    if (this.showLimitedDrops()) filters.is_limited_drop = 'true';
+    if (this.showRecycled()) filters.is_recycled = 'true';
 
     this.catalogService.getProducts(filters).subscribe({
       next: (response) => {
@@ -339,7 +403,7 @@ export class ShopComponent implements OnInit {
   }
 
   toggleColor(colorId: number) {
-    this.selectedColor = this.selectedColor === colorId ? null : colorId;
+    this.selectedColor.set(this.selectedColor() === colorId ? null : colorId);
     this.applyFilters();
   }
 
@@ -348,14 +412,37 @@ export class ShopComponent implements OnInit {
     this.updateQueryParams();
   }
 
+  removeFilter(filterType: string) {
+    switch (filterType) {
+      case 'category':
+        this.selectedCategory.set('');
+        break;
+      case 'color':
+        this.selectedColor.set(null);
+        break;
+      case 'inStock':
+        this.showInStock.set(false);
+        break;
+      case 'preOrder':
+        this.showPreOrder.set(false);
+        break;
+      case 'limited':
+        this.showLimitedDrops.set(false);
+        break;
+      case 'recycled':
+        this.showRecycled.set(false);
+        break;
+    }
+    this.applyFilters();
+  }
+
   clearFilters() {
-    this.selectedCategory = '';
-    this.selectedColor = null;
-    this.showInStock = false;
-    this.showPreOrder = false;
-    this.showLimitedDrops = false;
-    this.showRecycled = false;
-    this.sortBy = '-created_at';
+    this.selectedCategory.set('');
+    this.selectedColor.set(null);
+    this.showInStock.set(false);
+    this.showPreOrder.set(false);
+    this.showLimitedDrops.set(false);
+    this.showRecycled.set(false);
     this.currentPage.set(1);
     this.updateQueryParams();
   }
@@ -369,13 +456,13 @@ export class ShopComponent implements OnInit {
   private updateQueryParams() {
     const queryParams: any = {};
     
-    if (this.selectedCategory && this.selectedCategory !== '') queryParams.category = this.selectedCategory;
-    if (this.selectedColor) queryParams.color = this.selectedColor;
-    if (this.showInStock) queryParams.in_stock = 'true';
-    if (this.showPreOrder) queryParams.pre_order = 'true';
-    if (this.showLimitedDrops) queryParams.is_limited_drop = 'true';
-    if (this.showRecycled) queryParams.is_recycled = 'true';
-    if (this.sortBy !== '-created_at') queryParams.ordering = this.sortBy;
+    if (this.selectedCategory() && this.selectedCategory() !== '') queryParams.category = this.selectedCategory();
+    if (this.selectedColor()) queryParams.color = this.selectedColor();
+    if (this.showInStock()) queryParams.in_stock = 'true';
+    if (this.showPreOrder()) queryParams.pre_order = 'true';
+    if (this.showLimitedDrops()) queryParams.is_limited_drop = 'true';
+    if (this.showRecycled()) queryParams.is_recycled = 'true';
+    if (this.sortBy() !== '-created_at') queryParams.ordering = this.sortBy();
     if (this.currentPage() > 1) queryParams.page = this.currentPage();
 
     this.router.navigate([], {

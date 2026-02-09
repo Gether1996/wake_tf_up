@@ -42,11 +42,13 @@ export class CartService {
 
     // Refresh cart products when language changes
     effect(() => {
-      this.languageService.currentLang(); // Track the signal
+      const currentLang = this.languageService.currentLang(); // Track the signal
       // Use untracked to avoid re-triggering when cart items change
-      if (untracked(() => this.items().length) > 0) {
-        this.refreshCartProducts();
-      }
+      untracked(() => {
+        if (this.items().length > 0) {
+          this.refreshCartProducts();
+        }
+      });
     });
   }
 

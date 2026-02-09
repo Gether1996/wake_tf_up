@@ -121,7 +121,9 @@
       "inStock": "In Stock",
       "preOrder": "Pre-order",
       "all": "All",
-      "clear": "Clear Filters"
+      "clear": "Clear Filters",
+      "active": "Active filters",
+      "clearAll": "Clear all"
     },
     "sort": {
       "newest": "Newest First",
