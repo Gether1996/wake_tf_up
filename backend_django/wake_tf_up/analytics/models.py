@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.conf import settings
 from shop.models import Product
 
@@ -42,6 +42,7 @@ class ProductEventStat(models.Model):
         return f"{self.product.name} - {self.event_type}: {self.count}"
     
     @classmethod
+    @transaction.atomic
     def record_event(cls, product, event_type):
         """
         Record a product event by incrementing the counter.
