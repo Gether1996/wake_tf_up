@@ -149,7 +149,7 @@ import { environment } from '../../../environments/environment';
                     </div>
                     <div class="font-mono font-bold">
                       @if (cartService.subtotal() >= freeShippingThreshold()) {
-                        <span class="text-success">0€</span>
+                        <span class="text-success">{{ 'cart.free' | transloco }}</span>
                       } @else {
                         {{ packetaBoxCost() | currency: 'EUR' }}
                       }
@@ -178,7 +178,7 @@ import { environment } from '../../../environments/environment';
                     </div>
                     <div class="font-mono font-bold">
                       @if (cartService.subtotal() >= freeShippingThreshold()) {
-                        <span class="text-success">0€</span>
+                        <span class="text-success">{{ 'cart.free' | transloco }}</span>
                       } @else {
                         {{ dpdCourierCost() | currency: 'EUR' }}
                       }
@@ -196,7 +196,7 @@ import { environment } from '../../../environments/environment';
                     </div>
                     <div class="font-mono font-bold">
                       @if (cartService.subtotal() >= freeShippingThreshold()) {
-                        <span class="text-success">0€</span>
+                        <span class="text-success">{{ 'cart.free' | transloco }}</span>
                       } @else {
                         {{ packetaCourierCost() | currency: 'EUR' }}
                       }
@@ -527,7 +527,7 @@ import { environment } from '../../../environments/environment';
                     }
                     <p class="font-medium mt-2">
                       @if (cartService.subtotal() >= freeShippingThreshold()) {
-                        <span class="text-success">0€</span>
+                        <span class="text-success">{{ 'cart.free' | transloco }}</span>
                       } @else {
                         {{ selectedShippingCost() | currency: 'EUR' }}
                       }
