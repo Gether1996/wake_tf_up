@@ -28,6 +28,9 @@ import { LanguageService } from '../../core/services/language.service';
             <a [routerLink]="blogLink()" routerLinkActive="text-accent" class="font-mono text-sm uppercase tracking-wide hover:text-accent transition-colors">
               {{ 'nav.blog' | transloco }}
             </a>
+            <a [routerLink]="eventsLink()" routerLinkActive="text-accent" class="font-mono text-sm uppercase tracking-wide hover:text-accent transition-colors">
+              {{ 'nav.events' | transloco }}
+            </a>
             <a [routerLink]="aboutLink()" routerLinkActive="text-accent" class="font-mono text-sm uppercase tracking-wide hover:text-accent transition-colors">
               {{ 'nav.about' | transloco }}
             </a>
@@ -123,6 +126,9 @@ import { LanguageService } from '../../core/services/language.service';
             <a [routerLink]="blogLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
               {{ 'nav.blog' | transloco }}
             </a>
+            <a [routerLink]="eventsLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+              {{ 'nav.events' | transloco }}
+            </a>
             <a [routerLink]="aboutLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
               {{ 'nav.about' | transloco }}
             </a>
@@ -213,6 +219,7 @@ export class HeaderComponent {
   homeLink = computed(() => `/${this.currentLang()}`);
   shopLink = computed(() => `/${this.currentLang()}/shop`);
   blogLink = computed(() => `/${this.currentLang()}/blog`);
+  eventsLink = computed(() => `/${this.currentLang()}/events`);
   aboutLink = computed(() => `/${this.currentLang()}/about`);
   cartLink = computed(() => `/${this.currentLang()}/cart`);
   profileLink = computed(() => `/${this.currentLang()}/profile`);

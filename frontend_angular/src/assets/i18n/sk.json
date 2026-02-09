@@ -20,8 +20,7 @@
   "nav": {
     "home": "Domov",
     "shop": "Obchod",
-    "blog": "Blog",
-    "about": "O nás",
+    "blog": "Blog",    "events": "Eventy",    "about": "O nás",
     "cart": "Košík",
     "profile": "Profil",
     "orders": "Objednávky",
@@ -395,6 +394,20 @@
     "share": "Zdieľať tento článok",
     "copy_link": "Kopírovať odkaz",
     "copied": "Skopírované!"
+  },
+  "events": {
+    "title": "Eventy",
+    "subtitle": "Nadchádzajúce udalosti a dianie s WAKE TF UP",
+    "no_events": "Zatiaľ žiadne eventy",
+    "no_events_description": "Vráťte sa čoskoro pre nadchádzajúce udalosti",
+    "read_more": "Čítať viac",
+    "back": "Späť na eventy",
+    "all_events": "Všetky eventy",
+    "share": "Zdieľať tento event",
+    "copy_link": "Kopírovať odkaz",
+    "copied": "Skopírované!",
+    "date_time": "Dátum a čas",
+    "location": "Miesto"
   },
   "about": {
     "title": "Inak vyrobené",

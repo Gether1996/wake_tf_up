@@ -21,6 +21,7 @@
     "home": "Home",
     "shop": "Shop",
     "blog": "Blog",
+    "events": "Events",
     "about": "About",
     "cart": "Cart",
     "profile": "Profile",
@@ -395,6 +396,20 @@
     "share": "Share this post",
     "copy_link": "Copy Link",
     "copied": "Copied!"
+  },
+  "events": {
+    "title": "Events",
+    "subtitle": "Upcoming events and happenings with WAKE TF UP",
+    "no_events": "No events yet",
+    "no_events_description": "Check back soon for upcoming events",
+    "read_more": "Read More",
+    "back": "Back to Events",
+    "all_events": "All Events",
+    "share": "Share this event",
+    "copy_link": "Copy Link",
+    "copied": "Copied!",
+    "date_time": "Date & Time",
+    "location": "Location"
   },
   "about": {
     "title": "Made Different",

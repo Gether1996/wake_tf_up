@@ -342,8 +342,10 @@ class NewsletterTemplateAdmin(SingletonModelAdmin):
                 # Add preview button HTML
                 extra_context['show_preview'] = True
         
-        # Add available images to context
-        extra_context['newsletter_images'] = NewsletterImage.objects.all().order_by('-created_at')
+        # Add available images to context (limit to 50 recent, only load necessary fields)
+        extra_context['newsletter_images'] = NewsletterImage.objects.only(
+            'id', 'title', 'image', 'created_at'
+        ).order_by('-created_at')[:50]
         
         return super().changeform_view(request, object_id, form_url, extra_context)
     
@@ -473,8 +475,10 @@ class DiscountCodeTemplateAdmin(SingletonModelAdmin):
                 extra_context['preview_url'] = preview_url
                 extra_context['show_preview'] = True
         
-        # Add available images to context
-        extra_context['newsletter_images'] = NewsletterImage.objects.all().order_by('-created_at')
+        # Add available images to context (limit to 50 recent, only load necessary fields)
+        extra_context['newsletter_images'] = NewsletterImage.objects.only(
+            'id', 'title', 'image', 'created_at'
+        ).order_by('-created_at')[:50]
         
         return super().changeform_view(request, object_id, form_url, extra_context)
     

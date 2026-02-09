@@ -78,6 +78,19 @@ const appRoutes: Routes = [
     ]
   },
   {
+    path: 'events',
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/events/event-list/event-list.component').then(m => m.EventListComponent)
+      },
+      {
+        path: ':slug',
+        loadComponent: () => import('./pages/events/event-detail/event-detail.component').then(m => m.EventDetailComponent)
+      }
+    ]
+  },
+  {
     path: 'privacy',
     loadComponent: () => import('./pages/privacy-policy/privacy-policy.component').then(m => m.PrivacyPolicyComponent)
   },

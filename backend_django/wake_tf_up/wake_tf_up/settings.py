@@ -33,7 +33,7 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,demo.wake-tf-up.eu,backend,wake-tf-up.eu').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,wake-tf-up.eu,backend,wake-tf-up.eu').split(',')
 
 # Application definition
 
@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'orders',
     'reviews',
     'blog',
+    'events',
     'analytics',
     'payments',
     'newsletter',
@@ -212,12 +213,12 @@ SIMPLE_JWT = {
 }
 
 # CORS Configuration for Angular
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:4200,http://localhost:9006,https://demo.wake-tf-up.eu').split(',')
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:4200,http://localhost:9006,https://wake-tf-up.eu').split(',')
 
 CORS_ALLOW_CREDENTIALS = True
 
 # CSRF Trusted Origins (required for admin and forms)
-CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:9006,https://demo.wake-tf-up.eu,https://www.demo.wake-tf-up.eu').split(',')
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:9006,https://wake-tf-up.eu,https://www.wake-tf-up.eu').split(',')
 
 # Packeta API Configuration
 PACKETA_API_KEY = os.getenv('PACKETA_API_KEY', '9dbc4fa2f90c9113')  # Widget API key for frontend
@@ -226,7 +227,7 @@ PACKETA_SENDER_ID = os.getenv('PACKETA_SENDER_ID', '')
 PACKETA_REAL_WORLD_USAGE = os.getenv('PACKETA_REAL_WORLD_USAGE', 'False') == 'True'
 
 # Frontend URL for email verification links
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://demo.wake-tf-up.eu')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://wake-tf-up.eu')
 
 # Email Configuration
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')

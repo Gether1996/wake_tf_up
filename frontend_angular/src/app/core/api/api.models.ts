@@ -168,6 +168,19 @@ export interface BlogPost {
   created_at: string;
 }
 
+export interface Event {
+  id: number;
+  title: string;
+  slug: string;
+  content_html: string;
+  excerpt?: string;
+  author?: string;
+  datetime: string;
+  place: string;
+  is_published: boolean;
+  created_at: string;
+}
+
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;
