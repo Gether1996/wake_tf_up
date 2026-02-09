@@ -117,6 +117,7 @@ class Product(models.Model):
             models.Index(fields=['slug']),
             models.Index(fields=['is_published']),
             models.Index(fields=['category', 'is_published']),
+            models.Index(fields=['is_limited_drop']),
         ]
     
     def save(self, *args, **kwargs):

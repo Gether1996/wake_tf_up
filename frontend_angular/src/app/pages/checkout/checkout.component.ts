@@ -1010,9 +1010,6 @@ export class CheckoutComponent implements OnInit {
       this.currentStep.set(2);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (this.currentStep() === 2) {
-      console.log('=== STEP 2 VALIDATION DEBUG ===');
-      console.log('Company Purchase Enabled:', this.isCompanyPurchase());
-      
       // Validate contact and address fields
       const requiredFields = ['email', 'fullName', 'phone', 'address', 'city', 'postalCode', 'country'];
       
@@ -1021,53 +1018,23 @@ export class CheckoutComponent implements OnInit {
         requiredFields.push('billingCompany', 'billingIco');
       }
       
-      console.log('Required Fields:', requiredFields);
-      
       let isValid = true;
-      const emptyFields: string[] = [];
       
       requiredFields.forEach(field => {
         const control = this.checkoutForm.get(field);
-        const value = control?.value;
-        console.log(`Field "${field}":`, value, '| Valid:', control?.valid, '| Errors:', control?.errors);
-        if (!value) {
+        if (!control?.value || control?.invalid) {
           control?.markAsTouched();
           isValid = false;
-          emptyFields.push(field);
         }
       });
 
-      console.log('Empty Fields:', emptyFields);
-      console.log('Basic Required Fields Valid:', isValid);
-
       if (!isValid) {
-        console.log('❌ Validation failed: Empty required fields');
         this.error.set(this.currentLang() === 'sk' 
-          ? 'Prosím vyplňte všetky povinné polia' 
-          : 'Please fill in all required fields');
+          ? 'Prosím vyplňte všetky povinné polia správne' 
+          : 'Please fill in all required fields correctly');
         return;
       }
 
-      console.log('Form Valid Status:', this.checkoutForm.valid);
-      console.log('Form Invalid Status:', this.checkoutForm.invalid);
-      
-      if (this.checkoutForm.invalid) {
-        console.log('❌ Form is invalid. Checking all controls:');
-        Object.keys(this.checkoutForm.controls).forEach(key => {
-          const control = this.checkoutForm.get(key);
-          if (control?.invalid) {
-            console.log(`  - "${key}" is INVALID:`, control.value, '| Errors:', control.errors);
-          }
-          this.checkoutForm.get(key)?.markAsTouched();
-        });
-        
-        this.error.set(this.currentLang() === 'sk' 
-          ? 'Niektoré polia obsahujú neplatné údaje' 
-          : 'Some fields contain invalid data');
-        return;
-      }
-
-      console.log('✅ Step 2 validation passed');
       this.error.set('');
       this.currentStep.set(3);
       window.scrollTo({ top: 0, behavior: 'smooth' });
