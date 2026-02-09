@@ -124,8 +124,8 @@ import { environment } from '../../../environments/environment';
                       <div class="text-sm text-muted-foreground">{{ 'checkout.pickup_desc' | transloco }}</div>
                     </div>
                     <div class="font-mono font-bold">
-                      @if (pickupCost() === 0) {
-                        {{ 'checkout.free' | transloco }}
+                      @if (cartService.subtotal() >= freeShippingThreshold() || pickupCost() === 0) {
+                        <span class="text-success">{{ 'checkout.free' | transloco }}</span>
                       } @else {
                         {{ pickupCost() | currency: 'EUR' }}
                       }
@@ -147,7 +147,13 @@ import { environment } from '../../../environments/environment';
                         </div>
                       }
                     </div>
-                    <div class="font-mono font-bold">{{ packetaBoxCost() | currency: 'EUR' }}</div>
+                    <div class="font-mono font-bold">
+                      @if (cartService.subtotal() >= freeShippingThreshold()) {
+                        <span class="text-success">0€</span>
+                      } @else {
+                        {{ packetaBoxCost() | currency: 'EUR' }}
+                      }
+                    </div>
                   </label>
 
                   @if (checkoutForm.get('shippingMethod')?.value === 'packeta_box') {
@@ -170,7 +176,13 @@ import { environment } from '../../../environments/environment';
                       <div class="font-mono uppercase font-bold">{{ 'checkout.dpd_courier' | transloco }}</div>
                       <div class="text-sm text-muted-foreground">{{ 'checkout.dpd_courier_desc' | transloco }}</div>
                     </div>
-                    <div class="font-mono font-bold">{{ dpdCourierCost() | currency: 'EUR' }}</div>
+                    <div class="font-mono font-bold">
+                      @if (cartService.subtotal() >= freeShippingThreshold()) {
+                        <span class="text-success">0€</span>
+                      } @else {
+                        {{ dpdCourierCost() | currency: 'EUR' }}
+                      }
+                    </div>
                   </label>
 
                   <!-- Packeta Courier -->
@@ -182,7 +194,13 @@ import { environment } from '../../../environments/environment';
                       <div class="font-mono uppercase font-bold">{{ 'checkout.packeta_courier' | transloco }}</div>
                       <div class="text-sm text-muted-foreground">{{ 'checkout.packeta_courier_desc' | transloco }}</div>
                     </div>
-                    <div class="font-mono font-bold">{{ packetaCourierCost() | currency: 'EUR' }}</div>
+                    <div class="font-mono font-bold">
+                      @if (cartService.subtotal() >= freeShippingThreshold()) {
+                        <span class="text-success">0€</span>
+                      } @else {
+                        {{ packetaCourierCost() | currency: 'EUR' }}
+                      }
+                    </div>
                   </label>
                 </div>
               </div>
@@ -507,7 +525,13 @@ import { environment } from '../../../environments/environment';
                         {{ selectedPacketaPoint()?.address }}
                       </p>
                     }
-                    <p class="font-medium mt-2">{{ selectedShippingCost() | currency: 'EUR' }}</p>
+                    <p class="font-medium mt-2">
+                      @if (cartService.subtotal() >= freeShippingThreshold()) {
+                        <span class="text-success">0€</span>
+                      } @else {
+                        {{ selectedShippingCost() | currency: 'EUR' }}
+                      }
+                    </p>
                   </div>
                 </div>
 
@@ -580,28 +604,6 @@ import { environment } from '../../../environments/environment';
                     <span class="font-mono uppercase font-bold">{{ 'checkout.total' | transloco }}</span>
                     <span class="text-2xl font-bold">{{ total() | currency: 'EUR' }}</span>
                   </div>
-                </div>
-
-                <!-- Terms of Service Checkbox -->
-                <div class="mt-6">
-                  <label class="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      formControlName="acceptTerms"
-                      class="mt-1 w-4 h-4 cursor-pointer">
-                    <span class="text-sm">
-                      <ng-container *transloco="let t">
-                        {{ t('checkout.accept_terms_1') }}
-                        <a [routerLink]="'/' + currentLang() + '/terms-of-service'" target="_blank" class="text-accent hover:underline">
-                          {{ t('checkout.terms_of_service') }}
-                        </a>
-                        {{ t('checkout.accept_terms_2') }}
-                      </ng-container>
-                    </span>
-                  </label>
-                  @if (checkoutForm.get('acceptTerms')?.invalid && checkoutForm.get('acceptTerms')?.touched) {
-                    <p class="text-sm text-danger mt-2">{{ 'checkout.terms_required' | transloco }}</p>
-                  }
                 </div>
               </div>
               }
@@ -730,6 +732,28 @@ import { environment } from '../../../environments/environment';
                   {{ 'checkout.next_step' | transloco }}
                 </app-button>
               } @else if (currentStep() === 4) {
+                <!-- Terms of Service Checkbox -->
+                <div class="mb-4">
+                  <label class="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      formControlName="acceptTerms"
+                      class="mt-1 w-4 h-4 cursor-pointer">
+                    <span class="text-sm">
+                      <ng-container *transloco="let t">
+                        {{ t('checkout.accept_terms_1') }}
+                        <a [routerLink]="'/' + currentLang() + '/terms-of-service'" target="_blank" class="text-accent hover:underline">
+                          {{ t('checkout.terms_of_service') }}
+                        </a>
+                        {{ t('checkout.accept_terms_2') }}
+                      </ng-container>
+                    </span>
+                  </label>
+                  @if (checkoutForm.get('acceptTerms')?.invalid && checkoutForm.get('acceptTerms')?.touched) {
+                    <p class="text-sm text-danger mt-2">{{ 'checkout.terms_required' | transloco }}</p>
+                  }
+                </div>
+
                 <div class="space-y-3">
                   <app-button 
                     [type]="'button'"
