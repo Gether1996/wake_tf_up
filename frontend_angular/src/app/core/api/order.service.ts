@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { Order, PaginatedResponse } from './api.models';
 import { CartService } from './cart.service';
+import { LanguageService } from '../services/language.service';
 
 export interface CreateOrderRequest {
   items: Array<{
@@ -26,12 +27,15 @@ export interface CreateOrderRequest {
   billing_dic?: string;
   billing_ic_dph?: string;
   discount_code_str?: string;
+  language?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class OrderService {
+  private languageService = inject(LanguageService);
+
   constructor(
     private api: ApiService,
     private cartService: CartService
@@ -57,7 +61,8 @@ export class OrderService {
 
     return this.createOrder({
       items,
-      ...shippingData
+      ...shippingData,
+      language: this.languageService.currentLang()
     });
   }
 }

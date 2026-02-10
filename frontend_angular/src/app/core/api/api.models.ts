@@ -29,6 +29,7 @@ export interface RegisterRequest {
   city?: string;
   postal_code?: string;
   country?: string;
+  language?: string;
 }
 
 export interface TokenResponse {

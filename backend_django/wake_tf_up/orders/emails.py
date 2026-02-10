@@ -11,8 +11,13 @@ from core.email_utils import get_email_language, send_localized_email
 logger = logging.getLogger(__name__)
 
 
-def send_order_confirmation_email(order):
-    """Send order confirmation email with order summary to the customer."""
+def send_order_confirmation_email(order, language=None):
+    """Send order confirmation email with order summary to the customer.
+    
+    Args:
+        order: Order instance
+        language: Language code ('sk' or 'en'). If None, will try to detect from user preferences.
+    """
     if order is None or not order.user or not order.user.email:
         logger.warning("Cannot send order confirmation email without user email")
         return
@@ -29,8 +34,8 @@ def send_order_confirmation_email(order):
     support_email = MainSettings.objects.first().contact_email if MainSettings.objects.exists() else settings.DEFAULT_CONTACT_EMAIL
     sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", support_email)
     
-    # Get language from user or default to 'sk'
-    language_code = get_email_language(user=order.user)
+    # Get language from parameter or user preferences
+    language_code = language if language else get_email_language(user=order.user)
 
     logger.debug("Order email config - support_email: %s, base_url: %s, language: %s", support_email, base_url, language_code)
 

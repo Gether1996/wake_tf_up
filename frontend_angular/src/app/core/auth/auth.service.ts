@@ -47,7 +47,11 @@ export class AuthService {
   }
 
   register(data: RegisterRequest): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/auth/register/`, data);
+    const language = this.translocoService.getActiveLang();
+    return this.http.post<any>(`${environment.apiUrl}/auth/register/`, {
+      ...data,
+      language
+    });
   }
 
   logout(): void {
