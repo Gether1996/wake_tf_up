@@ -107,6 +107,10 @@ import { environment } from '../../../environments/environment';
               <div class="space-y-6">
                 <div class="border border-border p-5">
                   <p class="text-xs uppercase tracking-wide text-muted-foreground">{{ 'orders.payment_summary' | transloco }}</p>
+                  <div class="flex justify-between text-sm mt-4">
+                    <span class="text-muted-foreground">{{ 'orders.payment_method' | transloco }}</span>
+                    <span class="font-mono">{{ getPaymentMethodText(currentOrder.payment_method) | transloco }}</span>
+                  </div>
                   <div class="flex justify-between mt-4 text-sm">
                     <span>{{ 'orders.items_subtotal' | transloco }}</span>
                     <span>{{ getItemsSubtotal(currentOrder) | currency: 'EUR' }}</span>
@@ -130,7 +134,7 @@ import { environment } from '../../../environments/environment';
                 }
 
                 <div class="flex flex-wrap gap-3">
-                  @if (currentOrder.status === 'created') {
+                  @if (canShowPayNow(currentOrder)) {
                     <app-button [loading]="paying()" (clicked)="payNow(currentOrder.id)">
                       {{ 'orders.pay_now' | transloco }}
                     </app-button>
@@ -322,6 +326,21 @@ export class OrderDetailComponent implements OnInit {
       'dpd_courier': 'checkout.dpd_courier'
     };
     return shippingMap[method] || null;
+  }
+
+  getPaymentMethodText(method?: string | null): string {
+    const paymentMap: Record<string, string> = {
+      'gopay': 'orders.payment_method_gopay',
+      'cash_on_pickup': 'orders.payment_method_cash_on_pickup',
+    };
+    return paymentMap[method || ''] || 'orders.payment_method_unknown';
+  }
+
+  canShowPayNow(order: Order | null): boolean {
+    if (!order) {
+      return false;
+    }
+    return order.status === 'created' && order.payment_method !== 'cash_on_pickup';
   }
 
   getItemsSubtotal(order: Order | null): number {

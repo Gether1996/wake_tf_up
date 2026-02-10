@@ -16,6 +16,7 @@ export interface CreateOrderRequest {
   shipping_postal_code: string;
   shipping_country: string;
   phone: string;
+  payment_method: 'gopay' | 'cash_on_pickup';
   packeta_point_id?: string;
   packeta_point_name?: string;
   packeta_point_address?: string;

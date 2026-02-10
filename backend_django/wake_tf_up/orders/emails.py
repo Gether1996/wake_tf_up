@@ -33,6 +33,8 @@ def send_order_confirmation_email(order):
         "discount_amount": order.discount_amount,
         "total_amount": order.total_amount,
         "shipping_method_display": order.get_shipping_method_display(),
+        "payment_method_display": order.get_payment_method_display(),
+        "is_cash_payment": order.payment_method == "cash_on_pickup",
         "packeta_point": order.packeta_point_name,
         "packeta_address": order.packeta_point_address,
         "frontend_order_url": f"{base_url}/en/orders/{order.id}",

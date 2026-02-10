@@ -22,6 +22,11 @@ class Order(models.Model):
         ('packeta_courier', 'Packeta Courier'),
     ]
     
+    PAYMENT_METHOD_CHOICES = [
+        ('gopay', 'GoPay Online Payment'),
+        ('cash_on_pickup', 'Cash on Personal Pickup'),
+    ]
+    
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -39,6 +44,12 @@ class Order(models.Model):
         choices=SHIPPING_METHOD_CHOICES,
         default='dpd_courier',
         help_text="Delivery method selected by customer"
+    )
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PAYMENT_METHOD_CHOICES,
+        default='gopay',
+        help_text="Payment method selected at checkout"
     )
     
     # Packeta pickup point details (for packeta_box method)

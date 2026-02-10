@@ -22,6 +22,10 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating orders"""
     items = OrderItemSerializer(many=True)
     discount_code_str = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    payment_method = serializers.ChoiceField(
+        choices=[('gopay', 'GoPay'), ('cash_on_pickup', 'Cash on Pickup')],
+        default='gopay'
+    )
     
     class Meta:
         model = Order
@@ -30,7 +34,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             'shipping_postal_code', 'shipping_country', 'phone',
             'packeta_point_id', 'packeta_point_name', 'packeta_point_address',
             'is_company_purchase', 'billing_company', 'billing_ico', 'billing_dic', 'billing_ic_dph',
-            'items', 'discount_code_str'
+            'payment_method', 'items', 'discount_code_str'
         )
     
     def create(self, validated_data):
@@ -76,7 +80,7 @@ class OrderListSerializer(serializers.ModelSerializer):
         model = Order
         fields = (
             'id', 'status', 'shipping_method', 'total_amount', 'discount_amount',
-            'discount_code_display', 'items', 'items_count',
+            'discount_code_display', 'payment_method', 'items', 'items_count',
             'is_pre_order', 'created_at', 'updated_at'
         )
     
@@ -99,6 +103,6 @@ class OrderDetailSerializer(serializers.ModelSerializer):
             'tracking_number', 'carrier_tracking_url',
             'is_company_purchase', 'billing_company', 'billing_ico', 
             'billing_dic', 'billing_ic_dph', 'total_amount', 'discount_amount',
-            'discount_code_display', 'is_pre_order', 'items',
+            'discount_code_display', 'payment_method', 'is_pre_order', 'items',
             'created_at', 'updated_at'
         )

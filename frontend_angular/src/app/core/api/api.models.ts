@@ -94,6 +94,7 @@ export interface Order {
   id: number;
   status: string;
   shipping_method: 'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier';
+  payment_method?: 'gopay' | 'cash_on_pickup';
   total_amount: string;
   shipping_name: string;
   shipping_address: string;

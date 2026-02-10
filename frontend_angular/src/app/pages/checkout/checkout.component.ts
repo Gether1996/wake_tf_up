@@ -1302,6 +1302,7 @@ export class CheckoutComponent implements OnInit {
 
     const orderData: CreateOrderRequest = {
       shipping_method: formValue.shippingMethod,
+      payment_method: this.selectedPaymentMethod(),
       shipping_name: formValue.fullName,
       shipping_address: formValue.address,
       shipping_city: formValue.city,

@@ -138,6 +138,10 @@ import { environment } from '../../../environments/environment';
                             }
                           </div>
                         }
+                        <div>
+                          <p class="text-sm text-muted-foreground">{{ 'orders.payment_method' | transloco }}</p>
+                          <p class="text-sm font-mono">{{ getPaymentMethodText(order.payment_method) | transloco }}</p>
+                        </div>
                       </div>
                       <div class="text-right">
                         <p class="text-sm text-muted-foreground mb-1">{{ 'orders.total' | transloco }}</p>
@@ -148,7 +152,7 @@ import { environment } from '../../../environments/environment';
 
                   <!-- Actions -->
                   <div class="mt-4 pt-4 border-t border-border flex gap-3">
-                    @if (order.status === 'created') {
+                    @if (canShowPayNow(order)) {
                       <app-button 
                         [variant]="'primary'" 
                         [size]="'sm'" 
@@ -339,5 +343,20 @@ export class OrdersComponent implements OnInit {
     if (imagePath.startsWith('http')) return imagePath;
     // If relative path, prepend base URL
     return `${environment.apiBaseUrl}${imagePath}`;
+  }
+
+  getPaymentMethodText(method?: string | null): string {
+    const paymentMap: Record<string, string> = {
+      'gopay': 'orders.payment_method_gopay',
+      'cash_on_pickup': 'orders.payment_method_cash_on_pickup',
+    };
+    return paymentMap[method || ''] || 'orders.payment_method_unknown';
+  }
+
+  canShowPayNow(order: any): boolean {
+    if (!order) {
+      return false;
+    }
+    return order.status === 'created' && order.payment_method !== 'cash_on_pickup';
   }
 }
