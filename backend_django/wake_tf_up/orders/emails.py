@@ -37,7 +37,7 @@ def send_order_confirmation_email(order, language=None):
     # Get language from parameter or user preferences
     language_code = language if language else get_email_language(user=order.user)
 
-    logger.debug("Order email config - support_email: %s, base_url: %s, language: %s", support_email, base_url, language_code)
+    logger.debug("Order email config - support_email: %s, base_url: %s, language param: %s, final language: %s", support_email, base_url, language, language_code)
 
     context = {
         "order": order,

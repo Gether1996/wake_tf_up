@@ -35,6 +35,7 @@ class OrderCreateView(generics.CreateAPIView):
             order = serializer.save()
             # Get language from request data or LANGUAGE_CODE header
             language = request.data.get('language') or getattr(request, 'LANGUAGE_CODE', 'sk')
+            logger.info(f"Creating order {order.id} - language from request.data: {request.data.get('language')}, LANGUAGE_CODE: {getattr(request, 'LANGUAGE_CODE', None)}, using: {language}")
             try:
                 send_order_confirmation_email(order, language=language)
             except Exception as email_error:
