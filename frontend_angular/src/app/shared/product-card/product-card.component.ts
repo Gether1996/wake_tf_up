@@ -7,6 +7,7 @@ import { ButtonComponent } from '../button/button.component';
 import { CartService } from '../../core/api/cart.service';
 import { AnalyticsService } from '../../core/api/analytics.service';
 import { LanguageService } from '../../core/services/language.service';
+import { SettingsService } from '../../core/api/settings.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
 
@@ -61,7 +62,15 @@ import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
             <span class="text-lg font-medium">{{ product().discount_price | currency: 'EUR' }}</span>
             <span class="text-sm text-muted-foreground line-through">{{ product().price | currency: 'EUR' }}</span>
           } @else {
-            <span class="text-lg font-medium">{{ product().price | currency: 'EUR' }}</span>
+            <div class="mb-3">
+              <div class="text-lg font-medium flex items-baseline gap-2">
+                <span>{{ product().price | currency: 'EUR' }}</span>
+                <span class="text-xs text-muted-foreground font-normal">({{ 'product.price_with_vat' | transloco }})</span>
+              </div>
+              <div class="text-xs text-muted-foreground mt-1">
+                <p>{{ 'product.price_without_vat' | transloco }}: {{ priceWithoutVat() | currency: 'EUR' }}</p>
+              </div>
+            </div>
           }
         </div>
 
@@ -140,6 +149,7 @@ export class ProductCardComponent {
   private languageService = inject(LanguageService);
   private cartService = inject(CartService);
   private analyticsService = inject(AnalyticsService);
+  private settingsService = inject(SettingsService);
   
   currentLang = this.languageService.currentLang;
   productLink = computed(() => `/${this.currentLang()}/product/${this.product().slug}`);
@@ -149,6 +159,20 @@ export class ProductCardComponent {
   // Check if product is in cart and get quantity
   cartQuantity = computed(() => this.cartService.getItemQuantity(this.product().id));
   isInCart = computed(() => this.cartQuantity() > 0);
+  
+  // Calculate price without VAT
+  priceWithoutVat = computed(() => {
+    const taxRate = this.settingsService.settings()?.tax_rate || 20;
+    const price = parseFloat(this.product().price);
+    return price / (1 + taxRate / 100);
+  });
+  
+  discountPriceWithoutVat = computed(() => {
+    const discountPrice = this.product().discount_price;
+    if (!discountPrice) return null;
+    const taxRate = this.settingsService.settings()?.tax_rate || 20;
+    return parseFloat(discountPrice) / (1 + taxRate / 100);
+  });
   
   constructor() {}
 

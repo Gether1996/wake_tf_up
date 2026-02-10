@@ -2,7 +2,9 @@ import { Injectable, signal, computed, effect, untracked, PLATFORM_ID, inject } 
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { CartItem, Product } from '../api/api.models';
-import { NotificationService } from '../services/notification.service';import { LanguageService } from '../services/language.service';import { environment } from '../../../environments/environment';
+import { NotificationService } from '../services/notification.service';import { LanguageService } from '../services/language.service';
+import { SettingsService } from './settings.service';
+import { environment } from '../../../environments/environment';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 

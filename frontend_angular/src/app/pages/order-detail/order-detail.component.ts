@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { OrderService } from '../../core/api/order.service';
+import { SettingsService } from '../../core/api/settings.service';
 import { Order } from '../../core/api/api.models';
 import { LanguageService } from '../../core/services/language.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -180,7 +181,8 @@ import { environment } from '../../../environments/environment';
                           <p class="text-sm text-muted-foreground">× {{ item.quantity }}</p>
                         </div>
                         <p class="text-sm text-muted-foreground mt-1">{{ 'orders.status' | transloco }}: {{ getStatusText(currentOrder.status) | transloco }}</p>
-                        <p class="text-base font-semibold mt-2">{{ item.price_at_purchase | currency: 'EUR' }}</p>
+                        <p class="text-base font-semibold mt-2 flex items-baseline gap-2"><span>{{ item.price_at_purchase | currency: 'EUR' }}</span><span class="text-xs font-normal text-muted-foreground">({{ 'product.price_with_vat' | transloco }})</span></p>
+                        <p class="text-xs text-muted-foreground mt-1">{{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(item.price_at_purchase) | currency: 'EUR' }}</p>
                       </div>
                     </a>
                   } @else {
@@ -204,7 +206,8 @@ import { environment } from '../../../environments/environment';
                           <p class="text-sm text-muted-foreground">× {{ item.quantity }}</p>
                         </div>
                         <p class="text-sm text-muted-foreground mt-1">{{ 'orders.status' | transloco }}: {{ getStatusText(currentOrder.status) | transloco }}</p>
-                        <p class="text-base font-semibold mt-2">{{ item.price_at_purchase | currency: 'EUR' }}</p>
+                        <p class="text-base font-semibold mt-2 flex items-baseline gap-2"><span>{{ item.price_at_purchase | currency: 'EUR' }}</span><span class="text-xs font-normal text-muted-foreground">({{ 'product.price_with_vat' | transloco }})</span></p>
+                        <p class="text-xs text-muted-foreground mt-1">{{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(item.price_at_purchase) | currency: 'EUR' }}</p>
                       </div>
                     </div>
                   }
@@ -213,8 +216,6 @@ import { environment } from '../../../environments/environment';
             }
           </section>
         }
-      </div>
-    </div>
   `,
   styles: [`
     :host {
@@ -230,6 +231,7 @@ export class OrderDetailComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private paymentService = inject(PaymentService);
   private translocoService = inject(TranslocoService);
+  private settingsService = inject(SettingsService);
 
   currentLang = this.languageService.currentLang;
   order = signal<Order | null>(null);
@@ -371,5 +373,11 @@ export class OrderDetailComponent implements OnInit {
       return imagePath;
     }
     return `${environment.apiBaseUrl}${imagePath}`;
+  }
+
+  getPriceWithoutVat(priceWithVat: string | number): number {
+    const taxRate = this.settingsService.settings()?.tax_rate || 20;
+    const price = typeof priceWithVat === 'string' ? parseFloat(priceWithVat) : priceWithVat;
+    return price / (1 + taxRate / 100);
   }
 }

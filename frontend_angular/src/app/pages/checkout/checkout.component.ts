@@ -502,8 +502,12 @@ import { environment } from '../../../environments/environment';
                         <div class="flex-1">
                           <p class="font-medium">{{ item.product.name }}</p>
                           <p class="text-sm text-muted-foreground">{{ 'checkout.qty' | transloco }}: {{ item.quantity }}</p>
-                          <p class="font-medium mt-2">
-                            {{ (+(item.product.discount_price ?? item.product.price)) * item.quantity | currency: 'EUR' }}
+                          <p class="font-medium mt-2 flex items-baseline gap-2">
+                            <span>{{ (+(item.product.discount_price ?? item.product.price)) * item.quantity | currency: 'EUR' }}</span>
+                            <span class="text-xs font-normal text-muted-foreground">({{ 'product.price_with_vat' | transloco }})</span>
+                          </p>
+                          <p class="text-xs text-muted-foreground mt-1">
+                            {{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(+(item.product.discount_price ?? item.product.price)) * item.quantity | currency: 'EUR' }}
                           </p>
                         </div>
                       </div>
@@ -640,8 +644,12 @@ import { environment } from '../../../environments/environment';
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-medium truncate group-hover:text-accent transition-colors">{{ item.product.name }}</p>
                       <p class="text-xs text-muted-foreground">{{ 'checkout.qty' | transloco }}: {{ item.quantity }}</p>
-                      <p class="text-sm font-medium mt-1">
-                        {{ (item.product.discount_price || item.product.price) | currency: 'EUR' }}
+                      <p class="text-sm font-medium mt-1 flex items-baseline gap-2">
+                        <span>{{ (item.product.discount_price || item.product.price) | currency: 'EUR' }}</span>
+                        <span class="text-xs font-normal text-muted-foreground">({{ 'product.price_with_vat' | transloco }})</span>
+                      </p>
+                      <p class="text-xs text-muted-foreground mt-1">
+                        {{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(+(item.product.discount_price || item.product.price)) | currency: 'EUR' }}
                       </p>
                     </div>
                   </a>
@@ -1016,6 +1024,11 @@ export class CheckoutComponent implements OnInit {
     if (imagePath.startsWith('http')) return imagePath;
     // If relative path, prepend base URL
     return `${environment.apiBaseUrl}${imagePath}`;
+  }
+
+  getPriceWithoutVat(priceWithVat: number): number {
+    const taxRate = this.settingsService.settings()?.tax_rate || 20;
+    return priceWithVat / (1 + taxRate / 100);
   }
 
   nextStep() {

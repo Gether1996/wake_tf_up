@@ -155,7 +155,9 @@
     "quantity": "Množstvo",
     "description": "Popis",
     "color": "Farba",
-    "click_to_zoom": "Kliknite pre priblíženie"
+    "click_to_zoom": "Kliknite pre priblíženie",
+    "price_with_vat": "Cena s DPH",
+    "price_without_vat": "Cena bez DPH"
   },
   "cart": {
     "title": "Košík",
@@ -584,7 +586,7 @@
     },
     "section12": {
       "title": "12. Kontakt",
-      "content": "<p>Ak máte otázky týkajúce sa ochrany osobných údajov alebo chcete uplatniť svoje práva, kontaktujte nás:</p><p><strong>Email:</strong> {{email}}<br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> Jedľová 319/33, 010 04 Žilina<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057</p>"
+      "content": "<p>Ak máte otázky týkajúce sa ochrany osobných údajov alebo chcete uplatniť svoje práva, kontaktujte nás:</p><p><strong>Email:</strong> {{email}}<br><strong>Tel:</strong> 0917 207 760<br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> Jedľová 319/33, 010 04 Žilina<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057</p>"
     }
   },
   "terms": {
@@ -660,7 +662,7 @@
     },
     "section13": {
       "title": "13. Kontakt",
-      "content": "<p><strong>WAKE TF UP</strong><br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> Jedľová 319/33, 010 04 Žilina, Slovenská republika<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057<br><strong>Email:</strong> {{email}}</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> Jedľová 319/33, 010 04 Žilina, Slovenská republika<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057<br><strong>Email:</strong> {{email}}<br><strong>Tel:</strong> 0917 207 760</p>"
     }
   },
   "cookies": {

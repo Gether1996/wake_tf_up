@@ -112,6 +112,16 @@ import { ButtonComponent } from '../../shared/button/button.component';
                       <span class="font-medium">{{ item.product.price | currency: 'EUR' }}</span>
                     }
                   </div>
+                  
+                  <!-- Price without VAT Note -->
+                  <div class="text-xs text-muted-foreground mb-3 mt-2">
+                    <p class="text-xs mb-2"><span class="font-normal">{{ 'product.price_with_vat' | transloco }}</span></p>
+                    @if (item.product.discount_price) {
+                      <p>{{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(item.product.discount_price) | currency: 'EUR' }}</p>
+                    } @else {
+                      <p>{{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(item.product.price) | currency: 'EUR' }}</p>
+                    }
+                  </div>
 
                   <!-- Quantity Controls -->
                   <div class="flex items-center gap-4">
@@ -246,6 +256,12 @@ export class CartComponent implements OnInit {
       ? parseFloat(item.product.discount_price) 
       : parseFloat(item.product.price);
     return price * item.quantity;
+  }
+
+  getPriceWithoutVat(priceWithVat: string | number): number {
+    const taxRate = this.settingsService.settings()?.tax_rate || 20;
+    const price = typeof priceWithVat === 'string' ? parseFloat(priceWithVat) : priceWithVat;
+    return price / (1 + taxRate / 100);
   }
 
   updateQuantity(productId: number, newQuantity: number) {

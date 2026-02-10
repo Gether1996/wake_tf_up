@@ -6,6 +6,7 @@ import { CatalogService } from '../../core/api/catalog.service';
 import { CartService } from '../../core/api/cart.service';
 import { AnalyticsService } from '../../core/api/analytics.service';
 import { LanguageService } from '../../core/services/language.service';
+import { SettingsService } from '../../core/api/settings.service';
 import { Product } from '../../core/api/api.models';
 import { BadgeComponent } from '../../shared/badge/badge.component';
 import { ButtonComponent } from '../../shared/button/button.component';
@@ -142,7 +143,15 @@ import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
                 <span class="text-3xl font-bold">{{ product()!.discount_price | currency: 'EUR' }}</span>
                 <span class="text-xl text-muted-foreground line-through">{{ product()!.price | currency: 'EUR' }}</span>
               } @else {
-                <span class="text-3xl font-bold">{{ product()!.price | currency: 'EUR' }}</span>
+                <div class="mb-6">
+                  <div class="text-3xl font-bold flex items-baseline gap-2 mb-3">
+                    <span>{{ product()!.price | currency: 'EUR' }}</span>
+                    <span class="text-sm text-muted-foreground font-normal">({{ 'product.price_with_vat' | transloco }})</span>
+                  </div>
+                  <div class="text-sm text-muted-foreground">
+                    <p>{{ 'product.price_without_vat' | transloco }}: {{ priceWithoutVat() | currency: 'EUR' }}</p>
+                  </div>
+                </div>
               }
             </div>
 
@@ -329,6 +338,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private languageService = inject(LanguageService);
+  private settingsService = inject(SettingsService);
 
   currentLang = this.languageService.currentLang;
   homeLink = computed(() => `/${this.currentLang()}`);
@@ -345,6 +355,22 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   currentImageIndex = signal(0);
   zoomLevel = signal(1);
   private currentSlug = signal<string>('');
+
+  // Calculate price without VAT
+  priceWithoutVat = computed(() => {
+    if (!this.product()) return 0;
+    const taxRate = this.settingsService.settings()?.tax_rate || 20;
+    const price = parseFloat(this.product()!.price);
+    return price / (1 + taxRate / 100);
+  });
+  
+  discountPriceWithoutVat = computed(() => {
+    if (!this.product()) return null;
+    const discountPrice = this.product()!.discount_price;
+    if (!discountPrice) return null;
+    const taxRate = this.settingsService.settings()?.tax_rate || 20;
+    return parseFloat(discountPrice) / (1 + taxRate / 100);
+  });
 
   constructor() {
     // Watch for language changes and reload product

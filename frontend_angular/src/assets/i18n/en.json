@@ -155,7 +155,9 @@
     "quantity": "Quantity",
     "description": "Description",
     "color": "Color",
-    "click_to_zoom": "Click to zoom"
+    "click_to_zoom": "Click to zoom",
+    "price_with_vat": "Price with VAT",
+    "price_without_vat": "Price without VAT"
   },
   "cart": {
     "title": "Cart",
@@ -586,7 +588,7 @@
     },
     "section12": {
       "title": "12. Contact",
-      "content": "<p>If you have questions about data protection or wish to exercise your rights, contact us:</p><p><strong>Email:</strong> {{email}}<br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057</p>"
+      "content": "<p>If you have questions about data protection or wish to exercise your rights, contact us:</p><p><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> 0917 207 760<br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057</p>"
     }
   },
   "terms": {
@@ -662,7 +664,7 @@
     },
     "section13": {
       "title": "13. Contact",
-      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057<br><strong>Email:</strong> {{email}}</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057<br><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> 0917 207 760</p>"
     }
   },
   "cookies": {

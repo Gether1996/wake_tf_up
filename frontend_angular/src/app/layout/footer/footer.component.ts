@@ -67,16 +67,6 @@ import { FormsModule } from '@angular/forms';
                   {{ 'nav.blog' | transloco }}
                 </a>
               </li>
-              <li>
-                <a href="/sustainability" class="text-sm hover:text-accent transition-colors">
-                  {{ 'footer.sustainability' | transloco }}
-                </a>
-              </li>
-              <li>
-                <a href="/contact" class="text-sm hover:text-accent transition-colors">
-                  {{ 'footer.contact' | transloco }}
-                </a>
-              </li>
             </ul>
           </div>
 
@@ -124,9 +114,21 @@ import { FormsModule } from '@angular/forms';
           <!-- Company Info (Required by Slovak Law) -->
           <div class="mb-6 text-sm text-muted-foreground font-mono space-y-1">
             <p class="font-semibold text-foreground">{{ 'footer.company_name' | transloco }}</p>
-            <p>{{ 'footer.company_address' | transloco }}</p>
             <p>{{ 'footer.company_id' | transloco }} | {{ 'footer.company_tax_id' | transloco }}</p>
             <p>{{ 'footer.company_email' | transloco: { email: contactEmail() } }}</p>
+          </div>
+
+          <!-- Payment Methods -->
+          <div class="flex flex-wrap gap-6 mb-8 pb-8 border-b border-border">
+            <img src="/1.png" alt="Payment method 1" class="h-6 max-w-12 object-contain">
+            <img src="/2.png" alt="Payment method 2" class="h-6 max-w-12 object-contain">
+            <img src="/3.png" alt="Payment method 3" class="h-6 max-w-12 object-contain">
+            <img src="/4.png" alt="Payment method 4" class="h-6 max-w-12 object-contain">
+            <img src="/5.png" alt="Payment method 5" class="h-6 max-w-12 object-contain">
+            <img src="/6.png" alt="Payment method 6" class="h-6 max-w-12 object-contain">
+            <img src="/7.png" alt="Payment method 7" class="h-6 max-w-12 object-contain">
+            <img src="/8.png" alt="Payment method 8" class="h-6 max-w-12 object-contain">
+            <img src="/9.png" alt="Payment method 9" class="h-6 max-w-12 object-contain">
           </div>
 
           <!-- Copyright and Links -->
