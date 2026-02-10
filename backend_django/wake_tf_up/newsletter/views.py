@@ -32,14 +32,15 @@ def send_subscription_confirmation_email(email: str):
     support_email = settings_obj.contact_email or getattr(settings, 'DEFAULT_CONTACT_EMAIL', settings.DEFAULT_FROM_EMAIL)
     from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', support_email)
     base_url = getattr(settings, 'FRONTEND_URL', 'https://wake-tf-up.eu').rstrip('/')
+    language_code = settings.LANGUAGE_CODE if hasattr(settings, 'LANGUAGE_CODE') else 'sk'
 
     logger.debug('Newsletter email config - support_email: %s, base_url: %s', support_email, base_url)
 
     context = {
         'site_name': settings_obj.site_name,
         'support_email': support_email,
-        'shop_url': f"{base_url}/shop",
-        'unsubscribe_url': f"{base_url}/api/v1/newsletter/unsubscribe/?email={email}",
+        'shop_url': f"{base_url}/{language_code}/shop",
+        'unsubscribe_url': f"{base_url}/newsletter/unsubscribe?email={email}",
         'instagram_url': settings_obj.instagram_url,
         'facebook_url': settings_obj.facebook_url,
         'twitter_url': settings_obj.twitter_url,
