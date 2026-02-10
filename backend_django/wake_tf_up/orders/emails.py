@@ -16,6 +16,8 @@ def send_order_confirmation_email(order):
         logger.warning("Cannot send order confirmation email without user email")
         return
 
+    logger.info("Starting order confirmation email for order %s to %s", order.id, order.user.email)
+
     items = order.items.select_related("product").all()
     subtotal = Decimal("0.00")
     for item in items:
@@ -24,6 +26,9 @@ def send_order_confirmation_email(order):
 
     base_url = getattr(settings, "FRONTEND_URL", "http://localhost:4200").rstrip("/")
     support_email = MainSettings.objects.first().contact_email if MainSettings.objects.exists() else settings.DEFAULT_CONTACT_EMAIL
+    sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", support_email)
+
+    logger.debug("Order email config - support_email: %s, base_url: %s", support_email, base_url)
 
     context = {
         "order": order,
@@ -43,17 +48,20 @@ def send_order_confirmation_email(order):
     }
 
     try:
+        logger.debug("Rendering order confirmation email template for order %s", order.id)
         html_message = render_to_string("orders/order_confirmation_email.html", context)
         plain_message = strip_tags(html_message)
 
-        send_mail(
+        logger.info("Attempting to send order email with send_mail() to %s from %s", order.user.email, sender_email)
+        result = send_mail(
             subject=f"Potvrdenie objednávky #{order.id}",
             message=plain_message,
-            from_email=support_email,
+            from_email=sender_email,
             recipient_list=[order.user.email],
             html_message=html_message,
             fail_silently=False,
         )
-        logger.info("Sent order confirmation email for order %s", order.id)
+        logger.info("Sent order confirmation email for order %s (result: %s)", order.id, result)
     except Exception as exc:
-        logger.error("Failed to send order confirmation email for order %s: %s", order.id, exc)
+        logger.error("Failed to send order confirmation email for order %s: %s", order.id, exc, exc_info=True)
+

@@ -23,11 +23,17 @@ logger = logging.getLogger(__name__)
 def send_subscription_confirmation_email(email: str):
     """Send a confirmation email after a user subscribes to the newsletter."""
     if not email:
+        logger.warning('Attempted to send confirmation email without email address')
         return
+
+    logger.info('Starting to send newsletter confirmation email to: %s', email)
 
     settings_obj = MainSettings.get_settings()
     support_email = settings_obj.contact_email or getattr(settings, 'DEFAULT_CONTACT_EMAIL', settings.DEFAULT_FROM_EMAIL)
+    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', support_email)
     base_url = getattr(settings, 'FRONTEND_URL', 'https://wake-tf-up.eu').rstrip('/')
+
+    logger.debug('Newsletter email config - support_email: %s, base_url: %s', support_email, base_url)
 
     context = {
         'site_name': settings_obj.site_name,
@@ -40,18 +46,22 @@ def send_subscription_confirmation_email(email: str):
     }
 
     try:
+        logger.debug('Rendering newsletter email template for %s', email)
         html_message = render_to_string('newsletter/subscription_confirmation_email.html', context)
         plain_message = strip_tags(html_message)
-        send_mail(
+        
+        logger.info('Attempting to send email with send_mail() to %s from %s', email, from_email)
+        result = send_mail(
             subject=f"Potvrdenie odberu | {settings_obj.site_name}",
             message=plain_message,
-            from_email=support_email,
+            from_email=from_email,
             recipient_list=[email],
             html_message=html_message,
             fail_silently=False,
         )
+        logger.info('Newsletter confirmation email sent successfully to %s, result: %s', email, result)
     except Exception as exc:
-        logger.error('Failed to send newsletter confirmation email to %s: %s', email, exc)
+        logger.error('Failed to send newsletter confirmation email to %s: %s', email, exc, exc_info=True)
 
 
 class SubscribeView(generics.CreateAPIView):
