@@ -20,8 +20,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       // If 401 Unauthorized and not already trying to login/refresh
-      if (error.status === 401 && 
-          !req.url.includes('/auth/refresh') && 
+      const isRefreshRequest = req.url.includes('/auth/token/refresh');
+        if (error.status === 401 &&
+          !isRefreshRequest &&
           !req.url.includes('/auth/login') &&
           authService.getAccessToken()) {
         console.log('[Interceptor] 401 error, attempting token refresh');
