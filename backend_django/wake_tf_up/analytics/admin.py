@@ -38,39 +38,43 @@ class ProductEventStatAdmin(admin.ModelAdmin):
     days_tracked.short_description = 'Tracked For'
 
 
-@admin.register(ProductEvent)
-class ProductEventAdmin(admin.ModelAdmin):
-    """Individual event records (for detailed analytics if needed)"""
-    list_display = ('product', 'event_type', 'user_or_session', 'created_at')
-    list_filter = ('event_type', 'created_at')
-    search_fields = ('product__name', 'user__email', 'session_id')
-    readonly_fields = ('product', 'event_type', 'user', 'session_id', 'created_at')
-    date_hierarchy = 'created_at'
-    list_per_page = 50
-    
-    def has_add_permission(self, request):
-        return False
-    
-    def has_change_permission(self, request, obj=None):
-        return False
-    
-    def has_delete_permission(self, request, obj=None):
-        return request.user.is_superuser
-    
-    fieldsets = (
-        ('Event Info', {
-            'fields': ('product', 'event_type')
-        }),
-        ('User Info', {
-            'fields': ('user', 'session_id')
-        }),
-        ('Timestamp', {
-            'fields': ('created_at',)
-        }),
-    )
-    
-    def user_or_session(self, obj):
-        if obj.user:
-            return f"User: {obj.user.email}"
-        return f"Session: {obj.session_id[:12]}..."
-    user_or_session.short_description = 'User/Session'
+# ProductEvent model is not registered in admin
+# Individual events are tracked automatically but only aggregated stats are shown
+# If you need to see individual events, you can register ProductEventAdmin below:
+
+# @admin.register(ProductEvent)
+# class ProductEventAdmin(admin.ModelAdmin):
+#     """Individual event records (for detailed analytics if needed)"""
+#     list_display = ('product', 'event_type', 'user_or_session', 'created_at')
+#     list_filter = ('event_type', 'created_at')
+#     search_fields = ('product__name', 'user__email', 'session_id')
+#     readonly_fields = ('product', 'event_type', 'user', 'session_id', 'created_at')
+#     date_hierarchy = 'created_at'
+#     list_per_page = 50
+#     
+#     def has_add_permission(self, request):
+#         return False
+#     
+#     def has_change_permission(self, request, obj=None):
+#         return False
+#     
+#     def has_delete_permission(self, request, obj=None):
+#         return request.user.is_superuser
+#     
+#     fieldsets = (
+#         ('Event Info', {
+#             'fields': ('product', 'event_type')
+#         }),
+#         ('User Info', {
+#             'fields': ('user', 'session_id')
+#         }),
+#         ('Timestamp', {
+#             'fields': ('created_at',)
+#         }),
+#     )
+#     
+#     def user_or_session(self, obj):
+#         if obj.user:
+#             return f"User: {obj.user.email}"
+#         return f"Session: {obj.session_id[:12]}..."
+#     user_or_session.short_description = 'User/Session'

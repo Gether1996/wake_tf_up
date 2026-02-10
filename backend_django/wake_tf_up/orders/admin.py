@@ -25,15 +25,32 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ('order_number', 'user_email', 'shipping_name', 'shipping_method', 'status', 'discount_display', 'total_amount_display', 'is_pre_order', 'created_at')
     list_filter = ('status', 'shipping_method', 'created_at', 'updated_at')
     search_fields = ('id', 'user__email', 'shipping_name', 'shipping_city', 'phone', 'packeta_point_name')
-    readonly_fields = ('total_amount', 'discount_amount', 'created_at', 'updated_at', 'is_pre_order')
+    readonly_fields = ('user', 'status', 'shipping_method', 'total_amount', 'discount_amount', 'discount_code', 'created_at', 'updated_at', 'is_pre_order',
+                      'shipping_name', 'shipping_address', 'shipping_city', 'shipping_postal_code', 'shipping_country', 'phone',
+                      'packeta_point_id', 'packeta_point_name', 'packeta_point_address', 'packeta_packet_id', 
+                      'tracking_number', 'carrier_tracking_url', 'is_company_purchase', 'billing_company', 
+                      'billing_ico', 'billing_dic', 'billing_ic_dph')
     inlines = [OrderItemInline]
     date_hierarchy = 'created_at'
     list_per_page = 25
     actions = ['mark_as_paid', 'mark_as_shipped', 'mark_as_delivered', 'mark_as_cancelled', 'create_packeta_shipment']
     
+    def has_add_permission(self, request):
+        # Orders can only be created through the frontend API
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        # Orders cannot be edited in admin, only status can be changed via actions
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        # Only superusers can delete orders
+        return request.user.is_superuser
+    
     fieldsets = (
         ('Order Info', {
-            'fields': ('user', 'status', 'shipping_method', 'discount_code', 'discount_amount', 'total_amount', 'is_pre_order')
+            'fields': ('user', 'status', 'shipping_method', 'discount_code', 'discount_amount', 'total_amount', 'is_pre_order'),
+            'description': 'Order details are read-only. Use actions to change status.'
         }),
         ('Shipping Address', {
             'fields': ('shipping_name', 'shipping_address', 'shipping_city',
