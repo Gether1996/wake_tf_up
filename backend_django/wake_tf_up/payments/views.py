@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.conf import settings
 from orders.models import Order
 from .models import PaymentTransaction
 from .serializers import (
@@ -53,6 +54,9 @@ class CreatePaymentView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        if getattr(settings, 'GOPAY_DISABLE_PAYMENTS', False):
+            return self._simulate_payment_success(order)
+        
         # Check if payment already exists and is pending
         existing_payment = PaymentTransaction.objects.filter(
             order=order,
@@ -98,7 +102,6 @@ class CreatePaymentView(generics.CreateAPIView):
         ).update(status='failed')
         
         # Build return and notification URLs using configured frontend URL
-        from django.conf import settings
         base_url = settings.FRONTEND_URL.rstrip('/')
         return_url = f"{base_url}/api/v1/payments/return/"
         notify_url = f"{base_url}/api/v1/payments/notification/"
@@ -123,6 +126,37 @@ class CreatePaymentView(generics.CreateAPIView):
                 {'error': result.get('error', 'Payment creation failed')},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    def _simulate_payment_success(self, order):
+        """Skip real GoPay call and mark the order as paid in test environments."""
+        # Close other pending transactions
+        PaymentTransaction.objects.filter(order=order, status='pending').update(status='failed')
+        
+        order.status = 'paid'
+        order.save(update_fields=['status'])
+        
+        transaction = PaymentTransaction.objects.create(
+            order=order,
+            amount=order.total_amount,
+            status='completed',
+            payment_method='gopay',
+            provider='gopay-test-skip',
+            provider_transaction_id=f"TEST-{order.id}",
+            provider_response={
+                'message': 'Payment skipped - test mode',
+                'environment': getattr(settings, 'GOPAY_ENVIRONMENT', 'test')
+            }
+        )
+        
+        confirmation_url = f"{settings.FRONTEND_URL.rstrip('/')}/en/order-confirmation?order_id={order.id}&status=paid&testPayment=1"
+        
+        return Response({
+            'success': True,
+            'payment_url': confirmation_url,
+            'transaction_id': transaction.provider_transaction_id,
+            'transaction': PaymentTransactionSerializer(transaction).data,
+            'payment_skipped': True
+        }, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])

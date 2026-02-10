@@ -1,3 +1,4 @@
+import logging
 from rest_framework import generics, permissions, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -7,6 +8,9 @@ from .serializers import (
     OrderListSerializer,
     OrderDetailSerializer
 )
+from .emails import send_order_confirmation_email
+
+logger = logging.getLogger(__name__)
 
 
 class IsSuperuser(permissions.BasePermission):
@@ -29,6 +33,10 @@ class OrderCreateView(generics.CreateAPIView):
         
         try:
             order = serializer.save()
+            try:
+                send_order_confirmation_email(order)
+            except Exception as email_error:
+                logger.error("Failed to send order confirmation email for order %s: %s", order.id, email_error)
             return Response(
                 OrderDetailSerializer(order).data,
                 status=status.HTTP_201_CREATED

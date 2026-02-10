@@ -105,7 +105,7 @@ class ProductListSerializer(TranslatableSerializerMixin, serializers.ModelSerial
         model = Product
         fields = (
             'id', 'name', 'description', 'slug', 'category', 'color',
-            'price', 'discount_price', 'total_stock', 'available_stock', 'is_in_stock',
+            'price', 'discount_price', 'total_stock', 'available_stock', 'is_in_stock', 'is_published',
             'pre_order_enabled', 'is_limited_drop', 'is_recycled', 'primary_image', 'created_at'
         )
     

@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { OrderService } from '../../core/api/order.service';
 import { PaymentService } from '../../core/api/payment.service';
@@ -41,7 +41,13 @@ import { environment } from '../../../environments/environment';
         } @else {
           <div class="space-y-6">
             @for (order of orders(); track order.id) {
-              <div class="border border-border overflow-hidden hover:border-foreground transition-all">
+              <div 
+                class="border border-border overflow-hidden hover:border-foreground transition-all cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+                role="button"
+                tabindex="0"
+                (click)="viewOrder(order.id)"
+                (keydown.enter)="viewOrder(order.id)"
+                (keydown.space)="$event.preventDefault(); viewOrder(order.id)">
                 <!-- Order Header -->
                 <div class="bg-muted px-6 py-4 flex items-center justify-between flex-wrap gap-4">
                   <div>
@@ -111,7 +117,7 @@ import { environment } from '../../../environments/environment';
                             <p class="text-sm font-medium">{{ order.packeta_point_name }}</p>
                             <p class="text-xs text-muted-foreground">{{ order.packeta_point_address }}</p>
                           </div>
-                        } @else {
+                        } @else if (order.shipping_name && order.shipping_address && order.shipping_city && order.shipping_postal_code && order.shipping_country) {
                           <div>
                             <p class="text-sm text-muted-foreground">{{ 'orders.shipping_address' | transloco }}</p>
                             <p class="text-sm">{{ order.shipping_name }}</p>
@@ -135,7 +141,7 @@ import { environment } from '../../../environments/environment';
                       </div>
                       <div class="text-right">
                         <p class="text-sm text-muted-foreground mb-1">{{ 'orders.total' | transloco }}</p>
-                        <p class="text-2xl font-bold">{{ order.total | currency: 'EUR' }}</p>
+                        <p class="text-2xl font-bold">{{ getOrderTotal(order) | currency: 'EUR' }}</p>
                       </div>
                     </div>
                   </div>
@@ -146,14 +152,9 @@ import { environment } from '../../../environments/environment';
                       <app-button 
                         [variant]="'primary'" 
                         [size]="'sm'" 
-                        (clicked)="payNow(order.id)"
+                        (clicked)="payNow(order.id); $event.stopPropagation();"
                         [loading]="payingOrderId() === order.id">
                         {{ 'orders.pay_now' | transloco }}
-                      </app-button>
-                    }
-                    @if (order.status === 'created' || order.status === 'paid' || order.status === 'shipped') {
-                      <app-button [variant]="'ghost'" [size]="'sm'" (clicked)="trackOrder(order.id)">
-                        {{ 'orders.track' | transloco }}
                       </app-button>
                     }
                   </div>
@@ -207,6 +208,7 @@ export class OrdersComponent implements OnInit {
   private paymentService = inject(PaymentService);
   private languageService = inject(LanguageService);
   private notificationService = inject(NotificationService);
+  private router = inject(Router);
 
   currentLang = this.languageService.currentLang;
   shopLink = computed(() => `/${this.currentLang()}/shop`);
@@ -299,9 +301,14 @@ export class OrdersComponent implements OnInit {
     return statusMap[status] || 'orders.status_unknown';
   }
 
-  trackOrder(orderId: number) {
-    // TODO: Implement order tracking modal or redirect
-    this.notificationService.info('Order tracking feature coming soon!');
+  getOrderTotal(order: any): number {
+    const total = order?.total ?? order?.total_amount ?? 0;
+    const value = typeof total === 'string' ? parseFloat(total) : total;
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  viewOrder(orderId: number) {
+    this.router.navigate(['/', this.currentLang(), 'orders', orderId]);
   }
 
   payNow(orderId: number) {

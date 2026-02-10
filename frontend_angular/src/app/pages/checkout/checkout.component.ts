@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { CartService } from '../../core/api/cart.service';
 import { OrderService, CreateOrderRequest } from '../../core/api/order.service';
@@ -444,9 +444,6 @@ import { environment } from '../../../environments/environment';
                         </span>
                       </div>
                     </div>
-                    <div class="text-right">
-                      <img src="/assets/gopay-logo.svg" alt="GoPay" class="h-8 opacity-80" onerror="this.style.display='none'">
-                    </div>
                   </label>
 
                   <!-- Cash on Pickup (only for personal pickup) -->
@@ -733,28 +730,33 @@ import { environment } from '../../../environments/environment';
                 </app-button>
               } @else if (currentStep() === 4) {
                 <!-- Terms of Service Checkbox -->
-                <div class="mb-4">
-                  <label class="flex items-start gap-3 cursor-pointer">
+                <div class="mb-6 rounded-2xl border border-border/60 bg-gradient-to-br from-background via-background to-muted/40 p-5 shadow-[0_10px_35px_-25px_rgba(0,0,0,0.8)]">
+                  <div class="flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
+                    {{ 'checkout.secure_checkout' | transloco }}
+                  </div>
+
+                  <label class="mt-4 flex items-start gap-3 text-sm leading-relaxed text-muted-foreground cursor-pointer">
                     <input
                       type="checkbox"
-                      formControlName="acceptTerms"
-                      class="mt-1 w-4 h-4 cursor-pointer">
-                    <span class="text-sm">
+                      [formControl]="acceptTermsControl"
+                      class="mt-1 h-5 w-5 rounded border border-border bg-background/80 text-foreground accent-foreground transition-shadow focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-foreground/60 focus-visible:ring-offset-background cursor-pointer">
+                    <span class="select-none">
                       <ng-container *transloco="let t">
                         {{ t('checkout.accept_terms_1') }}
-                        <a [routerLink]="'/' + currentLang() + '/terms-of-service'" target="_blank" class="text-accent hover:underline">
+                        <a [routerLink]="'/' + currentLang() + '/terms'" target="_blank" class="text-accent hover:text-foreground transition-colors underline decoration-dotted">
                           {{ t('checkout.terms_of_service') }}
                         </a>
                         {{ t('checkout.accept_terms_2') }}
                       </ng-container>
                     </span>
                   </label>
+
                   @if (checkoutForm.get('acceptTerms')?.invalid && checkoutForm.get('acceptTerms')?.touched) {
-                    <p class="text-sm text-danger mt-2">{{ 'checkout.terms_required' | transloco }}</p>
+                    <p class="text-sm text-danger mt-3">{{ 'checkout.terms_required' | transloco }}</p>
                   }
                 </div>
 
-                <div class="space-y-3">
+                <div class="space-y-3 pt-1">
                   <app-button 
                     [type]="'button'"
                     [fullWidth]="true"
@@ -801,7 +803,10 @@ import { environment } from '../../../environments/environment';
   `]
 })
 export class CheckoutComponent implements OnInit {
-  private fb = inject(FormBuilder);
+    get acceptTermsControl(): FormControl {
+      return this.checkoutForm.get('acceptTerms') as FormControl;
+    }
+  private fb: FormBuilder = inject(FormBuilder);
   private router = inject(Router);
   cartService = inject(CartService);
   private orderService = inject(OrderService);
@@ -918,14 +923,18 @@ export class CheckoutComponent implements OnInit {
     this.loadCheckoutData();
     
     // Subscribe to shipping method changes
-    this.checkoutForm.get('shippingMethod')?.valueChanges.subscribe(value => {
-      this.selectedShippingMethod.set(value);
+    this.checkoutForm.get('shippingMethod')?.valueChanges.subscribe((value: string | null) => {
+      if (!value) {
+        return;
+      }
+      const method = value as 'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier';
+      this.selectedShippingMethod.set(method);
       // Reset Packeta point when changing shipping method
-      if (value !== 'packeta_box') {
+      if (method !== 'packeta_box') {
         this.selectedPacketaPoint.set(null);
       }
       // Reset payment method to GoPay if not pickup
-      if (value !== 'pickup') {
+      if (method !== 'pickup') {
         this.selectedPaymentMethod.set('gopay');
       }
       this.saveCheckoutData();
@@ -1239,6 +1248,19 @@ export class CheckoutComponent implements OnInit {
       this.error.set(this.currentLang() === 'sk' 
         ? 'Prosím vyberte výdajné miesto Packeta' 
         : 'Please select a Packeta pickup point');
+      return;
+    }
+
+    const hasToken = !!this.authService.getAccessToken();
+    if (!hasToken) {
+      this.error.set(this.currentLang() === 'sk'
+        ? 'Pre dokončenie objednávky sa prosím prihláste.'
+        : 'Please sign in to complete your order.');
+
+      const lang = this.currentLang();
+      this.router.navigate(['/', lang, 'auth', 'login'], {
+        queryParams: { returnUrl: `/${lang}/checkout` }
+      });
       return;
     }
 

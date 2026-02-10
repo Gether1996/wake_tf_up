@@ -243,3 +243,9 @@ DEFAULT_CHARSET = 'utf-8'
 GOPAY_CLIENT_ID = os.getenv('GOPAY_CLIENT_ID', '')  # GoPay GoID
 GOPAY_CLIENT_SECRET = os.getenv('GOPAY_CLIENT_SECRET', '')  # GoPay Client Secret
 GOPAY_ENVIRONMENT = os.getenv('GOPAY_ENVIRONMENT', 'test')  # 'test' or 'production'
+_gopay_disable_env = os.getenv('GOPAY_DISABLE_PAYMENTS')
+if _gopay_disable_env is None:
+    # Default: disable payments automatically when not in production environment
+    GOPAY_DISABLE_PAYMENTS = GOPAY_ENVIRONMENT != 'production'
+else:
+    GOPAY_DISABLE_PAYMENTS = _gopay_disable_env == 'True'
