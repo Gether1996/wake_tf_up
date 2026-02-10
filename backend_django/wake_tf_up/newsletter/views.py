@@ -1,12 +1,57 @@
+import logging
+from datetime import datetime
+
+from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
+from django.core.mail import send_mail
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from rest_framework import generics, permissions, status, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.admin.views.decorators import staff_member_required
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from datetime import datetime
+
+from settings.models import MainSettings
 from .models import Subscriber, NewsletterPopupStat, NewsletterTemplate, DiscountCodeTemplate, NewsletterImage
 from .serializers import SubscriberSerializer, NewsletterPopupStatSerializer, NewsletterImageSerializer
+
+
+logger = logging.getLogger(__name__)
+
+
+def send_subscription_confirmation_email(email: str):
+    """Send a confirmation email after a user subscribes to the newsletter."""
+    if not email:
+        return
+
+    settings_obj = MainSettings.get_settings()
+    support_email = settings_obj.contact_email or getattr(settings, 'DEFAULT_CONTACT_EMAIL', settings.DEFAULT_FROM_EMAIL)
+    base_url = getattr(settings, 'FRONTEND_URL', 'https://wake-tf-up.eu').rstrip('/')
+
+    context = {
+        'site_name': settings_obj.site_name,
+        'support_email': support_email,
+        'shop_url': f"{base_url}/shop",
+        'unsubscribe_url': f"{base_url}/api/v1/newsletter/unsubscribe/?email={email}",
+        'instagram_url': settings_obj.instagram_url,
+        'facebook_url': settings_obj.facebook_url,
+        'twitter_url': settings_obj.twitter_url,
+    }
+
+    try:
+        html_message = render_to_string('newsletter/subscription_confirmation_email.html', context)
+        plain_message = strip_tags(html_message)
+        send_mail(
+            subject=f"Potvrdenie odberu | {settings_obj.site_name}",
+            message=plain_message,
+            from_email=support_email,
+            recipient_list=[email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+    except Exception as exc:
+        logger.error('Failed to send newsletter confirmation email to %s: %s', email, exc)
 
 
 class SubscribeView(generics.CreateAPIView):
@@ -36,6 +81,7 @@ class SubscribeView(generics.CreateAPIView):
             subscriber.is_active = True
             subscriber.unsubscribed_at = None
             subscriber.save()
+            send_subscription_confirmation_email(email)
             
             return Response(
                 {'message': 'Subscription reactivated.'},
@@ -47,6 +93,7 @@ class SubscribeView(generics.CreateAPIView):
                 status=status.HTTP_200_OK
             )
         
+        send_subscription_confirmation_email(email)
         return Response(
             {'message': 'Successfully subscribed!'},
             status=status.HTTP_201_CREATED
