@@ -895,19 +895,8 @@ export class CheckoutComponent implements OnInit {
     // Auto-fill form when user data becomes available
     effect(() => {
       const currentUser = this.authService.user();
-      if (currentUser && !this.checkoutForm.get('email')?.value) {
-        const nameParts = [currentUser.first_name, currentUser.last_name].filter(Boolean);
-        const fullName = nameParts.join(' ');
-        
-        this.checkoutForm.patchValue({
-          email: currentUser.email || '',
-          fullName: fullName || '',
-          phone: currentUser.phone || '',
-          address: currentUser.street || '',
-          city: currentUser.city || '',
-          postalCode: currentUser.postal_code || '',
-          country: currentUser.country || 'SK'
-        });
+      if (currentUser) {
+        this.prefillContactFromUser();
       }
     });
   }
@@ -1149,6 +1138,48 @@ export class CheckoutComponent implements OnInit {
       } catch (e) {
         console.error('Failed to load checkout data:', e);
       }
+    }
+
+    // After restoring saved data, ensure user info populates any empty contact fields
+    this.prefillContactFromUser();
+  }
+
+  private prefillContactFromUser() {
+    const currentUser = this.authService.user();
+    if (!currentUser) {
+      return;
+    }
+
+    const form = this.checkoutForm;
+    const fieldsToPatch: Record<string, string> = {};
+
+    const nameParts = [currentUser.first_name, currentUser.last_name].filter(Boolean);
+    const fullName = nameParts.join(' ');
+
+    if (!form.get('email')?.value) {
+      fieldsToPatch['email'] = currentUser.email || '';
+    }
+    if (!form.get('fullName')?.value && fullName) {
+      fieldsToPatch['fullName'] = fullName;
+    }
+    if (!form.get('phone')?.value) {
+      fieldsToPatch['phone'] = currentUser.phone || '';
+    }
+    if (!form.get('address')?.value) {
+      fieldsToPatch['address'] = currentUser.street || '';
+    }
+    if (!form.get('city')?.value) {
+      fieldsToPatch['city'] = currentUser.city || '';
+    }
+    if (!form.get('postalCode')?.value) {
+      fieldsToPatch['postalCode'] = currentUser.postal_code || '';
+    }
+    if (!form.get('country')?.value) {
+      fieldsToPatch['country'] = currentUser.country || 'SK';
+    }
+
+    if (Object.keys(fieldsToPatch).length) {
+      form.patchValue(fieldsToPatch, { emitEvent: false });
     }
   }
 
