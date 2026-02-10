@@ -5,6 +5,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from settings.models import MainSettings
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ def send_order_confirmation_email(order):
         subtotal += line_total
 
     base_url = getattr(settings, "FRONTEND_URL", "http://localhost:4200").rstrip("/")
-    support_email = getattr(settings, "DEFAULT_FROM_EMAIL", "support@example.com")
+    support_email = MainSettings.objects.first().contact_email if MainSettings.objects.exists() else settings.DEFAULT_CONTACT_EMAIL
 
     context = {
         "order": order,

@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+from settings.models import MainSettings
 import uuid
 from .serializers import (
     UserRegistrationSerializer,
@@ -20,11 +21,13 @@ User = get_user_model()
 def send_verification_email(user, language='sk'):
     """Helper function to send verification email"""
     verification_url = f"{settings.FRONTEND_URL}/{language}/auth/verify-email?token={user.email_verification_token}"
+    contact_email = MainSettings.get_contact_email()
     
     context = {
         'user_name': user.first_name or user.email.split('@')[0],
         'user_email': user.email,
         'verification_url': verification_url,
+        'contact_email': contact_email,
     }
     
     try:
@@ -78,9 +81,11 @@ WAKE TF UP team
 
 def send_email_confirmed_notification(user, language='sk'):
     """Helper function to send email confirmation notification"""
+    contact_email = MainSettings.get_contact_email()
     context = {
         'user_name': user.first_name or user.email.split('@')[0],
         'user_email': user.email,
+        'contact_email': contact_email,
     }
     
     try:
@@ -97,6 +102,8 @@ Môžete sa teraz prihlásiť do svojho účtu a začať nakupovať.
 
 Ďakujeme, že ste súčasťou WAKE TF UP!
 
+Ak máte akékoľvek otázky, sme vám k dispozícii na {contact_email}.
+
 WAKE TF UP tím
         ''' if language == 'sk' else f'''
 Hello {context['user_name']},
@@ -106,6 +113,8 @@ Your email has been successfully verified!
 You can now log in to your account and start shopping.
 
 Thank you for being part of WAKE TF UP!
+
+If you have any questions, reach us at {contact_email}.
 
 WAKE TF UP team
         '''

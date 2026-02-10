@@ -33,7 +33,7 @@
                                 {% endif %}
                             </p>
                             <p style="margin: 16px 0 0 0; color: #374151;">
-                                Spôsob platby: <strong>{% if order.status == 'paid' %}Online platba bola úspešne prijatá{% else %}Platba pri doručení / potvrdenie prijatia{% endif %}</strong>
+                                Spôsob platby: <strong>{% if order.shipping_method == 'pickup' %}Platba pri prevzatí{% else %}Platba cez platobnú bránu GoPay{% endif %}</strong>
                             </p>
                             {% if company_purchase %}
                                 <p style="margin: 16px 0 0 0; color: #374151;">

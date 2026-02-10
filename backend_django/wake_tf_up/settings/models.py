@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.conf import settings as django_settings
 
 
 class MainSettings(models.Model):
@@ -64,7 +65,7 @@ class MainSettings(models.Model):
         help_text="Site name displayed in emails and frontend"
     )
     contact_email = models.EmailField(
-        default="info@waketfup.com",
+        default=django_settings.DEFAULT_CONTACT_EMAIL,
         help_text="Main contact email"
     )
     
@@ -125,6 +126,12 @@ class MainSettings(models.Model):
         """Get or create the settings instance"""
         settings, created = cls.objects.get_or_create(pk=1)
         return settings
+
+    @classmethod
+    def get_contact_email(cls):
+        """Return configured contact email with settings fallback"""
+        settings = cls.get_settings()
+        return settings.contact_email or django_settings.DEFAULT_CONTACT_EMAIL
     
     def __str__(self):
         return f"Main Settings (Updated: {self.updated_at.strftime('%Y-%m-%d %H:%M')})"

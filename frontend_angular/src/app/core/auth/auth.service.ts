@@ -14,6 +14,7 @@ export class AuthService {
   private platformId = inject(PLATFORM_ID);
   private readonly TOKEN_KEY = 'access_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
+  private profileRetryTimeout: ReturnType<typeof setTimeout> | null = null;
   
   private currentUser = signal<User | null>(null);
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
@@ -50,6 +51,7 @@ export class AuthService {
   }
 
   logout(): void {
+    this.clearProfileRetry();
     this.clearTokens();
     this.currentUser.set(null);
     this.isAuthenticatedSubject.next(false);
@@ -104,6 +106,24 @@ export class AuthService {
     return !!this.getAccessToken();
   }
 
+  private scheduleProfileRetry(): void {
+    if (!this.hasToken() || this.profileRetryTimeout) {
+      return;
+    }
+
+    this.profileRetryTimeout = setTimeout(() => {
+      this.profileRetryTimeout = null;
+      this.loadCurrentUser();
+    }, 5000);
+  }
+
+  private clearProfileRetry(): void {
+    if (this.profileRetryTimeout) {
+      clearTimeout(this.profileRetryTimeout);
+      this.profileRetryTimeout = null;
+    }
+  }
+
   private loadCurrentUser(): void {
     const token = this.getAccessToken();
     console.log('[AuthService] Loading current user, has token:', !!token);
@@ -114,13 +134,19 @@ export class AuthService {
           console.log('[AuthService] User loaded successfully:', user.email);
           this.currentUser.set(user);
           this.isAuthenticatedSubject.next(true);
+          this.clearProfileRetry();
         },
         error: (err) => {
           console.error('[AuthService] Failed to load user:', err.status, err.message);
-          // Just clear tokens, don't redirect to avoid infinite loop on refresh
-          this.clearTokens();
-          this.currentUser.set(null);
-          this.isAuthenticatedSubject.next(false);
+          if (err.status === 401 || err.status === 403) {
+            this.clearTokens();
+            this.currentUser.set(null);
+            this.isAuthenticatedSubject.next(false);
+          } else {
+            // Keep tokens for transient errors and retry later
+            this.isAuthenticatedSubject.next(this.hasToken());
+            this.scheduleProfileRetry();
+          }
         }
       });
   }

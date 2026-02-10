@@ -126,7 +126,7 @@ import { FormsModule } from '@angular/forms';
             <p class="font-semibold text-foreground">{{ 'footer.company_name' | transloco }}</p>
             <p>{{ 'footer.company_address' | transloco }}</p>
             <p>{{ 'footer.company_id' | transloco }} | {{ 'footer.company_tax_id' | transloco }}</p>
-            <p>{{ 'footer.company_email' | transloco }}</p>
+            <p>{{ 'footer.company_email' | transloco: { email: contactEmail() } }}</p>
           </div>
 
           <!-- Copyright and Links -->
@@ -176,6 +176,8 @@ export class FooterComponent {
   private newsletterService = inject(NewsletterService);
   private languageService = inject(LanguageService);
   private settingsService = inject(SettingsService);
+
+  contactEmail = this.settingsService.contactEmail;
 
   currentLang = this.languageService.currentLang;
   shopLink = computed(() => `/${this.currentLang()}/shop`);

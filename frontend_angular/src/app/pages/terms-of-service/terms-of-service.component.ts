@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { LanguageService } from '../../core/services/language.service';
+import { SettingsService } from '../../core/api/settings.service';
 
 @Component({
   selector: 'app-terms-of-service',
@@ -119,7 +120,7 @@ import { LanguageService } from '../../core/services/language.service';
         <!-- Section 13: Contact -->
         <section>
           <h2 class="text-2xl font-bold mt-8 mb-4">{{ 'terms.section13.title' | transloco }}</h2>
-          <div [innerHTML]="'terms.section13.content' | transloco"></div>
+          <div [innerHTML]="'terms.section13.content' | transloco: { email: contactEmail() }"></div>
         </section>
       </div>
 
@@ -140,6 +141,8 @@ import { LanguageService } from '../../core/services/language.service';
 })
 export class TermsOfServiceComponent {
   private languageService = inject(LanguageService);
+  private settingsService = inject(SettingsService);
   currentLang = this.languageService.currentLang;
   homeLink = computed(() => `/${this.currentLang()}`);
+  contactEmail = this.settingsService.contactEmail;
 }

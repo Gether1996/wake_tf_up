@@ -1,4 +1,4 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../services/notification.service';
@@ -35,6 +35,7 @@ export class SettingsService {
   settings = signal<MainSettings | null>(null);
   loading = signal(false);
   error = signal<string | null>(null);
+  contactEmail = computed(() => this.settings()?.contact_email || environment.defaultContactEmail);
 
   constructor() {
     this.loadSettings();
@@ -67,7 +68,7 @@ export class SettingsService {
           packeta_courier_cost: 4.99,
           tax_rate: 20,
           site_name: 'Wake TF Up',
-          contact_email: 'info@waketfup.com',
+          contact_email: environment.defaultContactEmail,
           instagram_url: '',
           facebook_url: '',
           twitter_url: '',

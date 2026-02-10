@@ -475,7 +475,7 @@
     "company_address": "Jedľová 319/33, 010 04 Žilina, Slovakia",
     "company_id": "Company ID: 56698585",
     "company_tax_id": "Tax ID: 1127876057",
-    "company_email": "info@wake-tf-up.com"
+    "company_email": "Email: {{email}}"
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -488,7 +488,7 @@
     },
     "section2": {
       "title": "2. Data Controller",
-      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057<br><strong>Email:</strong> info@wake-tf-up.com</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057<br><strong>Email:</strong> {{email}}</p>"
     },
     "section3": {
       "title": "3. Data We Collect",
@@ -582,7 +582,7 @@
     },
     "section12": {
       "title": "12. Contact",
-      "content": "<p>If you have questions about data protection or wish to exercise your rights, contact us:</p><p><strong>Email:</strong> info@wake-tf-up.com<br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057</p>"
+      "content": "<p>If you have questions about data protection or wish to exercise your rights, contact us:</p><p><strong>Email:</strong> {{email}}<br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057</p>"
     }
   },
   "terms": {
@@ -658,7 +658,7 @@
     },
     "section13": {
       "title": "13. Contact",
-      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057<br><strong>Email:</strong> info@wake-tf-up.com</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057<br><strong>Email:</strong> {{email}}</p>"
     }
   },
   "cookies": {

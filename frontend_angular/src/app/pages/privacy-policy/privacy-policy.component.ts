@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { LanguageService } from '../../core/services/language.service';
+import { SettingsService } from '../../core/api/settings.service';
 
 @Component({
   selector: 'app-privacy-policy',
@@ -25,7 +26,7 @@ import { LanguageService } from '../../core/services/language.service';
         <!-- Section 2: Data Controller -->
         <section>
           <h2 class="text-2xl font-bold mt-8 mb-4">{{ 'privacy.section2.title' | transloco }}</h2>
-          <div [innerHTML]="'privacy.section2.content' | transloco"></div>
+          <div [innerHTML]="'privacy.section2.content' | transloco: { email: contactEmail() }"></div>
         </section>
 
         <!-- Section 3: What Data We Collect -->
@@ -116,7 +117,7 @@ import { LanguageService } from '../../core/services/language.service';
         <!-- Section 12: Contact -->
         <section>
           <h2 class="text-2xl font-bold mt-8 mb-4">{{ 'privacy.section12.title' | transloco }}</h2>
-          <div [innerHTML]="'privacy.section12.content' | transloco"></div>
+          <div [innerHTML]="'privacy.section12.content' | transloco: { email: contactEmail() }"></div>
         </section>
       </div>
 
@@ -137,6 +138,8 @@ import { LanguageService } from '../../core/services/language.service';
 })
 export class PrivacyPolicyComponent {
   private languageService = inject(LanguageService);
+  private settingsService = inject(SettingsService);
   currentLang = this.languageService.currentLang;
   homeLink = computed(() => `/${this.currentLang()}`);
+  contactEmail = this.settingsService.contactEmail;
 }
