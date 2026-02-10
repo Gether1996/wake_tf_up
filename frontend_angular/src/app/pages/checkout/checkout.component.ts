@@ -1309,6 +1309,7 @@ export class CheckoutComponent implements OnInit {
       shipping_postal_code: formValue.postalCode,
       shipping_country: formValue.country,
       phone: formValue.phone,
+      language: this.languageService.currentLang(), // Add language for email localization
       ...(formValue.shippingMethod === 'packeta_box' && this.selectedPacketaPoint() && {
         packeta_point_id: this.selectedPacketaPoint()!.id,
         packeta_point_name: this.selectedPacketaPoint()!.name,
