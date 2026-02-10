@@ -8,6 +8,7 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
 from settings.models import MainSettings
+from core.email_utils import send_localized_email
 import uuid
 from .serializers import (
     UserRegistrationSerializer,
@@ -31,43 +32,14 @@ def send_verification_email(user, language='sk'):
     }
     
     try:
-        # Render HTML template
-        html_content = render_to_string(f'emails/email_verification_{language}.html', context)
-        
-        # Plain text fallback
-        text_content = f'''
-Ahoj {context['user_name']},
-
-Ďakujeme za registráciu v WAKE TF UP.
-
-Pre overenie vášho emailu prosím kliknite na nasledujúci odkaz:
-{verification_url}
-
-Ak ste sa neregistrovali, ignorujte tento email.
-
-WAKE TF UP tím
-        ''' if language == 'sk' else f'''
-Hello {context['user_name']},
-
-Thank you for signing up with WAKE TF UP.
-
-To verify your email, please click the following link:
-{verification_url}
-
-If you didn't sign up, please ignore this email.
-
-WAKE TF UP team
-        '''
-        
-        # Create email with HTML
-        email = EmailMultiAlternatives(
-            subject='WAKE TF UP - Overenie emailu' if language == 'sk' else 'WAKE TF UP - Email Verification',
-            body=text_content.strip(),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[user.email],
+        send_localized_email(
+            subject_sk='WAKE TF UP - Overenie emailu',
+            subject_en='WAKE TF UP - Email Verification',
+            template_path='emails/email_verification.html',
+            context=context,
+            recipient_list=[user.email],
+            language=language,
         )
-        email.attach_alternative(html_content, "text/html")
-        email.send(fail_silently=False)
         
         # Update sent time
         user.email_verification_sent_at = datetime.now()
@@ -89,45 +61,14 @@ def send_email_confirmed_notification(user, language='sk'):
     }
     
     try:
-        # Render HTML template
-        html_content = render_to_string(f'emails/email_confirmed_{language}.html', context)
-        
-        # Plain text fallback
-        text_content = f'''
-Ahoj {context['user_name']},
-
-Váš email bol úspešne overený!
-
-Môžete sa teraz prihlásiť do svojho účtu a začať nakupovať.
-
-Ďakujeme, že ste súčasťou WAKE TF UP!
-
-Ak máte akékoľvek otázky, sme vám k dispozícii na {contact_email}.
-
-WAKE TF UP tím
-        ''' if language == 'sk' else f'''
-Hello {context['user_name']},
-
-Your email has been successfully verified!
-
-You can now log in to your account and start shopping.
-
-Thank you for being part of WAKE TF UP!
-
-If you have any questions, reach us at {contact_email}.
-
-WAKE TF UP team
-        '''
-        
-        # Create email with HTML
-        email = EmailMultiAlternatives(
-            subject='WAKE TF UP - Email overený' if language == 'sk' else 'WAKE TF UP - Email Verified',
-            body=text_content.strip(),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[user.email],
+        send_localized_email(
+            subject_sk='WAKE TF UP - Email overený',
+            subject_en='WAKE TF UP - Email Verified',
+            template_path='emails/email_confirmed.html',
+            context=context,
+            recipient_list=[user.email],
+            language=language,
         )
-        email.attach_alternative(html_content, "text/html")
-        email.send(fail_silently=False)
         
         return True
     except Exception as e:
@@ -152,48 +93,14 @@ def send_password_reset_email(user, language='sk'):
             'reset_url': reset_url,
         }
         
-        # Load HTML template
-        template_name = f'emails/password_reset_{language}.html'
-        html_content = render_to_string(template_name, context)
-        
-        # Plain text fallback
-        text_content = f'''
-Ahoj {context['user_name']},
-
-Dostali sme žiadosť o zmenu hesla pre váš WAKE TF UP účet.
-
-Pre nastavenie nového hesla kliknite na nasledujúci odkaz:
-{reset_url}
-
-Tento link je platný 24 hodín.
-
-Ak ste o zmenu hesla nepožiadali, ignorujte tento email.
-
-WAKE TF UP tím
-        ''' if language == 'sk' else f'''
-Hey {context['user_name']},
-
-We received a request to reset the password for your WAKE TF UP account.
-
-To set a new password, click the following link:
-{reset_url}
-
-This link is valid for 24 hours.
-
-If you didn't request a password reset, please ignore this email.
-
-WAKE TF UP team
-        '''
-        
-        # Create email with HTML
-        email = EmailMultiAlternatives(
-            subject='WAKE TF UP - Zmena hesla' if language == 'sk' else 'WAKE TF UP - Password Reset',
-            body=text_content.strip(),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[user.email],
+        send_localized_email(
+            subject_sk='WAKE TF UP - Zmena hesla',
+            subject_en='WAKE TF UP - Password Reset',
+            template_path='emails/password_reset.html',
+            context=context,
+            recipient_list=[user.email],
+            language=language,
         )
-        email.attach_alternative(html_content, "text/html")
-        email.send(fail_silently=False)
         
         return True
     except Exception as e:
@@ -205,6 +112,7 @@ class RegisterView(generics.CreateAPIView):
     """
     User registration endpoint.
     POST /api/v1/auth/register/
+    Body: { email, password, password2, language: 'sk'|'en' (optional) }
     """
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
@@ -213,10 +121,13 @@ class RegisterView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        
+        # Get language from request data
+        language = serializer.validated_data.pop('language', 'sk')
         user = serializer.save()
         
-        # Send verification email
-        send_verification_email(user, language='sk')
+        # Send verification email in user's language
+        send_verification_email(user, language=language)
         
         return Response({
             'message': 'Registration successful. Please check your email to verify your account.',

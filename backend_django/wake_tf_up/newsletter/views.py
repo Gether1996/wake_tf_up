@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from settings.models import MainSettings
+from core.email_utils import get_email_language, send_localized_email
 from .models import Subscriber, NewsletterPopupStat, NewsletterTemplate, DiscountCodeTemplate, NewsletterImage
 from .serializers import SubscriberSerializer, NewsletterPopupStatSerializer, NewsletterImageSerializer
 
@@ -20,7 +21,7 @@ from .serializers import SubscriberSerializer, NewsletterPopupStatSerializer, Ne
 logger = logging.getLogger(__name__)
 
 
-def send_subscription_confirmation_email(email: str):
+def send_subscription_confirmation_email(email: str, request=None):
     """Send a confirmation email after a user subscribes to the newsletter."""
     if not email:
         logger.warning('Attempted to send confirmation email without email address')
@@ -32,35 +33,33 @@ def send_subscription_confirmation_email(email: str):
     support_email = settings_obj.contact_email or getattr(settings, 'DEFAULT_CONTACT_EMAIL', settings.DEFAULT_FROM_EMAIL)
     from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', support_email)
     base_url = getattr(settings, 'FRONTEND_URL', 'https://wake-tf-up.eu').rstrip('/')
-    language_code = settings.LANGUAGE_CODE if hasattr(settings, 'LANGUAGE_CODE') else 'sk'
+    # Get language from request if available, otherwise default to 'sk'
+    language_code = get_email_language(request=request)
 
-    logger.debug('Newsletter email config - support_email: %s, base_url: %s', support_email, base_url)
+    logger.debug('Newsletter email config - support_email: %s, base_url: %s, language: %s', support_email, base_url, language_code)
 
     context = {
         'site_name': settings_obj.site_name,
         'support_email': support_email,
         'shop_url': f"{base_url}/{language_code}/shop",
-        'unsubscribe_url': f"{base_url}/newsletter/unsubscribe?email={email}",
+        'unsubscribe_url': f"{base_url}/{language_code}/newsletter/unsubscribe?email={email}",
         'instagram_url': settings_obj.instagram_url,
         'facebook_url': settings_obj.facebook_url,
         'twitter_url': settings_obj.twitter_url,
     }
 
     try:
-        logger.debug('Rendering newsletter email template for %s', email)
-        html_message = render_to_string('newsletter/subscription_confirmation_email.html', context)
-        plain_message = strip_tags(html_message)
-        
-        logger.info('Attempting to send email with send_mail() to %s from %s', email, from_email)
-        result = send_mail(
-            subject=f"Potvrdenie odberu | {settings_obj.site_name}",
-            message=plain_message,
-            from_email=from_email,
+        logger.info('Attempting to send subscription confirmation email to %s from %s', email, from_email)
+        send_localized_email(
+            subject_sk=f"Potvrdenie odberu | {settings_obj.site_name}",
+            subject_en=f"Subscription Confirmation | {settings_obj.site_name}",
+            template_path='newsletter/subscription_confirmation_email.html',
+            context=context,
             recipient_list=[email],
-            html_message=html_message,
-            fail_silently=False,
+            language=language_code,
+            from_email=from_email
         )
-        logger.info('Newsletter confirmation email sent successfully to %s, result: %s', email, result)
+        logger.info('Newsletter confirmation email sent successfully to %s', email)
     except Exception as exc:
         logger.error('Failed to send newsletter confirmation email to %s: %s', email, exc, exc_info=True)
 
@@ -70,7 +69,10 @@ class SubscribeView(generics.CreateAPIView):
     Subscribe to newsletter.
     POST /api/v1/newsletter/subscribe/
     
-    Body: {"email": "user@example.com"}
+    Body: {
+        "email": "user@example.com",
+        "language": "en"  // optional, defaults to 'sk'
+    }
     """
     serializer_class = SubscriberSerializer
     permission_classes = [permissions.AllowAny]
@@ -80,6 +82,10 @@ class SubscribeView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         
         email = serializer.validated_data['email']
+        language = serializer.validated_data.get('language', 'sk')
+        
+        # Set language on request so it can be picked up by email utils
+        request.LANGUAGE_CODE = language
         
         # Check if already subscribed
         subscriber, created = Subscriber.objects.get_or_create(
@@ -92,7 +98,7 @@ class SubscribeView(generics.CreateAPIView):
             subscriber.is_active = True
             subscriber.unsubscribed_at = None
             subscriber.save()
-            send_subscription_confirmation_email(email)
+            send_subscription_confirmation_email(email, request)
             
             return Response(
                 {'message': 'Subscription reactivated.'},
@@ -104,7 +110,7 @@ class SubscribeView(generics.CreateAPIView):
                 status=status.HTTP_200_OK
             )
         
-        send_subscription_confirmation_email(email)
+        send_subscription_confirmation_email(email, request)
         return Response(
             {'message': 'Successfully subscribed!'},
             status=status.HTTP_201_CREATED
@@ -112,11 +118,6 @@ class SubscribeView(generics.CreateAPIView):
 
 
 class UnsubscribeView(APIView):
-    """
-    Unsubscribe from newsletter.
-    GET/POST /api/v1/newsletter/unsubscribe/?email=user@example.com
-    or POST with body: {"email": "user@example.com"}
-    """
     permission_classes = [permissions.AllowAny]
     
     def get(self, request):
@@ -237,7 +238,9 @@ def newsletter_template_preview(request, pk):
     html_content = template.content_html
     # Auto-generate unsubscribe URL from settings
     base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
-    unsubscribe_link = f"{base_url}/api/v1/newsletter/unsubscribe/?email=example@example.com"
+    # Get language from request
+    language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+    unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email=example@example.com"
     html_content = html_content.replace('{{unsubscribe_url}}', unsubscribe_link)
     # Replace site URL placeholder
     html_content = html_content.replace('{{site_url}}', base_url)
@@ -305,7 +308,9 @@ def discount_template_preview(request, pk):
     html_content = template.content_html
     # Auto-generate unsubscribe URL from settings
     base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
-    unsubscribe_link = f"{base_url}/api/v1/newsletter/unsubscribe/?email=example@example.com"
+    # Get language from request
+    language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+    unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email=example@example.com"
     html_content = html_content.replace('{{unsubscribe_url}}', unsubscribe_link)
     # Replace site URL placeholder
     html_content = html_content.replace('{{site_url}}', base_url)

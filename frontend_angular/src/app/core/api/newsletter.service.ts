@@ -1,9 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
+import { LanguageService } from '../services/language.service';
 
 export interface NewsletterSubscribeRequest {
   email: string;
+  language?: 'sk' | 'en';
 }
 
 export interface NewsletterResponse {
@@ -21,10 +23,17 @@ export interface PopupTrackRequest {
   providedIn: 'root'
 })
 export class NewsletterService {
+  private languageService = inject(LanguageService);
+  
   constructor(private api: ApiService) {}
 
-  subscribe(email: string): Observable<NewsletterResponse> {
-    return this.api.post<NewsletterResponse>('newsletter/subscribe/', { email });
+  subscribe(email: string, language?: 'sk' | 'en'): Observable<NewsletterResponse> {
+    // Use provided language or get current language from service
+    const lang = language || this.languageService.currentLang();
+    return this.api.post<NewsletterResponse>('newsletter/subscribe/', { 
+      email,
+      language: lang
+    });
   }
   
   trackPopupInteraction(data: PopupTrackRequest): Observable<{ message: string }> {

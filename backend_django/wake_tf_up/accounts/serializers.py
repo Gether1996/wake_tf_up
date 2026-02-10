@@ -13,11 +13,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validators=[validate_password]
     )
     password2 = serializers.CharField(write_only=True, required=True)
+    language = serializers.ChoiceField(
+        choices=['sk', 'en'],
+        default='sk',
+        required=False,
+        write_only=True,
+        help_text='Preferred language for emails (sk or en)'
+    )
     
     class Meta:
         model = User
         fields = (
-            'email', 'password', 'password2', 
+            'email', 'password', 'password2', 'language',
             'phone', 'first_name', 'last_name',
             'street', 'city', 'postal_code', 'country',
             'theme_preference'

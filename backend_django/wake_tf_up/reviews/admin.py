@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from core.email_utils import get_email_language, send_localized_email
 from .models import Review, ReviewToken
 
 
@@ -148,34 +149,33 @@ class ReviewTokenAdmin(admin.ModelAdmin):
     @admin.action(description='Resend review request email')
     def resend_email(self, request, queryset):
         """Resend review request emails for selected tokens"""
-        from django.core.mail import send_mail
-        from django.template.loader import render_to_string
-        from django.utils.html import strip_tags
         from django.conf import settings
+        
+        # Get language from request
+        language_code = get_email_language(request=request)
         
         sent_count = 0
         for token in queryset:
             if not token.is_valid():
                 continue
+            
+            base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:4200')
                 
             context = {
                 'user': token.user,
                 'order': token.order,
                 'tokens': [token],
-                'base_url': getattr(settings, 'FRONTEND_URL', 'http://localhost:4200')
+                'base_url': base_url
             }
             
             try:
-                html_message = render_to_string('orders/review_request_email.html', context)
-                plain_message = strip_tags(html_message)
-                
-                send_mail(
-                    subject=f'Ohodnoťte produkt: {token.product.name}',
-                    message=plain_message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
+                send_localized_email(
+                    subject_sk=f'Ohodnoťte produkt: {token.product.name}',
+                    subject_en=f'Rate product: {token.product.name}',
+                    template_path='orders/review_request_email.html',
+                    context=context,
                     recipient_list=[token.user.email],
-                    html_message=html_message,
-                    fail_silently=False,
+                    language=language_code
                 )
                 sent_count += 1
             except Exception as e:

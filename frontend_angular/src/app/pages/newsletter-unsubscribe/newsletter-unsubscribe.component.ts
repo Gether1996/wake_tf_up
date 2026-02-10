@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api/api.service';
+import { LanguageService } from '../../core/services/language.service';
 import { TranslocoModule } from '@jsverse/transloco';
 
 @Component({
@@ -26,7 +27,7 @@ import { TranslocoModule } from '@jsverse/transloco';
                 {{ 'newsletter_unsubscribe.description_success' | transloco }}
               </p>
               
-              <a [routerLink]="['/en']" class="block">
+              <a [routerLink]="['/', currentLang()]" class="block">
                 <button class="w-full bg-foreground text-background py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
                   {{ 'newsletter_unsubscribe.back_home' | transloco }}
                 </button>
@@ -60,7 +61,7 @@ import { TranslocoModule } from '@jsverse/transloco';
                 {{ error() | transloco }}
               </p>
               
-              <a [routerLink]="['/en']" class="block">
+              <a [routerLink]="['/', currentLang()]" class="block">
                 <button class="w-full bg-foreground text-background py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
                   {{ 'newsletter_unsubscribe.back_home' | transloco }}
                 </button>
@@ -76,9 +77,11 @@ import { TranslocoModule } from '@jsverse/transloco';
 export class NewsletterUnsubscribeComponent implements OnInit {
   private api = inject(ApiService);
   private route = inject(ActivatedRoute);
+  private languageService = inject(LanguageService);
   
   unsubscribed = signal(false);
   error = signal('');
+  currentLang = this.languageService.currentLang;
 
   ngOnInit() {
     // Get email from query parameter

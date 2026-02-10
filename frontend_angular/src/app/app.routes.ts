@@ -104,6 +104,10 @@ const appRoutes: Routes = [
     loadComponent: () => import('./pages/terms-of-service/terms-of-service.component').then(m => m.TermsOfServiceComponent)
   },
   {
+    path: 'newsletter/unsubscribe',
+    loadComponent: () => import('./pages/newsletter-unsubscribe/newsletter-unsubscribe.component').then(m => m.NewsletterUnsubscribeComponent)
+  },
+  {
     path: 'review/submit',
     loadComponent: () => import('./pages/review-submit/review-submit').then(m => m.ReviewSubmit)
   },
@@ -114,10 +118,11 @@ const appRoutes: Routes = [
 ];
 
 export const routes: Routes = [
-  // Newsletter unsubscribe (no language guard)
+  // Legacy unsubscribe links without language prefix
   {
     path: 'newsletter/unsubscribe',
-    loadComponent: () => import('./pages/newsletter-unsubscribe/newsletter-unsubscribe.component').then(m => m.NewsletterUnsubscribeComponent)
+    redirectTo: '/en/newsletter/unsubscribe',
+    pathMatch: 'full'
   },
   // All routes protected by language guard
   {

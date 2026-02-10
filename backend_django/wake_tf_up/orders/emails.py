@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from settings.models import MainSettings
+from core.email_utils import get_email_language, send_localized_email
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +28,11 @@ def send_order_confirmation_email(order):
     base_url = getattr(settings, "FRONTEND_URL", "http://localhost:4200").rstrip("/")
     support_email = MainSettings.objects.first().contact_email if MainSettings.objects.exists() else settings.DEFAULT_CONTACT_EMAIL
     sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", support_email)
+    
+    # Get language from user or default to 'sk'
+    language_code = get_email_language(user=order.user)
 
-    logger.debug("Order email config - support_email: %s, base_url: %s", support_email, base_url)
+    logger.debug("Order email config - support_email: %s, base_url: %s, language: %s", support_email, base_url, language_code)
 
     context = {
         "order": order,
@@ -42,26 +46,23 @@ def send_order_confirmation_email(order):
         "is_cash_payment": order.payment_method == "cash_on_pickup",
         "packeta_point": order.packeta_point_name,
         "packeta_address": order.packeta_point_address,
-        "frontend_order_url": f"{base_url}/en/orders/{order.id}",
+        "frontend_order_url": f"{base_url}/{language_code}/orders/{order.id}",
         "support_email": support_email,
         "company_purchase": order.is_company_purchase,
     }
 
     try:
-        logger.debug("Rendering order confirmation email template for order %s", order.id)
-        html_message = render_to_string("orders/order_confirmation_email.html", context)
-        plain_message = strip_tags(html_message)
-
-        logger.info("Attempting to send order email with send_mail() to %s from %s", order.user.email, sender_email)
-        result = send_mail(
-            subject=f"Potvrdenie objednávky #{order.id}",
-            message=plain_message,
-            from_email=sender_email,
+        logger.info("Attempting to send order confirmation email to %s from %s", order.user.email, sender_email)
+        send_localized_email(
+            subject_sk=f"Potvrdenie objednávky #{order.id}",
+            subject_en=f"Order Confirmation #{order.id}",
+            template_path="orders/order_confirmation_email.html",
+            context=context,
             recipient_list=[order.user.email],
-            html_message=html_message,
-            fail_silently=False,
+            language=language_code,
+            from_email=sender_email
         )
-        logger.info("Sent order confirmation email for order %s (result: %s)", order.id, result)
+        logger.info("Sent order confirmation email for order %s", order.id)
     except Exception as exc:
         logger.error("Failed to send order confirmation email for order %s: %s", order.id, exc, exc_info=True)
 

@@ -4,6 +4,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from core.email_utils import get_email_language, send_localized_email
 from .models import Order
 
 
@@ -29,6 +30,9 @@ def send_review_request_email(sender, instance, created, **kwargs):
         if not tokens:
             return
         
+        # Get language from user
+        language_code = get_email_language(user=instance.user)
+        
         # Prepare email context
         context = {
             'user': instance.user,
@@ -37,19 +41,15 @@ def send_review_request_email(sender, instance, created, **kwargs):
             'base_url': settings.FRONTEND_URL if hasattr(settings, 'FRONTEND_URL') else 'http://localhost:4200'
         }
         
-        # Render email
-        html_message = render_to_string('orders/review_request_email.html', context)
-        plain_message = strip_tags(html_message)
-        
-        # Send email
+        # Send localized email
         try:
-            send_mail(
-                subject=f'Ohodnoťte Vašu objednávku #{instance.id}',
-                message=plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
+            send_localized_email(
+                subject_sk=f'Ohodnoťte Vašu objednávku #{instance.id}',
+                subject_en=f'Rate Your Order #{instance.id}',
+                template_path='orders/review_request_email.html',
+                context=context,
                 recipient_list=[instance.user.email],
-                html_message=html_message,
-                fail_silently=False,
+                language=language_code
             )
         except Exception as e:
             # Log error but don't raise (we don't want to block order updates)

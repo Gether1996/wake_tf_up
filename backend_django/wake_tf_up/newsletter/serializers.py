@@ -13,9 +13,16 @@ class RelativeImageField(serializers.ImageField):
 
 class SubscriberSerializer(serializers.ModelSerializer):
     """Serializer for newsletter subscription"""
+    language = serializers.ChoiceField(
+        choices=['sk', 'en'],
+        default='sk',
+        required=False,
+        help_text='Preferred language for emails (sk or en)'
+    )
+    
     class Meta:
         model = Subscriber
-        fields = ('email',)
+        fields = ('email', 'language')
         # Don't validate unique constraint in serializer - we handle it manually in the view
         extra_kwargs = {
             'email': {'validators': []},
