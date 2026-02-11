@@ -20,7 +20,9 @@
   "nav": {
     "home": "Domov",
     "shop": "Obchod",
-    "blog": "Blog",    "events": "Eventy",    "about": "O nás",
+    "blog": "Blog",
+    "events": "Eventy",
+    "about": "O nás",
     "cart": "Košík",
     "profile": "Profil",
     "orders": "Objednávky",

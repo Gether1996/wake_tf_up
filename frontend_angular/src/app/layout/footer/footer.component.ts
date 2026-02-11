@@ -67,6 +67,11 @@ import { FormsModule } from '@angular/forms';
                   {{ 'nav.blog' | transloco }}
                 </a>
               </li>
+              <li>
+                <a [routerLink]="eventsLink()" (click)="scrollToTop()" class="text-sm hover:text-accent transition-colors">
+                  {{ 'nav.events' | transloco }}
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -185,6 +190,7 @@ export class FooterComponent {
   shopLink = computed(() => `/${this.currentLang()}/shop`);
   aboutLink = computed(() => `/${this.currentLang()}/about`);
   blogLink = computed(() => `/${this.currentLang()}/blog`);
+  eventsLink = computed(() => `/${this.currentLang()}/events`);
   privacyLink = computed(() => `/${this.currentLang()}/privacy`);
   termsLink = computed(() => `/${this.currentLang()}/terms`);
 
