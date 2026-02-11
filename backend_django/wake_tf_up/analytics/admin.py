@@ -38,17 +38,17 @@ class ProductEventStatAdmin(admin.ModelAdmin):
     days_tracked.short_description = 'Tracked For'
 
 
-# ProductEvent model is not registered in admin
-# Individual events are tracked automatically but only aggregated stats are shown
-# If you need to see individual events, you can register ProductEventAdmin below:
+# ProductEvent model is not registered in admin by default
+# Individual events are tracked automatically and contribute to ProductEventStat aggregates
+# If detailed event logging is needed in future, uncomment below:
 
 # @admin.register(ProductEvent)
 # class ProductEventAdmin(admin.ModelAdmin):
 #     """Individual event records (for detailed analytics if needed)"""
-#     list_display = ('product', 'event_type', 'user_or_session', 'created_at')
+#     list_display = ('product', 'event_type', 'user', 'created_at')
 #     list_filter = ('event_type', 'created_at')
-#     search_fields = ('product__name', 'user__email', 'session_id')
-#     readonly_fields = ('product', 'event_type', 'user', 'session_id', 'created_at')
+#     search_fields = ('product__name', 'user__email')
+#     readonly_fields = ('product', 'event_type', 'user', 'created_at')
 #     date_hierarchy = 'created_at'
 #     list_per_page = 50
 #     
@@ -66,15 +66,9 @@ class ProductEventStatAdmin(admin.ModelAdmin):
 #             'fields': ('product', 'event_type')
 #         }),
 #         ('User Info', {
-#             'fields': ('user', 'session_id')
+#             'fields': ('user',)
 #         }),
 #         ('Timestamp', {
 #             'fields': ('created_at',)
 #         }),
 #     )
-#     
-#     def user_or_session(self, obj):
-#         if obj.user:
-#             return f"User: {obj.user.email}"
-#         return f"Session: {obj.session_id[:12]}..."
-#     user_or_session.short_description = 'User/Session'

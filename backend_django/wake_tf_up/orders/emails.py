@@ -52,6 +52,7 @@ def send_order_confirmation_email(order, language=None):
         "packeta_point": order.packeta_point_name,
         "packeta_address": order.packeta_point_address,
         "frontend_order_url": f"{base_url}/{language_code}/orders/{order.id}",
+        "frontend_base_url": base_url,
         "support_email": support_email,
         "company_purchase": order.is_company_purchase,
     }

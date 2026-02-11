@@ -580,7 +580,7 @@
     },
     "section10": {
       "title": "10. Cookies",
-      "content": "Our website uses cookies to improve your user experience. We only use essential cookies for cart functionality and authentication. We do not use third-party tracking or marketing cookies."
+      "content": "Our website uses cookies and similar technologies to improve your user experience. Cookies are divided into these categories:<br><br><strong>Essential Cookies:</strong> Required for website functionality (login, cart, security). These cookies are always active and cannot be disabled.<br><br><strong>Analytics Cookies:</strong> We use our own analytics tracking cookies to monitor product clicks and views. These cookies are activated ONLY WITH YOUR CONSENT through the cookie banner. Without your consent, no analytics data is shared with us.<br><br><strong>Marketing Cookies:</strong> We do not use third-party marketing cookies from external services. Marketing cookies are only available with YOUR EXPLICIT CONSENT.<br><br>You can disable all cookies other than essential ones in the banner settings. Your consent (or refusal) is saved to localStorage. You can change it at any time by accessing the cookie settings in the bottom left corner of the website."
     },
     "section11": {
       "title": "11. Changes to This Policy",

@@ -61,7 +61,7 @@ class ProductEventStat(models.Model):
 
 
 class ProductEvent(models.Model):
-    """Track product view events and clicks"""
+    """Track product view events and clicks (anonymous, no session tracking)"""
     EVENT_TYPES = [
         ('view', 'Product View'),
         ('click', 'Product Click'),
@@ -79,11 +79,6 @@ class ProductEvent(models.Model):
         blank=True,
         related_name='product_events',
         help_text="Logged in user (optional)"
-    )
-    session_id = models.CharField(
-        max_length=100,
-        blank=True,
-        help_text="Anonymous session ID"
     )
     event_type = models.CharField(
         max_length=20,

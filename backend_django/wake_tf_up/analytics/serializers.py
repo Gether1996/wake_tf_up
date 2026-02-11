@@ -3,10 +3,10 @@ from .models import ProductEvent
 
 
 class ProductEventSerializer(serializers.ModelSerializer):
-    """Serializer for creating product events"""
+    """Serializer for creating product events (anonymous, no session tracking)"""
     class Meta:
         model = ProductEvent
-        fields = ('product', 'event_type', 'session_id')
+        fields = ('product', 'event_type')
         
     def create(self, validated_data):
         # Add user if authenticated

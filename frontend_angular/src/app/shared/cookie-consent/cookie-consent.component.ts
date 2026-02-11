@@ -1,9 +1,10 @@
-import { Component, signal, effect } from '@angular/core';
+import { Component, signal, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
 import { ButtonComponent } from '../../shared/button/button.component';
+import { CookieConsentService } from '../../core/services/cookie-consent.service';
 
 @Component({
   selector: 'app-cookie-consent',
@@ -172,16 +173,15 @@ export class CookieConsentComponent {
   analyticsEnabled = false;
   marketingEnabled = false;
 
-  private readonly CONSENT_KEY = 'cookie_consent';
-  private readonly CONSENT_VERSION = '1.0';
+  private cookieConsentService = inject(CookieConsentService);
 
   constructor() {
     // Check if user has already given consent
     effect(() => {
       if (typeof window !== 'undefined') {
-        const consent = this.getConsent();
+        const consent = this.cookieConsentService.getConsent();
         if (!consent) {
-          // Show banner after a short delay
+          // Show banner after a short delay only if no consent yet
           setTimeout(() => this.showBanner.set(true), 1000);
         } else {
           // Load saved preferences
@@ -203,7 +203,7 @@ export class CookieConsentComponent {
   acceptAll() {
     this.analyticsEnabled = true;
     this.marketingEnabled = true;
-    this.saveConsent(true, true);
+    this.cookieConsentService.acceptAll();
     this.showBanner.set(false);
     this.showSettings.set(false);
   }
@@ -211,49 +211,18 @@ export class CookieConsentComponent {
   rejectAll() {
     this.analyticsEnabled = false;
     this.marketingEnabled = false;
-    this.saveConsent(false, false);
+    this.cookieConsentService.rejectAll();
     this.showBanner.set(false);
     this.showSettings.set(false);
   }
 
   savePreferences() {
-    this.saveConsent(this.analyticsEnabled, this.marketingEnabled);
+    this.cookieConsentService.saveConsent(this.analyticsEnabled, this.marketingEnabled);
     this.showBanner.set(false);
     this.showSettings.set(false);
   }
 
   closeSettings(event: Event) {
     this.showSettings.set(false);
-  }
-
-  private saveConsent(analytics: boolean, marketing: boolean) {
-    if (typeof window !== 'undefined') {
-      const consent = {
-        version: this.CONSENT_VERSION,
-        timestamp: new Date().toISOString(),
-        essential: true, // Always true
-        analytics,
-        marketing
-      };
-      localStorage.setItem(this.CONSENT_KEY, JSON.stringify(consent));
-    }
-  }
-
-  private getConsent(): any {
-    if (typeof window !== 'undefined') {
-      const consentStr = localStorage.getItem(this.CONSENT_KEY);
-      if (consentStr) {
-        try {
-          const consent = JSON.parse(consentStr);
-          // Check if consent version matches
-          if (consent.version === this.CONSENT_VERSION) {
-            return consent;
-          }
-        } catch (e) {
-          return null;
-        }
-      }
-    }
-    return null;
   }
 }

@@ -1,12 +1,11 @@
-import { Injectable, PLATFORM_ID, inject } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { Observable } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable, EMPTY } from 'rxjs';
 import { ApiService } from './api.service';
+import { CookieConsentService } from '../services/cookie-consent.service';
 
 export interface ProductEvent {
   product: number | string; // ID or slug
   event_type: 'view' | 'click';
-  session_id?: string;
 }
 
 export interface AnalyticsResponse {
@@ -17,47 +16,35 @@ export interface AnalyticsResponse {
   providedIn: 'root'
 })
 export class AnalyticsService {
-  private platformId = inject(PLATFORM_ID);
-  private sessionId: string;
+  private cookieConsent = inject(CookieConsentService);
 
-  constructor(private api: ApiService) {
-    this.sessionId = this.getOrCreateSessionId();
-  }
+  constructor(private api: ApiService) {}
 
   trackProductView(productId: number | string): Observable<AnalyticsResponse> {
+    // Only track if user has given analytics consent
+    if (!this.cookieConsent.isAnalyticsAllowed()) {
+      return EMPTY;
+    }
+
     return this.trackEvent({
       product: productId,
-      event_type: 'view',
-      session_id: this.sessionId
+      event_type: 'view'
     });
   }
 
   trackProductClick(productId: number | string): Observable<AnalyticsResponse> {
+    // Only track if user has given analytics consent
+    if (!this.cookieConsent.isAnalyticsAllowed()) {
+      return EMPTY;
+    }
+
     return this.trackEvent({
       product: productId,
-      event_type: 'click',
-      session_id: this.sessionId
+      event_type: 'click'
     });
   }
 
   private trackEvent(event: ProductEvent): Observable<AnalyticsResponse> {
     return this.api.post<AnalyticsResponse>('analytics/events/', event);
-  }
-
-  private getOrCreateSessionId(): string {
-    if (!isPlatformBrowser(this.platformId)) {
-      return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    }
-    
-    // Use sessionStorage - session ID should be unique per browser session
-    const stored = sessionStorage.getItem('analytics_session_id');
-    if (stored) {
-      return stored;
-    }
-
-    // Generate simple session ID
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    sessionStorage.setItem('analytics_session_id', sessionId);
-    return sessionId;
   }
 }

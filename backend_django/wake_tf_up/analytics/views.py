@@ -6,14 +6,16 @@ from .serializers import ProductEventSerializer
 
 class ProductEventCreateView(generics.CreateAPIView):
     """
-    Record a product event (view/click).
+    Record a product event (view/click) - anonymous, no session tracking.
     POST /api/v1/analytics/events/
     
     Body: {
         "product": <product_id>,
-        "event_type": "view" or "click",
-        "session_id": "<optional session id for anonymous users>"
+        "event_type": "view" or "click"
     }
+    
+    Note: User is automatically added if authenticated.
+    No session_id tracking - purely anonymous or user-tracked.
     """
     serializer_class = ProductEventSerializer
     permission_classes = [permissions.AllowAny]

@@ -46,7 +46,7 @@ import { FormsModule } from '@angular/forms';
                 </a>
               </li>
               <li>
-                <a [routerLink]="shopLink()" [queryParams]="{is_preorder: 'true'}" class="text-sm hover:text-accent transition-colors">
+                <a [routerLink]="shopLink()" [queryParams]="{pre_order: 'true'}" class="text-sm hover:text-accent transition-colors">
                   {{ 'nav.preorders' | transloco }}
                 </a>
               </li>
@@ -58,12 +58,12 @@ import { FormsModule } from '@angular/forms';
             <h3 class="text-sm uppercase tracking-wide mb-4" style="font-family: 'Shlop', sans-serif;">{{ 'footer.about' | transloco }}</h3>
             <ul class="space-y-2">
               <li>
-                <a [routerLink]="aboutLink()" class="text-sm hover:text-accent transition-colors">
+                <a [routerLink]="aboutLink()" (click)="scrollToTop()" class="text-sm hover:text-accent transition-colors">
                   {{ 'nav.about' | transloco }}
                 </a>
               </li>
               <li>
-                <a [routerLink]="blogLink()" class="text-sm hover:text-accent transition-colors">
+                <a [routerLink]="blogLink()" (click)="scrollToTop()" class="text-sm hover:text-accent transition-colors">
                   {{ 'nav.blog' | transloco }}
                 </a>
               </li>
@@ -215,5 +215,9 @@ export class FooterComponent {
         this.loading.set(false);
       }
     });
+  }
+
+  scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
