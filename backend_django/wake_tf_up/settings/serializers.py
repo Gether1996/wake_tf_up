@@ -3,11 +3,12 @@ from .models import MainSettings
 
 
 class MainSettingsSerializer(serializers.ModelSerializer):
-    """Serializer for MainSettings - exposes public settings to frontend"""
+    """Serializer for MainSettings - exposes and allows updates to settings"""
     
     class Meta:
         model = MainSettings
         fields = [
+            'id',
             'free_shipping_threshold',
             'standard_shipping_cost',  # Legacy - keep for backwards compatibility
             'pickup_cost',
@@ -16,7 +17,13 @@ class MainSettingsSerializer(serializers.ModelSerializer):
             'packeta_courier_cost',
             'tax_rate',
             'site_name',
+            'owner_name',
+            'company_id',
+            'tax_id',
             'contact_email',
+            'phone',
+            'address',
+            'country',
             'instagram_url',
             'facebook_url',
             'twitter_url',
@@ -26,4 +33,4 @@ class MainSettingsSerializer(serializers.ModelSerializer):
             'newsletter_popup_delay',
             'newsletter_popup_enabled',
         ]
-        read_only_fields = fields  # All fields are read-only via API
+        read_only_fields = ['id']  # Only ID is read-only, allow updates to all settings

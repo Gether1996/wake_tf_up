@@ -1,7 +1,8 @@
-import { Injectable, signal, inject, computed } from '@angular/core';
+import { Injectable, signal, inject, computed, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../services/notification.service';
+import { interval, Subscription, takeUntil, Subject } from 'rxjs';
 
 export interface MainSettings {
   free_shipping_threshold: number;
@@ -12,6 +13,9 @@ export interface MainSettings {
   packeta_courier_cost: number;
   tax_rate: number;
   site_name: string;
+  owner_name: string;
+  company_id: string;
+  tax_id: string;
   contact_email: string;
   phone: string;
   address: string;
@@ -29,22 +33,48 @@ export interface MainSettings {
 @Injectable({
   providedIn: 'root'
 })
-export class SettingsService {
+export class SettingsService implements OnDestroy {
   private http = inject(HttpClient);
   private notificationService = inject(NotificationService);
   private apiUrl = `${environment.apiUrl}/settings`;
+  private destroy$ = new Subject<void>();
+  private refreshSubscription: Subscription | null = null;
   
   // Signal to store settings
   settings = signal<MainSettings | null>(null);
   loading = signal(false);
   error = signal<string | null>(null);
   contactEmail = computed(() => this.settings()?.contact_email || environment.defaultContactEmail);
-  phone = computed(() => this.settings()?.phone || '0917 207 760');
+  phone = computed(() => this.settings()?.phone || '+421 917 207 760');
   address = computed(() => this.settings()?.address || 'Jedľová 319/33, 010 04 Žilina');
   country = computed(() => this.settings()?.country || 'Slovakia');
+  ownerName = computed(() => this.settings()?.owner_name || 'Patrik Bielčik');
+  companyId = computed(() => this.settings()?.company_id || '56698585');
+  taxId = computed(() => this.settings()?.tax_id || '1127876057');
 
   constructor() {
     this.loadSettings();
+    this.startAutoRefresh();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    if (this.refreshSubscription) {
+      this.refreshSubscription.unsubscribe();
+    }
+  }
+
+  /**
+   * Start auto-refresh of settings every 5 minutes
+   */
+  private startAutoRefresh() {
+    // Auto-refresh settings every 5 minutes (300000 ms)
+    this.refreshSubscription = interval(5 * 60 * 1000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadSettings();
+      });
   }
 
   /**
@@ -74,8 +104,11 @@ export class SettingsService {
           packeta_courier_cost: 4.99,
           tax_rate: 20,
           site_name: 'Wake TF Up',
+          owner_name: 'Patrik Bielčik',
+          company_id: '56698585',
+          tax_id: '1127876057',
           contact_email: environment.defaultContactEmail,
-          phone: '0917 207 760',
+          phone: '+421 917 207 760',
           address: 'Jedľová 319/33, 010 04 Žilina',
           country: 'Slovakia',
           instagram_url: '',
@@ -124,5 +157,22 @@ export class SettingsService {
    */
   getPacketaApiKey() {
     return this.http.get<{ api_key: string }>(`${this.apiUrl}/packeta_key/`);
+  }
+
+  /**
+   * Update settings - admin only
+   */
+  updateSettings(updates: Partial<MainSettings>) {
+    return this.http.put<MainSettings>(`${this.apiUrl}/`, updates);
+  }
+
+  /**
+   * Update settings and reload local state immediately
+   */
+  updateAndRefresh(updates: Partial<MainSettings>) {
+    return this.http.put<MainSettings>(`${this.apiUrl}/`, updates).pipe(
+      // Automatically reload settings after update
+      // The subscriber should call refresh() or the auto-refresh will pick it up
+    );
   }
 }

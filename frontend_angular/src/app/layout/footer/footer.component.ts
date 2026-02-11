@@ -118,9 +118,10 @@ import { FormsModule } from '@angular/forms';
         <div class="border-t border-border mt-8 pt-8">
           <!-- Company Info (Required by Slovak Law) -->
           <div class="mb-6 text-sm text-muted-foreground font-mono space-y-1">
-            <p class="font-semibold text-foreground">{{ 'footer.company_name' | transloco }}</p>
+            <p class="font-semibold text-foreground">{{ ownerName() }}</p>
             <p>{{ 'footer.company_address' | transloco: { address: address(), country: country() } }}</p>
-            <p>{{ 'footer.company_id' | transloco }} | {{ 'footer.company_tax_id' | transloco }}</p>
+            <p>{{ 'footer.company_phone' | transloco: { phone: phone() } }}</p>
+            <p>{{ 'footer.company_id' | transloco: { id: companyId() } }} | {{ 'footer.company_tax_id' | transloco: { taxId: taxId() } }}</p>
             <p>{{ 'footer.company_email' | transloco: { email: contactEmail() } }}</p>
           </div>
 
@@ -192,6 +193,9 @@ export class FooterComponent {
   phone = this.settingsService.phone;
   address = this.settingsService.address;
   country = this.settingsService.country;
+  ownerName = this.settingsService.ownerName;
+  companyId = this.settingsService.companyId;
+  taxId = this.settingsService.taxId;
 
   currentLang = this.languageService.currentLang;
   shopLink = computed(() => `/${this.currentLang()}/shop`);

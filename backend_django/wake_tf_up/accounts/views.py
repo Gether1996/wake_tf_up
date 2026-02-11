@@ -53,11 +53,16 @@ def send_verification_email(user, language='sk'):
 
 def send_email_confirmed_notification(user, language='sk'):
     """Helper function to send email confirmation notification"""
-    contact_email = MainSettings.get_contact_email()
+    settings = MainSettings.get_settings()
     context = {
         'user_name': user.first_name or user.email.split('@')[0],
         'user_email': user.email,
-        'contact_email': contact_email,
+        'contact_email': settings.contact_email,
+        'phone': settings.phone,
+        'address': settings.address,
+        'owner_name': settings.owner_name,
+        'company_id': settings.company_id,
+        'tax_id': settings.tax_id,
     }
     
     try:

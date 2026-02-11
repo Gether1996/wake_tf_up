@@ -26,7 +26,7 @@ import { SettingsService } from '../../core/api/settings.service';
         <!-- Section 2: Data Controller -->
         <section>
           <h2 class="text-2xl font-bold mt-8 mb-4">{{ 'privacy.section2.title' | transloco }}</h2>
-          <div [innerHTML]="'privacy.section2.content' | transloco: { email: contactEmail(), phone: phone(), address: address(), country: country() }"></div>
+          <div [innerHTML]="'privacy.section2.content' | transloco: { email: contactEmail(), phone: phone(), address: address(), country: country(), owner: ownerName(), id: companyId(), taxId: taxId() }"></div>
         </section>
 
         <!-- Section 3: What Data We Collect -->
@@ -117,7 +117,7 @@ import { SettingsService } from '../../core/api/settings.service';
         <!-- Section 12: Contact -->
         <section>
           <h2 class="text-2xl font-bold mt-8 mb-4">{{ 'privacy.section12.title' | transloco }}</h2>
-          <div [innerHTML]="'privacy.section12.content' | transloco: { email: contactEmail(), phone: phone(), address: address(), country: country() }"></div>
+          <div [innerHTML]="'privacy.section12.content' | transloco: { email: contactEmail(), phone: phone(), address: address(), country: country(), owner: ownerName(), id: companyId(), taxId: taxId() }"></div>
         </section>
       </div>
 
@@ -145,4 +145,7 @@ export class PrivacyPolicyComponent {
   phone = this.settingsService.phone;
   address = this.settingsService.address;
   country = this.settingsService.country;
+  ownerName = this.settingsService.ownerName;
+  companyId = this.settingsService.companyId;
+  taxId = this.settingsService.taxId;
 }

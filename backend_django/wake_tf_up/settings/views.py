@@ -1,18 +1,31 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import MainSettings
 from .serializers import MainSettingsSerializer
 
 
-class MainSettingsViewSet(viewsets.ReadOnlyModelViewSet):
+class IsAdminUser(permissions.BasePermission):
+    """Custom permission to only allow admin users to update settings"""
+    message = "Only admin users can modify settings."
+    
+    def has_permission(self, request, view):
+        # Allow GET requests for everyone
+        if request.method == 'GET':
+            return True
+        # Only allow authenticated admin users for mutations
+        return request.user and request.user.is_authenticated and request.user.is_staff
+
+
+class MainSettingsViewSet(viewsets.ModelViewSet):
     """
-    ReadOnly ViewSet for MainSettings.
-    Only exposes GET methods - settings can only be changed via Django admin.
+    ViewSet for MainSettings.
+    GET: Public access to all settings
+    PUT/PATCH: Admin only - update settings
     """
     queryset = MainSettings.objects.all()
     serializer_class = MainSettingsSerializer
-    permission_classes = [permissions.AllowAny]  # Public settings
+    permission_classes = [IsAdminUser]  # Custom permission
     
     def list(self, request, *args, **kwargs):
         """Return the single settings instance"""
@@ -25,6 +38,25 @@ class MainSettingsViewSet(viewsets.ReadOnlyModelViewSet):
         settings = MainSettings.get_settings()
         serializer = self.get_serializer(settings)
         return Response(serializer.data)
+    
+    def update(self, request, *args, **kwargs):
+        """Update settings - admin only"""
+        settings = MainSettings.get_settings()
+        serializer = self.get_serializer(settings, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+    
+    def partial_update(self, request, *args, **kwargs):
+        """Partial update settings - admin only"""
+        return self.update(request, *args, partial=True, **kwargs)
+    
+    def destroy(self, request, *args, **kwargs):
+        """Prevent deletion"""
+        return Response(
+            {'detail': 'Settings cannot be deleted.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
     
     @action(detail=False, methods=['get'])
     def shipping(self, request):

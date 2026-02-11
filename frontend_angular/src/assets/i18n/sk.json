@@ -481,8 +481,8 @@
     "company_name": "Patrik Bielčik",
     "company_address": "Adresa: {{ address }}, {{ country }}",
     "company_phone": "Telefón: {{ phone }}",
-    "company_id": "IČO: 56698585",
-    "company_tax_id": "DIČ: 1127876057",
+    "company_id": "IČO: {{ id }}",
+    "company_tax_id": "DIČ: {{ taxId }}",
     "company_email": "Email: {{email}}"
   },
   "privacy": {
@@ -496,7 +496,7 @@
     },
     "section2": {
       "title": "2. Prevádzkovateľ",
-      "content": "<p><strong>WAKE TF UP</strong><br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> {{ address }}, {{ country }}<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057<br><strong>Email:</strong> {{email}}<br><strong>Telefón:</strong> {{ phone }}</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Prevádzkovateľ:</strong> {{ owner }}<br><strong>Adresa:</strong> {{ address }}, {{ country }}<br><strong>IČO:</strong> {{ id }}<br><strong>DIČ:</strong> {{ taxId }}<br><strong>Email:</strong> {{email}}<br><strong>Telefón:</strong> {{ phone }}</p>"
     },
     "section3": {
       "title": "3. Aké údaje zhromažďujeme",
@@ -590,7 +590,7 @@
     },
     "section12": {
       "title": "12. Kontakt",
-      "content": "<p>Ak máte otázky týkájuce sa ochrany osobných údajov alebo chcete uplatniť svoje práva, kontaktujte nás:</p><p><strong>Email:</strong> {{email}}<br><strong>Tel:</strong> {{ phone }}<br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> {{ address }}<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057</p>"
+      "content": "<p>Ak máte otázky týkajuce sa ochrany osobných údajov alebo chcete uplatniť svoje práva, kontaktujte nás:</p><p><strong>Email:</strong> {{email}}<br><strong>Tel:</strong> {{ phone }}<br><strong>Prevádzkovateľ:</strong> {{ owner }}<br><strong>Adresa:</strong> {{ address }}<br><strong>IČO:</strong> {{ id }}<br><strong>DIČ:</strong> {{ taxId }}</p>"
     }
   },
   "terms": {
@@ -604,7 +604,7 @@
     },
     "section2": {
       "title": "2. Vymedzenie pojmov",
-      "seller": "Predávajúci: WAKE TF UP, Patrik Bielčik, IČO: 56698585, DIČ: 1127876057, so sídlom {{ address }}",
+      "seller": "Predávajúci: WAKE TF UP, {{ owner }}, IČO: {{ id }}, DIČ: {{ taxId }}, so sídlom {{ address }}",
       "buyer": "Kupujúci: fyzická alebo právnická osoba, ktorá uzatvára kúpnu zmluvu",
       "goods": "Tovar: streetwear oblečenie z recyklovaných materiálov prezentované v internetovom obchode",
       "contract": "Kúpna zmluva: zmluva uzavretá na diaľku medzi predávajúcim a kupujúcim"
@@ -666,7 +666,7 @@
     },
     "section13": {
       "title": "13. Kontakt",
-      "content": "<p><strong>WAKE TF UP</strong><br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> {{ address }}, {{ country }}<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057<br><strong>Email:</strong> {{email}}<br><strong>Telefón:</strong> {{ phone }}</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Prevádzkovateľ:</strong> {{ owner }}<br><strong>Adresa:</strong> {{ address }}, {{ country }}<br><strong>IČO:</strong> {{ id }}<br><strong>DIČ:</strong> {{ taxId }}<br><strong>Email:</strong> {{email}}<br><strong>Telefón:</strong> {{ phone }}</p>"
     }
   },
   "cookies_policy": {

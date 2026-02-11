@@ -27,7 +27,7 @@ import { SettingsService } from '../../core/api/settings.service';
         <section>
           <h2 class="text-2xl font-bold mt-8 mb-4">{{ 'terms.section2.title' | transloco }}</h2>
           <ul class="list-disc pl-6 space-y-2">
-            <li><strong>{{ 'terms.section2.seller' | transloco }}</strong></li>
+            <li><strong>{{ 'terms.section2.seller' | transloco: { owner: ownerName(), id: companyId(), taxId: taxId(), address: address(), country: country() } }}</strong></li>
             <li><strong>{{ 'terms.section2.buyer' | transloco }}</strong></li>
             <li><strong>{{ 'terms.section2.goods' | transloco }}</strong></li>
             <li><strong>{{ 'terms.section2.contract' | transloco }}</strong></li>
@@ -120,7 +120,7 @@ import { SettingsService } from '../../core/api/settings.service';
         <!-- Section 13: Contact -->
         <section>
           <h2 class="text-2xl font-bold mt-8 mb-4">{{ 'terms.section13.title' | transloco }}</h2>
-          <div [innerHTML]="'terms.section13.content' | transloco: { email: contactEmail(), phone: phone(), address: address(), country: country() }"></div>
+          <div [innerHTML]="'terms.section13.content' | transloco: { email: contactEmail(), phone: phone(), address: address(), country: country(), owner: ownerName(), id: companyId(), taxId: taxId() }"></div>
         </section>
       </div>
 
@@ -148,4 +148,7 @@ export class TermsOfServiceComponent {
   phone = this.settingsService.phone;
   address = this.settingsService.address;
   country = this.settingsService.country;
+  ownerName = this.settingsService.ownerName;
+  companyId = this.settingsService.companyId;
+  taxId = this.settingsService.taxId;
 }

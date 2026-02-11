@@ -481,8 +481,8 @@
     "company_name": "Patrik Bielčik",
     "company_address": "Address: {{ address }}, {{ country }}",
     "company_phone": "Phone: {{ phone }}",
-    "company_id": "Company ID: 56698585",
-    "company_tax_id": "Tax ID: 1127876057",
+    "company_id": "Company ID (IČO): {{ id }}",
+    "company_tax_id": "Tax ID (DIČ): {{ taxId }}",
     "company_email": "Email: {{email}}"
   },
   "privacy": {
@@ -496,7 +496,7 @@
     },
     "section2": {
       "title": "2. Data Controller",
-      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> {{ address }}, {{ country }}<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057<br><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> {{ phone }}</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> {{ owner }}<br><strong>Address:</strong> {{ address }}, {{ country }}<br><strong>Company ID (IČO):</strong> {{ id }}<br><strong>Tax ID (DIČ):</strong> {{ taxId }}<br><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> {{ phone }}</p>"
     },
     "section3": {
       "title": "3. Data We Collect",
@@ -590,7 +590,7 @@
     },
     "section12": {
       "title": "12. Contact",
-      "content": "<p>If you have questions about data protection or wish to exercise your rights, contact us:</p><p><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> {{ phone }}<br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> {{ address }}, {{ country }}<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057</p>"
+      "content": "<p>If you have questions about data protection or wish to exercise your rights, please contact us:</p><p><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> {{ phone }}<br><strong>Operator:</strong> {{ owner }}<br><strong>Address:</strong> {{ address }}<br><strong>Company ID (IČO):</strong> {{ id }}<br><strong>Tax ID (DIČ):</strong> {{ taxId }}</p>"
     }
   },
   "terms": {
@@ -604,7 +604,7 @@
     },
     "section2": {
       "title": "2. Definitions",
-      "seller": "Seller: WAKE TF UP, Patrik Bielčik, Company ID: 56698585, Tax ID: 1127876057, registered at {{ address }}, {{ country }}",
+      "seller": "Seller: WAKE TF UP, {{ owner }}, Company ID: {{ id }}, Tax ID: {{ taxId }}, registered at {{ address }}, {{ country }}",
       "buyer": "Buyer: individual or legal entity entering into a purchase contract",
       "goods": "Goods: streetwear clothing from recycled materials presented in the online store",
       "contract": "Purchase Contract: distance contract between seller and buyer"
@@ -666,7 +666,7 @@
     },
     "section13": {
       "title": "13. Contact",
-      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> {{ address }}, {{ country }}<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057<br><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> {{ phone }}</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> {{ owner }}<br><strong>Address:</strong> {{ address }}, {{ country }}<br><strong>Company ID (IČO):</strong> {{ id }}<br><strong>Tax ID (DIČ):</strong> {{ taxId }}<br><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> {{ phone }}</p>"
     }
   },
   "cookies_policy": {

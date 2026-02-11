@@ -64,6 +64,21 @@ class MainSettings(models.Model):
         default="Wake TF Up",
         help_text="Site name displayed in emails and frontend"
     )
+    owner_name = models.CharField(
+        max_length=200,
+        default="Patrik Bielčik",
+        help_text="Owner/Operator name"
+    )
+    company_id = models.CharField(
+        max_length=50,
+        default="56698585",
+        help_text="Company registration ID (IČO)"
+    )
+    tax_id = models.CharField(
+        max_length=50,
+        default="1127876057",
+        help_text="Tax ID (DIČ)"
+    )
     contact_email = models.EmailField(
         default=django_settings.DEFAULT_CONTACT_EMAIL,
         help_text="Main contact email"
