@@ -120,7 +120,6 @@ import { FormsModule } from '@angular/forms';
           <div class="mb-6 text-sm text-muted-foreground font-mono space-y-1">
             <p class="font-semibold text-foreground">{{ ownerName() }}</p>
             <p>{{ 'footer.company_address' | transloco: { address: address(), country: country() } }}</p>
-            <p>{{ 'footer.company_phone' | transloco: { phone: phone() } }}</p>
             <p>{{ 'footer.company_id' | transloco: { id: companyId() } }} | {{ 'footer.company_tax_id' | transloco: { taxId: taxId() } }}</p>
             <p>{{ 'footer.company_email' | transloco: { email: contactEmail() } }}</p>
           </div>
