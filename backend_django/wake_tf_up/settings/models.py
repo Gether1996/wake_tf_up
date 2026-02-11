@@ -68,6 +68,21 @@ class MainSettings(models.Model):
         default=django_settings.DEFAULT_CONTACT_EMAIL,
         help_text="Main contact email"
     )
+    phone = models.CharField(
+        max_length=20,
+        default="+421 917 207 760",
+        help_text="Contact phone number"
+    )
+    address = models.CharField(
+        max_length=255,
+        default="Jedľová 319/33, 010 04 Žilina",
+        help_text="Company address"
+    )
+    country = models.CharField(
+        max_length=100,
+        default="Slovakia",
+        help_text="Country name"
+    )
     
     # Social Media
     instagram_url = models.URLField(blank=True, help_text="Instagram profile URL")

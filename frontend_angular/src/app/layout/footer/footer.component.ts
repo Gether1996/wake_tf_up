@@ -119,6 +119,7 @@ import { FormsModule } from '@angular/forms';
           <!-- Company Info (Required by Slovak Law) -->
           <div class="mb-6 text-sm text-muted-foreground font-mono space-y-1">
             <p class="font-semibold text-foreground">{{ 'footer.company_name' | transloco }}</p>
+            <p>{{ 'footer.company_address' | transloco: { address: address(), country: country() } }}</p>
             <p>{{ 'footer.company_id' | transloco }} | {{ 'footer.company_tax_id' | transloco }}</p>
             <p>{{ 'footer.company_email' | transloco: { email: contactEmail() } }}</p>
           </div>
@@ -143,11 +144,14 @@ import { FormsModule } from '@angular/forms';
             </p>
             
             <div class="flex gap-6">
-              <a [routerLink]="privacyLink()" class="text-sm text-muted-foreground hover:text-accent transition-colors font-mono">
+              <a [routerLink]="privacyLink()" (click)="scrollToTop()" class="text-sm text-muted-foreground hover:text-accent transition-colors font-mono">
                 {{ 'footer.privacy' | transloco }}
               </a>
-              <a [routerLink]="termsLink()" class="text-sm text-muted-foreground hover:text-accent transition-colors font-mono">
+              <a [routerLink]="termsLink()" (click)="scrollToTop()" class="text-sm text-muted-foreground hover:text-accent transition-colors font-mono">
                 {{ 'footer.terms' | transloco }}
+              </a>
+              <a [routerLink]="cookiesLink()" (click)="scrollToTop()" class="text-sm text-muted-foreground hover:text-accent transition-colors font-mono">
+                {{ 'footer.cookies' | transloco }}
               </a>
             </div>
 
@@ -185,6 +189,9 @@ export class FooterComponent {
   private settingsService = inject(SettingsService);
 
   contactEmail = this.settingsService.contactEmail;
+  phone = this.settingsService.phone;
+  address = this.settingsService.address;
+  country = this.settingsService.country;
 
   currentLang = this.languageService.currentLang;
   shopLink = computed(() => `/${this.currentLang()}/shop`);
@@ -193,6 +200,7 @@ export class FooterComponent {
   eventsLink = computed(() => `/${this.currentLang()}/events`);
   privacyLink = computed(() => `/${this.currentLang()}/privacy`);
   termsLink = computed(() => `/${this.currentLang()}/terms`);
+  cookiesLink = computed(() => `/${this.currentLang()}/cookies`);
 
   // Social media links from settings
   instagramUrl = computed(() => this.settingsService.settings()?.instagram_url || '');

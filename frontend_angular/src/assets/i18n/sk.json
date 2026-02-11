@@ -477,8 +477,10 @@
     "rights": "Všetky práva vyhradené",
     "privacy": "Ochrana súkromia",
     "terms": "Obchodné podmienky",
+    "cookies": "Politika cookies",
     "company_name": "Patrik Bielčik",
-    "company_address": "Jedľová 319/33, 010 04 Žilina",
+    "company_address": "Adresa: {{ address }}, {{ country }}",
+    "company_phone": "Telefón: {{ phone }}",
     "company_id": "IČO: 56698585",
     "company_tax_id": "DIČ: 1127876057",
     "company_email": "Email: {{email}}"
@@ -486,7 +488,7 @@
   "privacy": {
     "title": "Zásady ochrany osobných údajov",
     "effective_date": "Platnosť od",
-    "date": "16. januára 2026",
+    "date": "1. januára 2026",
     "back_home": "Späť na hlavnú stránku",
     "section1": {
       "title": "1. Úvod",
@@ -494,7 +496,7 @@
     },
     "section2": {
       "title": "2. Prevádzkovateľ",
-      "content": "<p><strong>WAKE TF UP</strong><br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> Jedľová 319/33, 010 04 Žilina, Slovenská republika<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057<br><strong>Email:</strong> {{email}}</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> {{ address }}, {{ country }}<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057<br><strong>Email:</strong> {{email}}<br><strong>Telefón:</strong> {{ phone }}</p>"
     },
     "section3": {
       "title": "3. Aké údaje zhromažďujeme",
@@ -588,13 +590,13 @@
     },
     "section12": {
       "title": "12. Kontakt",
-      "content": "<p>Ak máte otázky týkajúce sa ochrany osobných údajov alebo chcete uplatniť svoje práva, kontaktujte nás:</p><p><strong>Email:</strong> {{email}}<br><strong>Tel:</strong> 0917 207 760<br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> Jedľová 319/33, 010 04 Žilina<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057</p>"
+      "content": "<p>Ak máte otázky týkájuce sa ochrany osobných údajov alebo chcete uplatniť svoje práva, kontaktujte nás:</p><p><strong>Email:</strong> {{email}}<br><strong>Tel:</strong> {{ phone }}<br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> {{ address }}<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057</p>"
     }
   },
   "terms": {
     "title": "Všeobecné obchodné podmienky",
     "effective_date": "Platnosť od",
-    "date": "16. januára 2026",
+    "date": "1. januára 2026",
     "back_home": "Späť na hlavnú stránku",
     "section1": {
       "title": "1. Úvodné ustanovenia",
@@ -602,7 +604,7 @@
     },
     "section2": {
       "title": "2. Vymedzenie pojmov",
-      "seller": "Predávajúci: WAKE TF UP, Patrik Bielčik, IČO: 56698585, DIČ: 1127876057, so sídlom Jedľová 319/33, 010 04 Žilina",
+      "seller": "Predávajúci: WAKE TF UP, Patrik Bielčik, IČO: 56698585, DIČ: 1127876057, so sídlom {{ address }}",
       "buyer": "Kupujúci: fyzická alebo právnická osoba, ktorá uzatvára kúpnu zmluvu",
       "goods": "Tovar: streetwear oblečenie z recyklovaných materiálov prezentované v internetovom obchode",
       "contract": "Kúpna zmluva: zmluva uzavretá na diaľku medzi predávajúcim a kupujúcim"
@@ -644,7 +646,7 @@
     },
     "section8": {
       "title": "8. Záruka a reklamácie",
-      "content": "Na tovar sa vzťahuje zákonná záruka 24 mesiacov. Reklamáciu môžete uplatniť na adrese predávajúceho alebo emailom na info@wake-tf-up.com. Reklamáciu vybavíme do 30 dní. Práva zo zodpovednosti za vady tovaru sa riadia Občianskym zákonníkom a zákonom o ochrane spotrebiteľa."
+      "content": "Na tovar sa vzťahuje zákonná záruka 24 mesiacov. Reklamáciu môžete uplatniť na adrese predávajúceho alebo emailom na {{email}}. Reklamáciu vybavíme do 30 dní. Práva zo zodpovednosti za vady tovaru sa riadia Občianskym zákonníkom a zákonom o ochrane spotrebiteľa."
     },
     "section9": {
       "title": "9. Duševné vlastníctvo",
@@ -660,30 +662,66 @@
     },
     "section12": {
       "title": "12. Záverečné ustanovenia",
-      "content": "Tieto VOP nadobúdajú účinnosť dňom 16. januára 2026. Predávajúci si vyhradzuje právo zmeniť VOP. Aktuálne znenie VOP je vždy dostupné na tejto stránke. Vzťahy neupravené VOP sa riadia právnym poriadkom Slovenskej republiky."
+      "content": "Tieto VOP nadobúdajú účinnosť dňom 1. januára 2026. Predávajúci si vyhradzuje právo zmeniť VOP. Aktuálne znenie VOP je vždy dostupné na tejto stránke. Vzťahy neupravené VOP sa riadia právnym poriadkom Slovenskej republiky."
     },
     "section13": {
       "title": "13. Kontakt",
-      "content": "<p><strong>WAKE TF UP</strong><br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> Jedľová 319/33, 010 04 Žilina, Slovenská republika<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057<br><strong>Email:</strong> {{email}}<br><strong>Tel:</strong> 0917 207 760</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Prevádzkovateľ:</strong> Patrik Bielčik<br><strong>Adresa:</strong> {{ address }}, {{ country }}<br><strong>IČO:</strong> 56698585<br><strong>DIČ:</strong> 1127876057<br><strong>Email:</strong> {{email}}<br><strong>Telefón:</strong> {{ phone }}</p>"
     }
   },
-  "cookies": {
-    "title": "Používame cookies",
-    "description": "Používame nevyhnutné cookies na zabezpečenie fungovania webu. Analytické a marketingové cookies používame len s Vaším súhlasom.",
-    "learn_more": "Viac informácií",
-    "accept_all": "Prijať všetko",
-    "reject": "Odmietnuť",
-    "settings": "Nastavenia",
-    "settings_title": "Nastavenia cookies",
-    "settings_description": "Môžete si vybrať, ktoré typy cookies chcete povoliť. Nevyhnutné cookies sú vždy aktívne.",
-    "essential_title": "Nevyhnutné cookies",
-    "essential_description": "Tieto cookies sú potrebné pre základné fungovanie webu (prihlásenie, košík, bezpečnosť). Nie je možné ich vypnúť.",
-    "analytics_title": "Analytické cookies",
-    "analytics_description": "Pomáhajú nám pochopiť, ako návštevníci používajú web, aby sme mohli zlepšiť používateľskú skúsenosť.",
-    "marketing_title": "Marketingové cookies",
-    "marketing_description": "Používajú sa na zobrazovanie relevantných reklám a sledovanie efektívnosti marketingových kampaní.",
-    "always_active": "Vždy aktívne",
-    "save_preferences": "Uložiť predvoľby"
+  "cookies_policy": {
+    "title": "Politika používania cookies",
+    "effective_date": "Platnosť od",
+    "date": "1. januára 2026",
+    "back_home": "Späť na hlavnú stránku",
+    "section1": {
+      "title": "1. Úvod",
+      "content": "Táto politika cookies ('politika') vysvetľuje, ako WAKE TF UP používa cookies a podobné technológie na našej webovej stránke. Cookies sú malé textové súbory ukladané na vašom zariadení, ktoré nám pomáhajú pochopiť vašu skúsenosť s prehliadaním a zlepšovať naše služby v súlade s GDPR."
+    },
+    "section2": {
+      "title": "2. Čo sú cookies?",
+      "content": "Cookies sú malé súbory, ktoré sa ukladajú na vaše zariadenie, keď navštívite našu webovú stránku. Umožňujú webovej stránke pamätať si informácie o vás, ako je váš stav prihlásenia, jazykové preferencie alebo položky v nákupnom košíku. Môžu sa používať reláčné cookies (vymazané po zatvorení prehliadača) aj trvalé cookies (ostávajú na vašom zariadení)."
+    },
+    "section3": {
+      "title": "3. Typy cookies, ktoré používame",
+      "essential": {
+        "title": "Nevyhnutné cookies",
+        "content": "Tieto cookies sú nevyhnutné na správne fungovanie webovej stránky. Bez nich by ste nemohli prihlásiť, pridať položky do košíka alebo dokončiť nákup.",
+        "item1": "Správa relácie (udržiavanie prihlásenia)",
+        "item2": "Bezpečnostné tokeny (ochrana pred CSRF útokmi)",
+        "item3": "Funkčnosť nákupného košíka (ukladanie vybratých položiek)"
+      },
+      "analytics": {
+        "title": "Analytické cookies",
+        "content": "Používame vlastné analytické cookies na sledovanie toho, ktoré produkty návštevníci prezerajú a na aké kliká. To nám pomáha pochopiť, ktoré položky sú pre našich zákazníkov zaujímavé.",
+        "notice": "⚠️ LEN S VAŠÍM SÚHLASOM: Tieto cookies sa aktivujú LEN S VAŠIM VÝSLOVNÝM SÚHLASOM prostredníctvom cookie bannera. Bez vášho súhlasu sa žiadne analytické údaje nezhromažďujú ani nenám nezdielajú."
+      },
+      "marketing": {
+        "title": "Marketingové cookies",
+        "content": "Máme právo používať v budúcnosti marketingové cookies na sledovanie efektívnosti kampaní a zobrazovanie relevantných reklám.",
+        "notice": "⚠️ LEN S VAŠÍM SÚHLASOM: Tieto cookies sa používajú len s vašim výslovným súhlasom."
+      }
+    },
+    "section4": {
+      "title": "4. Miesto ukladania cookies",
+      "content": "Vaše preferencie cookies (vrátane rozhodnutí o súhlase) sú uložené v lokálnom úložisku prehliadača pod kľúčom 'cookie_consent'. Toto je metóda ukladania bez vypršania, ktorá trvá medzi relációmi prehliadača, kým si nevymažete údaje prehliadača alebo nezmените nastavenia."
+    },
+    "section5": {
+      "title": "5. Vaše možnosti",
+      "content1": "Máte úplnú kontrolu nad cookies na našej webovej stránke. Môžete:",
+      "item1": "Prijať všetky cookies tlačidlom 'Prijať všetko'",
+      "item2": "Odmietnuť nepovinné cookies tlačidlom 'Odmietnuť'",
+      "item3": "Prispôsobiť si preferencie možnosťou 'Nastavenia'",
+      "content2": "Vaše preferencie sú uložené a rešpektované. Môžete ich zmeniť kedykoľvek prístupom na cookie banner v dolnom ľavom rohu webovej stránky."
+    },
+    "section6": {
+      "title": "6. Zmeny tejto politiky",
+      "content": "Túto politiku cookies môžeme čas od času aktualizovať. O významných zmenách vás budeme informovať aktualizáciou dátumu na vrchu tejto politiky. Odporúčame vám, aby ste si túto stránku pravidelne prezerali, aby ste boli informovaní o tom, ako používame cookies."
+    },
+    "section7": {
+      "title": "7. Kontakt",
+      "content": "Ak máte otázky k našej politike cookies alebo chcete vykonávať svoje práva na ochranu osobných údajov, kontaktujte nás na {{email}} alebo {{ phone }}. Môžete nás dosiahnutť aj na adrese {{ address }}, {{ country }}."
+    }
   },
   "order_confirmation": {
     "success_title": "Platba úspešná!",

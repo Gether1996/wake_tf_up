@@ -13,6 +13,9 @@ export interface MainSettings {
   tax_rate: number;
   site_name: string;
   contact_email: string;
+  phone: string;
+  address: string;
+  country: string;
   instagram_url: string;
   facebook_url: string;
   twitter_url: string;
@@ -36,6 +39,9 @@ export class SettingsService {
   loading = signal(false);
   error = signal<string | null>(null);
   contactEmail = computed(() => this.settings()?.contact_email || environment.defaultContactEmail);
+  phone = computed(() => this.settings()?.phone || '0917 207 760');
+  address = computed(() => this.settings()?.address || 'Jedľová 319/33, 010 04 Žilina');
+  country = computed(() => this.settings()?.country || 'Slovakia');
 
   constructor() {
     this.loadSettings();
@@ -69,6 +75,9 @@ export class SettingsService {
           tax_rate: 20,
           site_name: 'Wake TF Up',
           contact_email: environment.defaultContactEmail,
+          phone: '0917 207 760',
+          address: 'Jedľová 319/33, 010 04 Žilina',
+          country: 'Slovakia',
           instagram_url: '',
           facebook_url: '',
           twitter_url: '',

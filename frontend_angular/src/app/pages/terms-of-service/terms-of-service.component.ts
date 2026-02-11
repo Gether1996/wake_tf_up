@@ -90,7 +90,7 @@ import { SettingsService } from '../../core/api/settings.service';
         <!-- Section 8: Warranty and Complaints -->
         <section>
           <h2 class="text-2xl font-bold mt-8 mb-4">{{ 'terms.section8.title' | transloco }}</h2>
-          <p>{{ 'terms.section8.content' | transloco }}</p>
+          <p>{{ 'terms.section8.content' | transloco: { email: contactEmail() } }}</p>
         </section>
 
         <!-- Section 9: Intellectual Property -->
@@ -120,7 +120,7 @@ import { SettingsService } from '../../core/api/settings.service';
         <!-- Section 13: Contact -->
         <section>
           <h2 class="text-2xl font-bold mt-8 mb-4">{{ 'terms.section13.title' | transloco }}</h2>
-          <div [innerHTML]="'terms.section13.content' | transloco: { email: contactEmail() }"></div>
+          <div [innerHTML]="'terms.section13.content' | transloco: { email: contactEmail(), phone: phone(), address: address(), country: country() }"></div>
         </section>
       </div>
 
@@ -145,4 +145,7 @@ export class TermsOfServiceComponent {
   currentLang = this.languageService.currentLang;
   homeLink = computed(() => `/${this.currentLang()}`);
   contactEmail = this.settingsService.contactEmail;
+  phone = this.settingsService.phone;
+  address = this.settingsService.address;
+  country = this.settingsService.country;
 }

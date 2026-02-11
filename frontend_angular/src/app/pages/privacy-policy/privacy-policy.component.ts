@@ -26,7 +26,7 @@ import { SettingsService } from '../../core/api/settings.service';
         <!-- Section 2: Data Controller -->
         <section>
           <h2 class="text-2xl font-bold mt-8 mb-4">{{ 'privacy.section2.title' | transloco }}</h2>
-          <div [innerHTML]="'privacy.section2.content' | transloco: { email: contactEmail() }"></div>
+          <div [innerHTML]="'privacy.section2.content' | transloco: { email: contactEmail(), phone: phone(), address: address(), country: country() }"></div>
         </section>
 
         <!-- Section 3: What Data We Collect -->
@@ -117,7 +117,7 @@ import { SettingsService } from '../../core/api/settings.service';
         <!-- Section 12: Contact -->
         <section>
           <h2 class="text-2xl font-bold mt-8 mb-4">{{ 'privacy.section12.title' | transloco }}</h2>
-          <div [innerHTML]="'privacy.section12.content' | transloco: { email: contactEmail() }"></div>
+          <div [innerHTML]="'privacy.section12.content' | transloco: { email: contactEmail(), phone: phone(), address: address(), country: country() }"></div>
         </section>
       </div>
 
@@ -142,4 +142,7 @@ export class PrivacyPolicyComponent {
   currentLang = this.languageService.currentLang;
   homeLink = computed(() => `/${this.currentLang()}`);
   contactEmail = this.settingsService.contactEmail;
+  phone = this.settingsService.phone;
+  address = this.settingsService.address;
+  country = this.settingsService.country;
 }

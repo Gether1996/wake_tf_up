@@ -24,7 +24,7 @@ class MainSettingsAdmin(admin.ModelAdmin):
             'fields': ('tax_rate',)
         }),
         ('General Settings', {
-            'fields': ('site_name', 'contact_email')
+            'fields': ('site_name', 'contact_email', 'phone', 'address', 'country')
         }),
         ('Social Media', {
             'fields': ('instagram_url', 'facebook_url', 'twitter_url'),

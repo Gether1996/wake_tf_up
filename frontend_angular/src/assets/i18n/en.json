@@ -477,8 +477,10 @@
     "rights": "All rights reserved",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
+    "cookies": "Cookies Policy",
     "company_name": "Patrik Bielčik",
-    "company_address": "Jedľová 319/33, 010 04 Žilina, Slovakia",
+    "company_address": "Address: {{ address }}, {{ country }}",
+    "company_phone": "Phone: {{ phone }}",
     "company_id": "Company ID: 56698585",
     "company_tax_id": "Tax ID: 1127876057",
     "company_email": "Email: {{email}}"
@@ -486,7 +488,7 @@
   "privacy": {
     "title": "Privacy Policy",
     "effective_date": "Effective date",
-    "date": "January 16, 2026",
+    "date": "1st of January 2026",
     "back_home": "Back to home",
     "section1": {
       "title": "1. Introduction",
@@ -494,7 +496,7 @@
     },
     "section2": {
       "title": "2. Data Controller",
-      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057<br><strong>Email:</strong> {{email}}</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> {{ address }}, {{ country }}<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057<br><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> {{ phone }}</p>"
     },
     "section3": {
       "title": "3. Data We Collect",
@@ -588,13 +590,13 @@
     },
     "section12": {
       "title": "12. Contact",
-      "content": "<p>If you have questions about data protection or wish to exercise your rights, contact us:</p><p><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> 0917 207 760<br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057</p>"
+      "content": "<p>If you have questions about data protection or wish to exercise your rights, contact us:</p><p><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> {{ phone }}<br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> {{ address }}, {{ country }}<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057</p>"
     }
   },
   "terms": {
     "title": "Terms of Service",
     "effective_date": "Effective date",
-    "date": "January 16, 2026",
+    "date": "1st of January 2026",
     "back_home": "Back to home",
     "section1": {
       "title": "1. Introduction",
@@ -602,7 +604,7 @@
     },
     "section2": {
       "title": "2. Definitions",
-      "seller": "Seller: WAKE TF UP, Patrik Bielčik, Company ID: 56698585, Tax ID: 1127876057, registered at Jedľová 319/33, 010 04 Žilina, Slovakia",
+      "seller": "Seller: WAKE TF UP, Patrik Bielčik, Company ID: 56698585, Tax ID: 1127876057, registered at {{ address }}, {{ country }}",
       "buyer": "Buyer: individual or legal entity entering into a purchase contract",
       "goods": "Goods: streetwear clothing from recycled materials presented in the online store",
       "contract": "Purchase Contract: distance contract between seller and buyer"
@@ -644,7 +646,7 @@
     },
     "section8": {
       "title": "8. Warranty and Complaints",
-      "content": "Goods are covered by a 24-month legal warranty. You can file a complaint at the seller's address or by email at complaints@waketfup.com. We will process the complaint within 30 days. Rights from liability for defects are governed by the Civil Code and Consumer Protection Act."
+      "content": "Goods are covered by a 24-month legal warranty. You can file a complaint at the seller's address or by email at {{email}}. We will process the complaint within 30 days. Rights from liability for defects are governed by the Civil Code and Consumer Protection Act."
     },
     "section9": {
       "title": "9. Intellectual Property",
@@ -660,30 +662,66 @@
     },
     "section12": {
       "title": "12. Final Provisions",
-      "content": "These Terms become effective on January 16, 2026. Seller reserves the right to change these Terms. Current Terms are always available on this page. Relationships not covered by Terms are governed by Slovak law."
+      "content": "These Terms become effective on 1st of January 2026. Seller reserves the right to change these Terms. Current Terms are always available on this page. Relationships not covered by Terms are governed by Slovak law."
     },
     "section13": {
       "title": "13. Contact",
-      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> Jedľová 319/33, 010 04 Žilina, Slovakia<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057<br><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> 0917 207 760</p>"
+      "content": "<p><strong>WAKE TF UP</strong><br><strong>Operator:</strong> Patrik Bielčik<br><strong>Address:</strong> {{ address }}, {{ country }}<br><strong>Company ID (IČO):</strong> 56698585<br><strong>Tax ID (DIČ):</strong> 1127876057<br><strong>Email:</strong> {{email}}<br><strong>Phone:</strong> {{ phone }}</p>"
     }
   },
-  "cookies": {
-    "title": "We Use Cookies",
-    "description": "We use essential cookies to ensure the website functions properly. Analytics and marketing cookies are only used with your consent.",
-    "learn_more": "Learn more",
-    "accept_all": "Accept All",
-    "reject": "Reject",
-    "settings": "Settings",
-    "settings_title": "Cookie Settings",
-    "settings_description": "You can choose which types of cookies you want to enable. Essential cookies are always active.",
-    "essential_title": "Essential Cookies",
-    "essential_description": "These cookies are necessary for basic website functionality (login, cart, security). They cannot be disabled.",
-    "analytics_title": "Analytics Cookies",
-    "analytics_description": "Help us understand how visitors use the website so we can improve user experience.",
-    "marketing_title": "Marketing Cookies",
-    "marketing_description": "Used to display relevant ads and track the effectiveness of marketing campaigns.",
-    "always_active": "Always Active",
-    "save_preferences": "Save Preferences"
+  "cookies_policy": {
+    "title": "Cookies Policy",
+    "effective_date": "Effective date",
+    "date": "1st of January 2026",
+    "back_home": "Back to home",
+    "section1": {
+      "title": "1. Introduction",
+      "content": "This Cookies Policy ('Policy') explains how WAKE TF UP uses cookies and similar technologies on our website. Cookies are small text files stored on your device that help us understand your browsing experience and improve our services in accordance with GDPR."
+    },
+    "section2": {
+      "title": "2. What Are Cookies?",
+      "content": "Cookies are small files that are stored on your device when you visit our website. They allow the website to remember information about you, such as your login status, language preferences, or items in your shopping cart. Both session cookies (deleted when you close the browser) and persistent cookies (remain on your device) may be used."
+    },
+    "section3": {
+      "title": "3. Types of Cookies We Use",
+      "essential": {
+        "title": "Essential Cookies",
+        "content": "These cookies are necessary for the website to function properly. Without them, you would not be able to log in, add items to your cart, or complete purchases.",
+        "item1": "Session management (keeping you logged in)",
+        "item2": "Security tokens (protecting against CSRF attacks)",
+        "item3": "Shopping cart functionality (storing items you select)"
+      },
+      "analytics": {
+        "title": "Analytics Cookies",
+        "content": "We use our own analytics cookies to track which products visitors view and click on. This helps us understand which items are of interest to our customers.",
+        "notice": "⚠️ ONLY WITH YOUR CONSENT: These cookies are activated ONLY WITH YOUR EXPLICIT CONSENT through the cookie banner. Without your consent, no analytics data is collected or shared with us."
+      },
+      "marketing": {
+        "title": "Marketing Cookies",
+        "content": "We reserve the right to use marketing cookies in the future to track campaign effectiveness and display relevant advertisements.",
+        "notice": "⚠️ ONLY WITH YOUR CONSENT: These cookies are only used with your explicit consent."
+      }
+    },
+    "section4": {
+      "title": "4. Cookie Storage Location",
+      "content": "Your cookie preferences (including consent choices) are stored in your browser's localStorage under the key 'cookie_consent'. This is a non-expiring storage method that persists across browser sessions until you clear your browser data or change your settings."
+    },
+    "section5": {
+      "title": "5. Your Choices",
+      "content1": "You have full control over cookies on our website. You can:",
+      "item1": "Accept all cookies through the 'Accept All' button",
+      "item2": "Reject non-essential cookies through the 'Reject' button",
+      "item3": "Customize your preferences through the 'Settings' option",
+      "content2": "Your preferences are saved and respected. You can change them anytime by accessing the cookie banner in the bottom left corner of the website."
+    },
+    "section6": {
+      "title": "6. Changes to This Policy",
+      "content": "We may update this Cookies Policy from time to time. We will notify you of significant changes by updating the date at the top of this policy. We recommend checking this page regularly to be informed of how we use cookies."
+    },
+    "section7": {
+      "title": "7. Contact",
+      "content": "If you have questions about our Cookie Policy or wish to exercise your data privacy rights, please contact us at {{email}} or {{ phone }}. You can also reach us at {{ address }}, {{ country }}."
+    }
   },
   "order_confirmation": {
     "success_title": "Payment Successful!",
