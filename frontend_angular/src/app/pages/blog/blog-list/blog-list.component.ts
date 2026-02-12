@@ -5,6 +5,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { BlogService } from '../../../core/api/blog.service';
 import { LanguageService } from '../../../core/services/language.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { BlogPost } from '../../../core/api/api.models';
 
 @Component({
@@ -43,11 +44,22 @@ import { BlogPost } from '../../../core/api/api.models';
           <div class="space-y-8">
             @for (post of posts(); track post.id) {
               <article class="border border-border p-6 hover:border-foreground transition-all group">
-                <a [routerLink]="[post.slug]">
-                  <h2 class="text-2xl font-bold mb-3 group-hover:text-accent transition-colors">
-                    {{ post.title }}
-                  </h2>
-                </a>
+                <div class="flex items-center gap-3 mb-3">
+                  <a [routerLink]="[post.slug]" class="flex-1">
+                    <h2 class="text-2xl font-bold group-hover:text-accent transition-colors">
+                      {{ post.title }}
+                    </h2>
+                  </a>
+                  @if (authService.isSuperuser()) {
+                    <span 
+                      [class]="'inline-flex items-center px-3 py-1 text-xs font-semibold border ' + 
+                        (post.is_published 
+                          ? 'bg-green-50 dark:bg-green-950 border-green-500 text-green-700 dark:text-green-400' 
+                          : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-500 text-yellow-700 dark:text-yellow-400')">
+                      {{ (post.is_published ? 'blog.published' : 'blog.draft') | transloco }}
+                    </span>
+                  }
+                </div>
                 
                 <div class="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                   <time [attr.datetime]="post.created_at">
@@ -121,6 +133,7 @@ export class BlogListComponent implements OnInit {
   private blogService = inject(BlogService);
   private languageService = inject(LanguageService);
   private notificationService = inject(NotificationService);
+  authService = inject(AuthService);
 
   posts = signal<BlogPost[]>([]);
   loading = signal(false);

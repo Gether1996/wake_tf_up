@@ -17,12 +17,14 @@ export interface MainSettings {
   company_id: string;
   tax_id: string;
   contact_email: string;
+  orders_email: string;
   phone: string;
   address: string;
   country: string;
   instagram_url: string;
   facebook_url: string;
   twitter_url: string;
+  tiktok_url: string;
   max_cart_quantity: number;
   maintenance_mode: boolean;
   maintenance_message: string;
@@ -108,12 +110,14 @@ export class SettingsService implements OnDestroy {
           company_id: '56698585',
           tax_id: '1127876057',
           contact_email: environment.defaultContactEmail,
+          orders_email: 'orders@wake-tf-up.eu',
           phone: '+421 917 207 760',
           address: 'Jedľová 319/33, 010 04 Žilina',
           country: 'Slovakia',
           instagram_url: '',
           facebook_url: '',
           twitter_url: '',
+          tiktok_url: '',
           max_cart_quantity: 10,
           maintenance_mode: false,
           maintenance_message: '',

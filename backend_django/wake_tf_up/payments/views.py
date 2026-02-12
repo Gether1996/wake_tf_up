@@ -210,14 +210,14 @@ def payment_return_view(request):
     
     if not gopay_id:
         # Redirect to home if no payment ID
-        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:4200')
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://www.wake-tf-up.eu')
         return HttpResponseRedirect(f"{frontend_url}/{language}/shop")
     
     # Check payment status
     gopay = GoPayService()
     result = gopay.check_payment_status(gopay_id)
     
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:4200')
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://www.wake-tf-up.eu')
     
     if result.get('success'):
         state = result.get('state')

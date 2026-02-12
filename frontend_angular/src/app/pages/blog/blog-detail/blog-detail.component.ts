@@ -5,6 +5,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { TranslocoModule } from '@jsverse/transloco';
 import { BlogService } from '../../../core/api/blog.service';
 import { LanguageService } from '../../../core/services/language.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { BlogPost } from '../../../core/api/api.models';
 import { ButtonComponent } from '../../../shared/button/button.component';
 import { environment } from '../../../../environments/environment';
@@ -43,7 +44,18 @@ import { environment } from '../../../../environments/environment';
           </a>
 
           <!-- Title -->
-          <h1 class="text-4xl md:text-5xl font-bold mb-6">{{ post()!.title }}</h1>
+          <div class="flex items-center gap-4 mb-6">
+            <h1 class="text-4xl md:text-5xl font-bold flex-1">{{ post()!.title }}</h1>
+            @if (authService.isSuperuser()) {
+              <span 
+                [class]="'inline-flex items-center px-3 py-1 text-sm font-semibold border whitespace-nowrap ' + 
+                  (post()!.is_published 
+                    ? 'bg-green-50 dark:bg-green-950 border-green-500 text-green-700 dark:text-green-400' 
+                    : 'bg-yellow-50 dark:bg-yellow-950 border-yellow-500 text-yellow-700 dark:text-yellow-400')">
+                {{ (post()!.is_published ? 'blog.published' : 'blog.draft') | transloco }}
+              </span>
+            }
+          </div>
 
           <!-- Meta -->
           <div class="flex items-center gap-4 text-muted-foreground mb-8 pb-8 border-b border-border">
@@ -118,6 +130,7 @@ export class BlogDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private languageService = inject(LanguageService);
   private sanitizer = inject(DomSanitizer);
+  authService = inject(AuthService);
 
   currentLang = this.languageService.currentLang;
   blogLink = computed(() => `/${this.currentLang()}/blog`);

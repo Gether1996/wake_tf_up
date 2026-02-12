@@ -1,4 +1,4 @@
-import { Component, inject, computed, signal } from '@angular/core';
+import { Component, inject, computed, signal, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -79,7 +79,7 @@ import { LanguageService } from '../../core/services/language.service';
 
             <!-- User Menu - Desktop Only -->
             @if (isAuthenticated()) {
-              <div class="hidden md:flex items-center relative">
+              <div class="hidden md:flex items-center relative" #userMenuContainer>
                 <button (click)="toggleUserMenu()" class="hover:text-accent transition-colors">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
@@ -210,6 +210,7 @@ export class HeaderComponent {
   private themeService = inject(ThemeService);
   private languageService = inject(LanguageService);
   private router = inject(Router);
+  private elementRef = inject(ElementRef);
 
   isAuthenticated = this.authService.isAuthenticated;
   isSuperuser = this.authService.isSuperuser;
@@ -264,6 +265,17 @@ export class HeaderComponent {
   logout() {
     this.authService.logout();
     this.closeUserMenu();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    // Close user menu if clicking outside of it
+    if (this.userMenuOpen) {
+      const clickedInside = this.elementRef.nativeElement.contains(event.target);
+      if (!clickedInside) {
+        this.closeUserMenu();
+      }
+    }
   }
 
 }

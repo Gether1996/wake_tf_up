@@ -83,6 +83,10 @@ class MainSettings(models.Model):
         default=django_settings.DEFAULT_CONTACT_EMAIL,
         help_text="Main contact email"
     )
+    orders_email = models.EmailField(
+        default="orders@wake-tf-up.eu",
+        help_text="Orders contact email"
+    )
     phone = models.CharField(
         max_length=20,
         default="+421 917 207 760",
@@ -103,6 +107,7 @@ class MainSettings(models.Model):
     instagram_url = models.URLField(blank=True, help_text="Instagram profile URL")
     facebook_url = models.URLField(blank=True, help_text="Facebook page URL")
     twitter_url = models.URLField(blank=True, help_text="Twitter profile URL")
+    tiktok_url = models.URLField(blank=True, help_text="TikTok profile URL", default="https://www.tiktok.com/@waketfup_eu")
     
     # Cart Settings
     max_cart_quantity = models.PositiveIntegerField(

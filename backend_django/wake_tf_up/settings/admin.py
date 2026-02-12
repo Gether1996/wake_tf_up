@@ -24,10 +24,10 @@ class MainSettingsAdmin(admin.ModelAdmin):
             'fields': ('tax_rate',)
         }),
         ('General Settings', {
-            'fields': ('site_name', 'owner_name', 'company_id', 'tax_id', 'contact_email', 'phone', 'address', 'country')
+            'fields': ('site_name', 'owner_name', 'company_id', 'tax_id', 'contact_email', 'orders_email', 'phone', 'address', 'country')
         }),
         ('Social Media', {
-            'fields': ('instagram_url', 'facebook_url', 'twitter_url'),
+            'fields': ('instagram_url', 'facebook_url', 'twitter_url', 'tiktok_url'),
             'classes': ('collapse',)
         }),
         ('Cart Settings', {

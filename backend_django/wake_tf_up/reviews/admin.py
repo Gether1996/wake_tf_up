@@ -99,7 +99,7 @@ class ReviewTokenAdmin(admin.ModelAdmin):
     def token_link(self, obj):
         """Display clickable review link"""
         from django.conf import settings
-        base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:4200')
+        base_url = getattr(settings, 'FRONTEND_URL', 'http://www.wake-tf-up.eu')
         link = f"{base_url}/sk/review/submit?token={obj.token}"
         return format_html(
             '<a href="{}" target="_blank" style="color: #0066cc;">Open Review Form →</a>',
@@ -159,7 +159,7 @@ class ReviewTokenAdmin(admin.ModelAdmin):
             if not token.is_valid():
                 continue
             
-            base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:4200')
+            base_url = getattr(settings, 'FRONTEND_URL', 'http://www.wake-tf-up.eu')
                 
             context = {
                 'user': token.user,

@@ -30,8 +30,10 @@ def send_order_confirmation_email(order, language=None):
         line_total = (item.price_at_purchase or Decimal("0")) * item.quantity
         subtotal += line_total
 
-    base_url = getattr(settings, "FRONTEND_URL", "http://localhost:4200").rstrip("/")
-    support_email = MainSettings.objects.first().contact_email if MainSettings.objects.exists() else settings.DEFAULT_CONTACT_EMAIL
+    base_url = getattr(settings, "FRONTEND_URL", "http://www.wake-tf-up.eu").rstrip("/")
+    settings_obj = MainSettings.objects.first()
+    support_email = settings_obj.contact_email if settings_obj else settings.DEFAULT_CONTACT_EMAIL
+    orders_email = settings_obj.orders_email if settings_obj else None
     sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", support_email)
     
     # Get language from parameter or user preferences
@@ -60,12 +62,19 @@ def send_order_confirmation_email(order, language=None):
 
     try:
         logger.info("Attempting to send order confirmation email to %s from %s", order.user.email, sender_email)
+        
+        # Send to customer and orders email (if configured)
+        recipient_list = [order.user.email]
+        if orders_email:
+            recipient_list.append(orders_email)
+            logger.info("Also sending order confirmation to orders email: %s", orders_email)
+        
         send_localized_email(
             subject_sk=f"Potvrdenie objednávky #{order.id}",
             subject_en=f"Order Confirmation #{order.id}",
             template_path="orders/order_confirmation_email.html",
             context=context,
-            recipient_list=[order.user.email],
+            recipient_list=recipient_list,
             language=language_code,
             from_email=sender_email
         )
@@ -93,7 +102,7 @@ def send_payment_confirmation_email(order, language=None):
         line_total = (item.price_at_purchase or Decimal("0")) * item.quantity
         subtotal += line_total
 
-    base_url = getattr(settings, "FRONTEND_URL", "http://localhost:4200").rstrip("/")
+    base_url = getattr(settings, "FRONTEND_URL", "http://www.wake-tf-up.eu").rstrip("/")
     support_email = MainSettings.objects.first().contact_email if MainSettings.objects.exists() else settings.DEFAULT_CONTACT_EMAIL
     sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", support_email)
     
