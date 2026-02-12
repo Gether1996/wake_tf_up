@@ -231,34 +231,37 @@ def payment_return_view(request):
         return HttpResponseRedirect(f"{frontend_url}/en/order-confirmation?error=status_check_failed")
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([permissions.AllowAny])
 def payment_notification_view(request):
     """
     Handle GoPay payment notification (webhook).
-    POST /api/v1/payments/notification/
+    GET/POST /api/v1/payments/notification/
     
     GoPay sends notifications to this endpoint when payment status changes.
+    Accepts both GET (with ?id=xxx in query string) and POST (with id in body).
     """
-    gopay_id = request.data.get('id')
+    # GoPay sends GET with ?id=xxx parameter
+    gopay_id = request.GET.get('id') or request.data.get('id')
     
     if not gopay_id:
-        logger.error("Payment notification received without ID")
+        logger.error("[GoPay Webhook] Notification received without ID")
         return Response(
             {'error': 'Missing payment ID'},
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    logger.info(f"Payment notification received for GoPay ID: {gopay_id}")
+    logger.info(f"[GoPay Webhook] Notification received for GoPay ID: {gopay_id} (method: {request.method})")
     
     # Process notification
     gopay = GoPayService()
     result = gopay.process_notification(gopay_id)
     
     if result.get('success'):
+        logger.info(f"[GoPay Webhook] ✓ Notification processed successfully")
         return Response({'status': 'ok'}, status=status.HTTP_200_OK)
     else:
-        logger.error(f"Failed to process notification: {result.get('error')}")
+        logger.error(f"[GoPay Webhook] ✗ Failed to process notification: {result.get('error')}")
         return Response(
             {'error': result.get('error')},
             status=status.HTTP_400_BAD_REQUEST
