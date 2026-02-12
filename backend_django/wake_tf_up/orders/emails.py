@@ -73,3 +73,65 @@ def send_order_confirmation_email(order, language=None):
     except Exception as exc:
         logger.error("Failed to send order confirmation email for order %s: %s", order.id, exc, exc_info=True)
 
+
+def send_payment_confirmation_email(order, language=None):
+    """Send payment confirmation email after successful payment.
+    
+    Args:
+        order: Order instance
+        language: Language code ('sk' or 'en'). If None, will try to detect from user preferences.
+    """
+    if order is None or not order.user or not order.user.email:
+        logger.warning("Cannot send payment confirmation email without user email")
+        return
+
+    logger.info("Starting payment confirmation email for order %s to %s", order.id, order.user.email)
+
+    items = order.items.select_related("product").all()
+    subtotal = Decimal("0.00")
+    for item in items:
+        line_total = (item.price_at_purchase or Decimal("0")) * item.quantity
+        subtotal += line_total
+
+    base_url = getattr(settings, "FRONTEND_URL", "http://localhost:4200").rstrip("/")
+    support_email = MainSettings.objects.first().contact_email if MainSettings.objects.exists() else settings.DEFAULT_CONTACT_EMAIL
+    sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", support_email)
+    
+    # Get language from parameter or user preferences
+    language_code = language if language else get_email_language(user=order.user)
+
+    logger.debug("Payment email config - support_email: %s, base_url: %s, language param: %s, final language: %s", support_email, base_url, language, language_code)
+
+    context = {
+        "order": order,
+        "user": order.user,
+        "items": items,
+        "subtotal": subtotal,
+        "shipping_cost": order.shipping_cost,
+        "discount_amount": order.discount_amount,
+        "total_amount": order.total_amount,
+        "shipping_method_display": order.get_shipping_method_display(),
+        "payment_method_display": order.get_payment_method_display(),
+        "packeta_point": order.packeta_point_name,
+        "packeta_address": order.packeta_point_address,
+        "frontend_order_url": f"{base_url}/{language_code}/orders/{order.id}",
+        "frontend_base_url": base_url,
+        "support_email": support_email,
+        "company_purchase": order.is_company_purchase,
+    }
+
+    try:
+        logger.info("Attempting to send payment confirmation email to %s from %s", order.user.email, sender_email)
+        send_localized_email(
+            subject_sk=f"Platba prijatá - Objednávka #{order.id}",
+            subject_en=f"Payment Received - Order #{order.id}",
+            template_path="orders/payment_confirmation_email.html",
+            context=context,
+            recipient_list=[order.user.email],
+            language=language_code,
+            from_email=sender_email
+        )
+        logger.info("Sent payment confirmation email for order %s", order.id)
+    except Exception as exc:
+        logger.error("Failed to send payment confirmation email for order %s: %s", order.id, exc, exc_info=True)
+

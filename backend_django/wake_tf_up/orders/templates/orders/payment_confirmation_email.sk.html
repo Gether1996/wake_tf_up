@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Potvrdenie platby</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f7f7f7; margin: 0; padding: 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f7f7f7; padding: 24px 0;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; padding: 32px; text-align: left;">
+                    <tr>
+                        <td style="padding-bottom: 24px; border-bottom: 1px solid #e6e6e6;">
+                            <h1 style="margin: 0; font-size: 22px; color: #16a34a;">✓ Platba bola prijatá!</h1>
+                            <p style="margin: 8px 0 0 0; color: #6b7280;">Vaša platba za objednávku <strong>#{{ order.id }}</strong> bola úspešne spracovaná.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 24px 0;">
+                            <div style="background-color: #dcfce7; border-left: 4px solid #16a34a; padding: 16px; margin-bottom: 24px;">
+                                <p style="margin: 0; color: #166534;">
+                                    <strong>Stav objednávky:</strong> Zaplatená<br>
+                                    <strong>Celková suma:</strong> {{ total_amount|floatformat:2 }} €
+                                </p>
+                            </div>
+                            
+                            <h2 style="margin: 0 0 12px 0; font-size: 18px; color: #111827;">Dodacie údaje</h2>
+                            <p style="margin: 0; color: #374151;">
+                                <strong>{{ order.shipping_name }}</strong><br>
+                                {{ order.shipping_address }}<br>
+                                {{ order.shipping_postal_code }} {{ order.shipping_city }}<br>
+                                {{ order.shipping_country }}<br>
+                                Tel.: {{ order.phone }}
+                            </p>
+                            <p style="margin: 16px 0 0 0; color: #374151;">
+                                Spôsob dopravy: <strong>{{ shipping_method_display }}</strong>
+                                {% if order.shipping_method == 'packeta_box' and packeta_point %}<br>
+                                    Packeta výdajné miesto: <strong>{{ packeta_point }}</strong><br>
+                                    {{ packeta_address }}
+                                {% endif %}
+                            </p>
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 24px 0;">
+                            <h2 style="margin: 0 0 12px 0; font-size: 18px; color: #111827;">Zhrnutie objednávky</h2>
+                            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background-color: #f3f4f6; color: #374151;">
+                                        <th align="left" style="padding: 12px; font-weight: normal;">Produkt</th>
+                                        <th align="center" style="padding: 12px; font-weight: normal;">Množstvo</th>
+                                        <th align="right" style="padding: 12px; font-weight: normal;">Cena</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                                            <td style="padding: 12px; color: #111827;">
+                                                {{ item.product.name }}
+                                                {% if item.is_pre_order %}<br><small style="color: #f97316;">Predobjednávka</small>{% endif %}
+                                            </td>
+                                            <td align="center" style="padding: 12px; color: #374151;">x{{ item.quantity }}</td>
+                                            <td align="right" style="padding: 12px; color: #111827;">{{ item.subtotal|floatformat:2 }} €</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" align="right" style="padding: 12px; color: #6b7280;">Medzisúčet</td>
+                                        <td align="right" style="padding: 12px; color: #111827;">{{ subtotal|floatformat:2 }} €</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" align="right" style="padding: 12px; color: #6b7280;">Doprava</td>
+                                        <td align="right" style="padding: 12px; color: #111827;">{% if shipping_cost == 0 %}<span style="color: #16a34a;">Zadarmo</span>{% else %}{{ shipping_cost|floatformat:2 }} €{% endif %}</td>
+                                    </tr>
+                                    {% if discount_amount and discount_amount > 0 %}
+                                    <tr>
+                                        <td colspan="2" align="right" style="padding: 12px; color: #6b7280;">Zľava</td>
+                                        <td align="right" style="padding: 12px; color: #16a34a;">-{{ discount_amount|floatformat:2 }} €</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr style="background-color: #dcfce7;">
+                                        <td colspan="2" align="right" style="padding: 12px; font-weight: bold; color: #111827;">Zaplatené</td>
+                                        <td align="right" style="padding: 12px; font-weight: bold; color: #16a34a;">{{ total_amount|floatformat:2 }} €</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 24px 0;">
+                            <h2 style="margin: 0 0 12px 0; font-size: 18px; color: #111827;">Ďalšie kroky</h2>
+                            <p style="margin: 0; color: #374151;">
+                                Teraz pripravíme Vašu objednávku na odoslanie. O odoslaní zásielky Vás budeme informovať emailom.
+                            </p>
+                            <p style="margin: 16px 0 0 0; color: #374151;">
+                                Stav Vašej objednávky môžete sledovať po prihlásení v sekcii <a href="{{ frontend_order_url }}" style="color: #2563eb;">Moje objednávky</a>.
+                            </p>
+                            <p style="margin: 16px 0 0 0; color: #374151;">
+                                Ak máte akékoľvek otázky, kontaktujte nás na <a href="mailto:{{ support_email }}" style="color: #2563eb;">{{ support_email }}</a>.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top: 24px; border-top: 1px solid #e6e6e6; color: #9ca3af; font-size: 12px;">
+                            Tento email bol vygenerovaný automaticky. Prosím, neodpovedajte naň priamo.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

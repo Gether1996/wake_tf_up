@@ -310,9 +310,24 @@ class GoPayService:
             
             if state == 'PAID':
                 logger.info(f"[GoPay Webhook] ✓ Payment PAID - marking order #{transaction.order.id} as paid")
+                
+                # Check if order was already paid (to avoid duplicate emails)
+                was_already_paid = transaction.order.status == 'paid'
+                
                 transaction.status = 'completed'
                 transaction.order.status = 'paid'
                 transaction.order.save()
+                
+                # Send payment confirmation email only if status changed from unpaid to paid
+                if not was_already_paid:
+                    try:
+                        from orders.emails import send_payment_confirmation_email
+                        logger.info(f"[GoPay Webhook] Sending payment confirmation email for order #{transaction.order.id}")
+                        send_payment_confirmation_email(transaction.order)
+                    except Exception as email_exc:
+                        logger.error(f"[GoPay Webhook] Failed to send payment confirmation email: {email_exc}")
+                else:
+                    logger.info(f"[GoPay Webhook] Order was already paid - skipping duplicate email")
             elif state in ['CANCELED', 'TIMEOUTED']:
                 logger.warning(f"[GoPay Webhook] ✗ Payment {state} - marking as failed")
                 transaction.status = 'failed'
