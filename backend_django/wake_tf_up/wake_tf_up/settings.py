@@ -241,8 +241,9 @@ DEFAULT_CONTACT_EMAIL = os.getenv('DEFAULT_CONTACT_EMAIL', 'info@wake-tf-up.com'
 DEFAULT_CHARSET = 'utf-8'
 
 # GoPay Payment Gateway Configuration
-GOPAY_CLIENT_ID = os.getenv('GOPAY_CLIENT_ID', '')  # GoPay GoID
-GOPAY_CLIENT_SECRET = os.getenv('GOPAY_CLIENT_SECRET', '')  # GoPay Client Secret
+GOPAY_CLIENT_ID = os.getenv('GOPAY_CLIENT_ID', '')  # OAuth2 Client ID for API authentication
+GOPAY_CLIENT_SECRET = os.getenv('GOPAY_CLIENT_SECRET', '')  # OAuth2 Client Secret
+GOPAY_GOID = os.getenv('GOPAY_GOID', '')  # GoID - Merchant identifier for receiving payments
 GOPAY_ENVIRONMENT = os.getenv('GOPAY_ENVIRONMENT', 'test')  # 'test' or 'production'
 GOPAY_CALLBACK_BASE_URL = os.getenv('GOPAY_CALLBACK_BASE_URL', 'https://www.wake-tf-up.eu')  # Base URL for GoPay callbacks
 _gopay_disable_env = os.getenv('GOPAY_DISABLE_PAYMENTS')

@@ -23,8 +23,9 @@ class GoPayService:
     
     def __init__(self):
         # Load credentials from environment
-        self.client_id = getattr(settings, 'GOPAY_CLIENT_ID', None)
-        self.client_secret = getattr(settings, 'GOPAY_CLIENT_SECRET', None)
+        self.client_id = getattr(settings, 'GOPAY_CLIENT_ID', None)  # OAuth2 ClientID
+        self.client_secret = getattr(settings, 'GOPAY_CLIENT_SECRET', None)  # OAuth2 Secret
+        self.goid = getattr(settings, 'GOPAY_GOID', None)  # Merchant GoID for receiving payments
         self.environment = getattr(settings, 'GOPAY_ENVIRONMENT', 'test')  # 'test' or 'production'
         
         # API endpoints
@@ -110,7 +111,7 @@ class GoPayService:
             },
             "target": {
                 "type": "ACCOUNT",
-                "goid": self.client_id
+                "goid": self.goid
             },
             "amount": amount_cents,
             "currency": "EUR",
