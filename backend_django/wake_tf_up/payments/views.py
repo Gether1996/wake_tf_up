@@ -39,22 +39,28 @@ class CreatePaymentView(generics.CreateAPIView):
     serializer_class = CreatePaymentSerializer
     
     def create(self, request, *args, **kwargs):
+        logger.info(f"[Payment API] Create payment request from user {request.user.id} ({request.user.email})")
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         order_id = serializer.validated_data['order_id']
+        logger.info(f"[Payment API] Order ID: {order_id}")
         
         # Get order and verify ownership
         order = get_object_or_404(Order, id=order_id, user=request.user)
+        logger.debug(f"[Payment API] Order found: #{order.id} | Total: {order.total_amount} EUR | Status: {order.status}")
         
         # Check if order is already paid
         if order.status == 'paid':
+            logger.warning(f"[Payment API] Order #{order.id} is already paid")
             return Response(
                 {'error': 'Order is already paid'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         if getattr(settings, 'GOPAY_DISABLE_PAYMENTS', False):
+            logger.info(f"[Payment API] GOPAY_DISABLE_PAYMENTS=True - simulating payment")
             return self._simulate_payment_success(order)
         
         # Check if payment already exists and is pending
@@ -64,6 +70,7 @@ class CreatePaymentView(generics.CreateAPIView):
         ).first()
         
         if existing_payment:
+            logger.info(f"[Payment API] Found existing pending payment: Transaction #{existing_payment.id}")
             # Allow retry if GoPay payment exists but check its current status
             gopay = GoPayService()
             status_result = gopay.check_payment_status(existing_payment.provider_transaction_id)
@@ -71,6 +78,7 @@ class CreatePaymentView(generics.CreateAPIView):
             if status_result.get('success'):
                 state = status_result.get('state')
                 if state == 'PAID':
+                    logger.info(f"[Payment API] Existing payment is already PAID")
                     existing_payment.status = 'completed'
                     existing_payment.order.status = 'paid'
                     existing_payment.order.save()
@@ -80,6 +88,7 @@ class CreatePaymentView(generics.CreateAPIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 elif state in ['CREATED', 'PAYMENT_METHOD_CHOSEN']:
+                    logger.info(f"[Payment API] Existing payment still active (state={state}) - returning existing URL")
                     # Payment is still active, return existing payment URL
                     gopay_response = existing_payment.provider_response or {}
                     return Response({
@@ -89,6 +98,7 @@ class CreatePaymentView(generics.CreateAPIView):
                         'transaction': PaymentTransactionSerializer(existing_payment).data
                     }, status=status.HTTP_200_OK)
                 else:
+                    logger.warning(f"[Payment API] Existing payment failed/cancelled (state={state}) - will create new payment")
                     # Payment failed/cancelled/timeout - mark as failed and create new one
                     existing_payment.status = 'failed'
                     existing_payment.save()
@@ -107,6 +117,9 @@ class CreatePaymentView(generics.CreateAPIView):
         return_url = f"{base_url}/api/v1/payments/return/"
         notify_url = f"{base_url}/api/v1/payments/notification/"
         
+        logger.info(f"[Payment API] Creating new GoPay payment for Order #{order.id}")
+        logger.debug(f"[Payment API] Callback base URL: {base_url}")
+        
         # Create payment with GoPay
         gopay = GoPayService()
         result = gopay.create_payment(
@@ -116,6 +129,7 @@ class CreatePaymentView(generics.CreateAPIView):
         )
         
         if result.get('success'):
+            logger.info(f"[Payment API] ✓ Payment created successfully - redirecting to: {result.get('payment_url')}")
             return Response({
                 'success': True,
                 'payment_url': result.get('payment_url'),
@@ -123,6 +137,7 @@ class CreatePaymentView(generics.CreateAPIView):
                 'transaction': PaymentTransactionSerializer(result.get('transaction')).data
             }, status=status.HTTP_201_CREATED)
         else:
+            logger.error(f"[Payment API] ✗ Payment creation failed: {result.get('error')}")
             return Response(
                 {'error': result.get('error', 'Payment creation failed')},
                 status=status.HTTP_400_BAD_REQUEST

@@ -7,6 +7,7 @@ This service handles all GoPay API interactions for payment processing.
 
 import requests
 import logging
+import json
 from typing import Dict, Optional
 from decimal import Decimal
 from django.conf import settings
@@ -44,7 +45,11 @@ class GoPayService:
         Token is cached and reused until it expires.
         """
         if self._access_token:
+            logger.debug("Using cached GoPay access token")
             return self._access_token
+        
+        logger.info(f"[GoPay OAuth2] Requesting token from {self.auth_url}")
+        logger.debug(f"[GoPay OAuth2] ClientID: {self.client_id[:4]}...{self.client_id[-4:] if self.client_id else 'N/A'}")
         
         try:
             response = requests.post(
@@ -57,17 +62,21 @@ class GoPayService:
                 headers={'Accept': 'application/json'}
             )
             
+            logger.debug(f"[GoPay OAuth2] Response status: {response.status_code}")
+            
             if response.status_code == 200:
                 data = response.json()
                 self._access_token = data.get('access_token')
-                logger.info("Successfully obtained GoPay access token")
+                token_preview = self._access_token[:10] + '...' if self._access_token else 'None'
+                logger.info(f"[GoPay OAuth2] ✓ Successfully obtained access token: {token_preview}")
                 return self._access_token
             else:
-                logger.error(f"Failed to get GoPay token: {response.status_code} - {response.text}")
+                logger.error(f"[GoPay OAuth2] ✗ Failed to get token: {response.status_code}")
+                logger.error(f"[GoPay OAuth2] Response body: {response.text}")
                 return None
                 
         except Exception as e:
-            logger.error(f"Error getting GoPay access token: {str(e)}")
+            logger.error(f"[GoPay OAuth2] ✗ Exception: {str(e)}")
             return None
     
     def create_payment(
@@ -90,6 +99,17 @@ class GoPayService:
         token = self._get_access_token()
         if not token:
             raise Exception("Failed to authenticate with GoPay")
+        
+        # Validate credentials
+        logger.info(f"[GoPay Payment] Starting payment creation for Order #{order.id}")
+        logger.debug(f"[GoPay Payment] Environment: {self.environment}")
+        logger.debug(f"[GoPay Payment] API URL: {self.api_url}")
+        logger.debug(f"[GoPay Payment] ClientID: {self.client_id if self.client_id else 'NOT SET'}")
+        logger.debug(f"[GoPay Payment] GoID: {self.goid if self.goid else 'NOT SET'}")
+        
+        if not self.goid:
+            logger.error("[GoPay Payment] ✗ GOPAY_GOID not configured in settings")
+            raise Exception("GOPAY_GOID not configured in settings. Please add GOPAY_GOID to .env file.")
         
         # Prepare payment data
         amount_cents = int(order.total_amount * 100)  # Convert to cents
@@ -133,7 +153,14 @@ class GoPayService:
             "lang": "SK"  # Language for payment gateway
         }
         
+        # Log payment details
+        logger.info(f"[GoPay Payment] Order #{order.id} | Amount: {amount_cents/100:.2f} EUR | GoID: {self.goid}")
+        logger.info(f"[GoPay Payment] Return URL: {return_url}")
+        logger.info(f"[GoPay Payment] Notification URL: {notify_url}")
+        logger.debug(f"[GoPay Payment] Full request payload:\n{json.dumps(payment_data, indent=2, ensure_ascii=False)}")
+        
         try:
+            logger.debug(f"[GoPay Payment] Sending POST to {self.api_url}/payments/payment")
             response = requests.post(
                 f"{self.api_url}/payments/payment",
                 json=payment_data,
@@ -144,8 +171,15 @@ class GoPayService:
                 }
             )
             
+            logger.debug(f"[GoPay Payment] Response status: {response.status_code}")
+            
             if response.status_code in [200, 201]:
                 data = response.json()
+                logger.info(f"[GoPay Payment] ✓ Payment created successfully")
+                logger.info(f"[GoPay Payment] Transaction ID: {data.get('id')}")
+                logger.info(f"[GoPay Payment] State: {data.get('state')}")
+                logger.info(f"[GoPay Payment] Gateway URL: {data.get('gw_url')}")
+                logger.debug(f"[GoPay Payment] Full response:\n{json.dumps(data, indent=2, ensure_ascii=False)}")
                 
                 # Create transaction record
                 transaction = PaymentTransaction.objects.create(
@@ -157,6 +191,7 @@ class GoPayService:
                     provider_transaction_id=str(data.get('id')),
                     provider_response=data
                 )
+                logger.info(f"[GoPay Payment] Created PaymentTransaction #{transaction.id}")
                 
                 return {
                     'success': True,
@@ -166,14 +201,21 @@ class GoPayService:
                     'state': data.get('state')
                 }
             else:
-                logger.error(f"GoPay payment creation failed: {response.status_code} - {response.text}")
+                logger.error(f"[GoPay Payment] ✗ Payment creation failed: HTTP {response.status_code}")
+                logger.error(f"[GoPay Payment] Response body: {response.text}")
+                try:
+                    error_data = response.json()
+                    logger.error(f"[GoPay Payment] Parsed error:\n{json.dumps(error_data, indent=2, ensure_ascii=False)}")
+                except:
+                    pass
                 return {
                     'success': False,
                     'error': f"Payment creation failed: {response.text}"
                 }
                 
         except Exception as e:
-            logger.error(f"Error creating GoPay payment: {str(e)}")
+            logger.error(f"[GoPay Payment] ✗ Exception during payment creation: {str(e)}")
+            logger.exception(e)
             return {
                 'success': False,
                 'error': str(e)
@@ -189,21 +231,31 @@ class GoPayService:
         Returns:
             dict with payment status information
         """
+        logger.info(f"[GoPay Status] Checking status for transaction {gopay_transaction_id}")
+        
         token = self._get_access_token()
         if not token:
+            logger.error("[GoPay Status] ✗ Failed to authenticate")
             raise Exception("Failed to authenticate with GoPay")
         
         try:
+            url = f"{self.api_url}/payments/payment/{gopay_transaction_id}"
+            logger.debug(f"[GoPay Status] GET {url}")
+            
             response = requests.get(
-                f"{self.api_url}/payments/payment/{gopay_transaction_id}",
+                url,
                 headers={
                     'Authorization': f'Bearer {token}',
                     'Accept': 'application/json'
                 }
             )
             
+            logger.debug(f"[GoPay Status] Response status: {response.status_code}")
+            
             if response.status_code == 200:
                 data = response.json()
+                logger.info(f"[GoPay Status] ✓ State: {data.get('state')} | Sub-state: {data.get('sub_state')}")
+                logger.debug(f"[GoPay Status] Full response:\n{json.dumps(data, indent=2, ensure_ascii=False)}")
                 return {
                     'success': True,
                     'state': data.get('state'),
@@ -214,14 +266,15 @@ class GoPayService:
                     'data': data
                 }
             else:
-                logger.error(f"Failed to check payment status: {response.status_code} - {response.text}")
+                logger.error(f"[GoPay Status] ✗ Failed: {response.status_code} - {response.text}")
                 return {
                     'success': False,
                     'error': response.text
                 }
                 
         except Exception as e:
-            logger.error(f"Error checking payment status: {str(e)}")
+            logger.error(f"[GoPay Status] ✗ Exception: {str(e)}")
+            logger.exception(e)
             return {
                 'success': False,
                 'error': str(e)
@@ -238,6 +291,7 @@ class GoPayService:
         Returns:
             dict with processed payment information
         """
+        logger.info(f"[GoPay Webhook] Processing notification for transaction {gopay_transaction_id}")
         status_result = self.check_payment_status(gopay_transaction_id)
         
         if not status_result.get('success'):
@@ -252,19 +306,27 @@ class GoPayService:
             )
             
             # Map GoPay states to our status
+            logger.info(f"[GoPay Webhook] Current state: {state}")
+            
             if state == 'PAID':
+                logger.info(f"[GoPay Webhook] ✓ Payment PAID - marking order #{transaction.order.id} as paid")
                 transaction.status = 'completed'
                 transaction.order.status = 'paid'
                 transaction.order.save()
             elif state in ['CANCELED', 'TIMEOUTED']:
+                logger.warning(f"[GoPay Webhook] ✗ Payment {state} - marking as failed")
                 transaction.status = 'failed'
             elif state == 'REFUNDED':
+                logger.info(f"[GoPay Webhook] Payment REFUNDED - updating order status")
                 transaction.status = 'refunded'
                 transaction.order.status = 'refunded'
                 transaction.order.save()
+            else:
+                logger.debug(f"[GoPay Webhook] State '{state}' - no status change")
             
             transaction.provider_response = status_result.get('data')
             transaction.save()
+            logger.info(f"[GoPay Webhook] ✓ Transaction updated: status={transaction.status}")
             
             return {
                 'success': True,
@@ -273,13 +335,14 @@ class GoPayService:
             }
             
         except PaymentTransaction.DoesNotExist:
-            logger.error(f"Transaction not found for GoPay ID: {gopay_transaction_id}")
+            logger.error(f"[GoPay Webhook] ✗ Transaction not found for GoPay ID: {gopay_transaction_id}")
             return {
                 'success': False,
                 'error': 'Transaction not found'
             }
         except Exception as e:
-            logger.error(f"Error processing notification: {str(e)}")
+            logger.error(f"[GoPay Webhook] ✗ Exception: {str(e)}")
+            logger.exception(e)
             return {
                 'success': False,
                 'error': str(e)
