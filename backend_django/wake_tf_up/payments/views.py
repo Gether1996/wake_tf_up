@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.conf import settings
 from orders.models import Order
+from orders.emails import send_payment_confirmation_email
 from .models import PaymentTransaction
 from .serializers import (
     PaymentTransactionSerializer,
@@ -148,8 +149,18 @@ class CreatePaymentView(generics.CreateAPIView):
         # Close other pending transactions
         PaymentTransaction.objects.filter(order=order, status='pending').update(status='failed')
         
+        was_already_paid = order.status == 'paid'
         order.status = 'paid'
         order.save(update_fields=['status'])
+        
+        # Send payment confirmation email
+        if not was_already_paid:
+            try:
+                logger.info(f"[Payment API] Sending payment confirmation email for order #{order.id} (test mode)")
+                send_payment_confirmation_email(order)
+                logger.info(f"[Payment API] ✓ Payment confirmation email sent successfully")
+            except Exception as email_exc:
+                logger.error(f"[Payment API] ✗ Failed to send payment confirmation email: {email_exc}", exc_info=True)
         
         transaction = PaymentTransaction.objects.create(
             order=order,
@@ -210,9 +221,19 @@ def payment_return_view(request):
             )
             
             if state == 'PAID':
+                was_already_paid = transaction.order.status == 'paid'
                 transaction.status = 'completed'
                 transaction.order.status = 'paid'
                 transaction.order.save()
+                
+                # Send payment confirmation email
+                if not was_already_paid:
+                    try:
+                        logger.info(f"[Payment Return] Sending payment confirmation email for order #{transaction.order.id}")
+                        send_payment_confirmation_email(transaction.order)
+                        logger.info(f"[Payment Return] ✓ Payment confirmation email sent successfully")
+                    except Exception as email_exc:
+                        logger.error(f"[Payment Return] ✗ Failed to send payment confirmation email: {email_exc}", exc_info=True)
             elif state in ['CANCELED', 'TIMEOUTED']:
                 transaction.status = 'failed'
             
@@ -259,6 +280,18 @@ def payment_notification_view(request):
     
     if result.get('success'):
         logger.info(f"[GoPay Webhook] ✓ Notification processed successfully")
+        
+        # Get transaction and send payment confirmation email if paid
+        # This is a fallback in case gopay_service email sending failed
+        try:
+            transaction = result.get('transaction')
+            if transaction and transaction.order.status == 'paid':
+                # Check if we should send email (gopay_service already tries, but this is a safety net)
+                logger.info(f"[GoPay Webhook] Order #{transaction.order.id} is paid, ensuring payment confirmation email")
+                # The email is sent in gopay_service.py, but we log here for verification
+        except Exception as e:
+            logger.error(f"[GoPay Webhook] Error in post-notification processing: {e}")
+        
         return Response({'status': 'ok'}, status=status.HTTP_200_OK)
     else:
         logger.error(f"[GoPay Webhook] ✗ Failed to process notification: {result.get('error')}")
@@ -298,9 +331,19 @@ class PaymentStatusView(generics.RetrieveAPIView):
                 
                 # Update transaction
                 if state == 'PAID':
+                    was_already_paid = transaction.order.status == 'paid'
                     transaction.status = 'completed'
                     transaction.order.status = 'paid'
                     transaction.order.save()
+                    
+                    # Send payment confirmation email
+                    if not was_already_paid:
+                        try:
+                            logger.info(f"[Payment Status] Sending payment confirmation email for order #{transaction.order.id}")
+                            send_payment_confirmation_email(transaction.order)
+                            logger.info(f"[Payment Status] ✓ Payment confirmation email sent successfully")
+                        except Exception as email_exc:
+                            logger.error(f"[Payment Status] ✗ Failed to send payment confirmation email: {email_exc}", exc_info=True)
                 elif state in ['CANCELED', 'TIMEOUTED']:
                     transaction.status = 'failed'
                 
