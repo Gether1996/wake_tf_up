@@ -32,5 +32,6 @@ class MainSettingsSerializer(serializers.ModelSerializer):
             'maintenance_message',
             'newsletter_popup_delay',
             'newsletter_popup_enabled',
+            'review_email_days_after_delivery',
         ]
         read_only_fields = ['id']  # Only ID is read-only, allow updates to all settings

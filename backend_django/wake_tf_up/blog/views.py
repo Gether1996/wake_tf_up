@@ -11,23 +11,33 @@ class IsSuperuser(permissions.BasePermission):
 
 class BlogPostListView(generics.ListAPIView):
     """
-    List all published blog posts.
+    List all published blog posts (or all posts for superusers).
     GET /api/v1/blog/
     """
-    queryset = BlogPost.objects.filter(is_published=True)
     serializer_class = BlogPostListSerializer
     permission_classes = [permissions.AllowAny]
+    
+    def get_queryset(self):
+        """Show unpublished posts to superusers"""
+        if self.request.user.is_authenticated and self.request.user.is_superuser:
+            return BlogPost.objects.all()
+        return BlogPost.objects.filter(is_published=True)
 
 
 class BlogPostDetailView(generics.RetrieveAPIView):
     """
-    Get blog post details by slug.
+    Get blog post details by slug (or unpublished for superusers).
     GET /api/v1/blog/{slug}/
     """
-    queryset = BlogPost.objects.filter(is_published=True)
     serializer_class = BlogPostDetailSerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = 'slug'
+    
+    def get_queryset(self):
+        """Show unpublished posts to superusers"""
+        if self.request.user.is_authenticated and self.request.user.is_superuser:
+            return BlogPost.objects.all()
+        return BlogPost.objects.filter(is_published=True)
 
 
 class BlogImageListView(generics.ListAPIView):

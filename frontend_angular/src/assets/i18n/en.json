@@ -17,12 +17,13 @@
     "motto": "Reworked. Reclaimed. One of one.",
     "tagline": "Unique streetwear from recycled materials"
   },
-  "nav": {
+    "nav": {
     "home": "Home",
     "shop": "Shop",
     "blog": "Blog",
     "events": "Events",
     "about": "About",
+    "contact": "Contact",
     "cart": "Cart",
     "profile": "Profile",
     "orders": "Orders",
@@ -463,6 +464,27 @@
       "subtitle": "Explore our latest drops and find your unique piece",
       "button": "Shop Now"
     }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Have a question or want to collaborate? Get in touch!",
+    "info_title": "Contact Information",
+    "company": "Company",
+    "address": "Address",
+    "email": "Email",
+    "phone": "Phone",
+    "form_title": "Send Us a Message",
+    "form": {
+      "name": "Your Name",
+      "name_placeholder": "John Doe",
+      "email": "Your Email",
+      "email_placeholder": "john@example.com",
+      "message": "Your Message",
+      "message_placeholder": "Tell us what's on your mind...",
+      "submit": "Send Message"
+    },
+    "success_title": "Message Sent!",
+    "success_message": "Thank you for reaching out. We'll get back to you as soon as possible."
   },
   "footer": {
     "tagline": "Reworked. Reclaimed. One of one.",

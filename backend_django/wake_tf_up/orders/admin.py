@@ -22,10 +22,10 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('order_number', 'user_email', 'shipping_name', 'shipping_method', 'status', 'discount_display', 'total_amount_display', 'is_pre_order', 'created_at')
-    list_filter = ('status', 'shipping_method', 'created_at', 'updated_at')
+    list_display = ('order_number', 'user_email', 'shipping_name', 'payment_method', 'shipping_method', 'status', 'discount_display', 'total_amount_display', 'is_pre_order', 'delivered_status', 'created_at')
+    list_filter = ('status', 'payment_method', 'shipping_method', 'created_at', 'updated_at')
     search_fields = ('id', 'user__email', 'shipping_name', 'shipping_city', 'phone', 'packeta_point_name')
-    readonly_fields = ('user', 'status', 'shipping_method', 'total_amount', 'discount_amount', 'discount_code', 'created_at', 'updated_at', 'is_pre_order',
+    readonly_fields = ('user', 'status', 'shipping_method', 'total_amount', 'discount_amount', 'discount_code', 'created_at', 'updated_at', 'delivered_at', 'review_request_sent_at', 'is_pre_order',
                       'shipping_name', 'shipping_address', 'shipping_city', 'shipping_postal_code', 'shipping_country', 'phone',
                       'packeta_point_id', 'packeta_point_name', 'packeta_point_address', 'packeta_packet_id', 
                       'tracking_number', 'carrier_tracking_url', 'is_company_purchase', 'billing_company', 
@@ -33,7 +33,7 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = [OrderItemInline]
     date_hierarchy = 'created_at'
     list_per_page = 25
-    actions = ['mark_as_paid', 'mark_as_shipped', 'mark_as_delivered', 'mark_as_cancelled', 'create_packeta_shipment']
+    actions = ['mark_as_paid', 'mark_as_shipped', 'mark_as_delivered', 'mark_as_cancelled', 'create_packeta_shipment', 'complete_order']
     
     def has_add_permission(self, request):
         # Orders can only be created through the frontend API
@@ -67,7 +67,7 @@ class OrderAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
         }),
         ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
+            'fields': ('created_at', 'updated_at', 'delivered_at', 'review_request_sent_at'),
             'classes': ('collapse',)
         }),
     )
@@ -98,6 +98,26 @@ class OrderAdmin(admin.ModelAdmin):
     is_pre_order.boolean = True
     is_pre_order.short_description = 'Pre-order'
     
+    def delivered_status(self, obj):
+        """Show delivery and review request status"""
+        if obj.status != 'delivered':
+            return '-'
+        
+        if obj.review_request_sent_at:
+            return f'✓ Review sent ({obj.review_request_sent_at.strftime("%Y-%m-%d")})'
+        elif obj.delivered_at:
+            from django.utils import timezone
+            from settings.models import MainSettings
+            settings_obj = MainSettings.get_settings()
+            days_since = (timezone.now() - obj.delivered_at).days
+            days_until_email = settings_obj.review_email_days_after_delivery - days_since
+            if days_until_email > 0:
+                return f'⏳ Review in {days_until_email} days'
+            else:
+                return '⚠️ Review pending'
+        return '?'
+    delivered_status.short_description = 'Review Status'
+    
     # Actions
     def mark_as_paid(self, request, queryset):
         queryset.update(status='paid')
@@ -114,6 +134,16 @@ class OrderAdmin(admin.ModelAdmin):
     def mark_as_cancelled(self, request, queryset):
         queryset.update(status='cancelled')
     mark_as_cancelled.short_description = "Mark selected orders as Cancelled"
+    
+    def complete_order(self, request, queryset):
+        """Mark order as completed/delivered"""
+        updated = queryset.update(status='delivered')
+        self.message_user(
+            request,
+            f"{updated} order(s) marked as completed/delivered.",
+            level=messages.SUCCESS
+        )
+    complete_order.short_description = "✓ Complete Order (mark as Delivered)"
     
     def create_packeta_shipment(self, request, queryset):
         """Create Packeta shipment for selected orders"""

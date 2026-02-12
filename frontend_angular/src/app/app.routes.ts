@@ -51,6 +51,10 @@ const appRoutes: Routes = [
     loadComponent: () => import('./pages/about/about.component').then(m => m.AboutComponent)
   },
   {
+    path: 'contact',
+    loadComponent: () => import('./pages/contact/contact.component').then(m => m.ContactComponent)
+  },
+  {
     path: 'profile',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent)

@@ -11,23 +11,33 @@ class IsSuperuser(permissions.BasePermission):
 
 class EventListView(generics.ListAPIView):
     """
-    List all published events.
+    List all published events (or all events for superusers).
     GET /api/v1/events/
     """
-    queryset = Event.objects.filter(is_published=True)
     serializer_class = EventListSerializer
     permission_classes = [permissions.AllowAny]
+    
+    def get_queryset(self):
+        """Show unpublished events to superusers"""
+        if self.request.user.is_authenticated and self.request.user.is_superuser:
+            return Event.objects.all()
+        return Event.objects.filter(is_published=True)
 
 
 class EventDetailView(generics.RetrieveAPIView):
     """
-    Get event details by slug.
+    Get event details by slug (or unpublished for superusers).
     GET /api/v1/events/{slug}/
     """
-    queryset = Event.objects.filter(is_published=True)
     serializer_class = EventDetailSerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = 'slug'
+    
+    def get_queryset(self):
+        """Show unpublished events to superusers"""
+        if self.request.user.is_authenticated and self.request.user.is_superuser:
+            return Event.objects.all()
+        return Event.objects.filter(is_published=True)
 
 
 class EventImageListView(generics.ListAPIView):

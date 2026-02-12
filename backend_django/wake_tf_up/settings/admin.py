@@ -37,6 +37,14 @@ class MainSettingsAdmin(admin.ModelAdmin):
             'fields': ('maintenance_mode', 'maintenance_message'),
             'classes': ('collapse',)
         }),
+        ('Newsletter Settings', {
+            'fields': ('newsletter_popup_enabled', 'newsletter_popup_delay'),
+            'classes': ('collapse',)
+        }),
+        ('Review Email Settings', {
+            'fields': ('review_email_days_after_delivery',),
+            'description': 'Configure automatic review request emails after order delivery'
+        }),
     )
     
     readonly_fields = ('created_at', 'updated_at')

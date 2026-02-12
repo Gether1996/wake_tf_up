@@ -23,6 +23,7 @@
     "blog": "Blog",
     "events": "Eventy",
     "about": "O nás",
+    "contact": "Kontakt",
     "cart": "Košík",
     "profile": "Profil",
     "orders": "Objednávky",
@@ -463,6 +464,27 @@
       "subtitle": "Preskúmajte naše najnovšie dropy a nájdite svoj unikátny kus",
       "button": "Nakupovať"
     }
+  },
+  "contact": {
+    "title": "Kontaktujte nás",
+    "subtitle": "Máte otázku alebo chcete spolupracovať? Ozvite sa!",
+    "info_title": "Kontaktné informácie",
+    "company": "Spoločnosť",
+    "address": "Adresa",
+    "email": "Email",
+    "phone": "Telefón",
+    "form_title": "Pošlite nám správu",
+    "form": {
+      "name": "Vaše meno",
+      "name_placeholder": "Ján Novák",
+      "email": "Váš email",
+      "email_placeholder": "jan@example.com",
+      "message": "Vaša správa",
+      "message_placeholder": "Napíšte nám, čo vás zaujíma...",
+      "submit": "Odoslať správu"
+    },
+    "success_title": "Správa odoslaná!",
+    "success_message": "Ďakujeme za vašu správu. Ozveme sa vám čo najskôr."
   },
   "footer": {
     "tagline": "Prepracované. Obnovené. Jeden z jedného.",

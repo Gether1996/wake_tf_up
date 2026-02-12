@@ -134,6 +134,12 @@ class MainSettings(models.Model):
         help_text="Enable automatic newsletter popup"
     )
     
+    # Review Email Settings
+    review_email_days_after_delivery = models.PositiveIntegerField(
+        default=7,
+        help_text="Number of days after delivery to send review request email (default: 7)"
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

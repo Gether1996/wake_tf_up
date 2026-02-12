@@ -45,7 +45,7 @@ import { SettingsService } from '../../core/api/settings.service';
           <div class="mt-6">
             <h3 class="text-xl font-semibold mb-2">{{ 'cookies_policy.section3.analytics.title' | transloco }}</h3>
             <p class="mb-4">{{ 'cookies_policy.section3.analytics.content' | transloco }}</p>
-            <p class="bg-blue-50 border border-blue-200 p-4 rounded">
+            <p class="bg-accent/10 border border-accent/30 p-4 rounded text-foreground">
               <strong>{{ 'cookies_policy.section3.analytics.notice' | transloco }}</strong>
             </p>
           </div>
@@ -53,7 +53,7 @@ import { SettingsService } from '../../core/api/settings.service';
           <div class="mt-6">
             <h3 class="text-xl font-semibold mb-2">{{ 'cookies_policy.section3.marketing.title' | transloco }}</h3>
             <p class="mb-4">{{ 'cookies_policy.section3.marketing.content' | transloco }}</p>
-            <p class="bg-blue-50 border border-blue-200 p-4 rounded">
+            <p class="bg-accent/10 border border-accent/30 p-4 rounded text-foreground">
               <strong>{{ 'cookies_policy.section3.marketing.notice' | transloco }}</strong>
             </p>
           </div>

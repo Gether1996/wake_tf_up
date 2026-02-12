@@ -127,6 +127,16 @@ class Order(models.Model):
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    delivered_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp when order was marked as delivered"
+    )
+    review_request_sent_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp when review request email was sent"
+    )
     
     class Meta:
         db_table = 'orders'
