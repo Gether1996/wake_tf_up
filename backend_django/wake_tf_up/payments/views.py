@@ -250,9 +250,10 @@ def payment_return_view(request):
             transaction.provider_response = result.get('data')
             transaction.save()
             
-            # Redirect to frontend with status and language
+            # Redirect to frontend with status and language (use order.language, not query param)
+            order_language = getattr(transaction.order, 'language', 'sk')
             return HttpResponseRedirect(
-                f"{frontend_url}/{language}/order-confirmation?order_id={transaction.order.id}&status={state.lower()}"
+                f"{frontend_url}/{order_language}/order-confirmation?order_id={transaction.order.id}&status={state.lower()}"
             )
             
         except PaymentTransaction.DoesNotExist:
