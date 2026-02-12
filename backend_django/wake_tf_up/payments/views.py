@@ -14,6 +14,7 @@ from .serializers import (
 )
 from .gopay_service import GoPayService
 import logging
+from core.email_utils import get_email_language
 
 logger = logging.getLogger(__name__)
 
@@ -347,8 +348,10 @@ class PaymentStatusView(generics.RetrieveAPIView):
                     # Send payment confirmation email
                     if not was_already_paid:
                         try:
-                            logger.info(f"[Payment Status] Sending payment confirmation email for order #{transaction.order.id}")
-                            send_payment_confirmation_email(transaction.order)
+                            # Get language from request or user preference
+                            language = get_email_language(request=request, user=order.user)
+                            logger.info(f"[Payment Status] Sending payment confirmation email for order #{transaction.order.id} in {language}")
+                            send_payment_confirmation_email(transaction.order, language=language)
                             logger.info(f"[Payment Status] ✓ Payment confirmation email sent successfully")
                         except Exception as email_exc:
                             logger.error(f"[Payment Status] ✗ Failed to send payment confirmation email: {email_exc}", exc_info=True)

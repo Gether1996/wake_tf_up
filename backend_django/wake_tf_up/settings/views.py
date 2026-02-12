@@ -10,7 +10,7 @@ class IsAdminUser(permissions.BasePermission):
     message = "Only admin users can modify settings."
     
     def has_permission(self, request, view):
-        # Allow GET requests for everyone
+        # Allow GET requests for everyone (including anonymous users)
         if request.method == 'GET':
             return True
         # Only allow authenticated admin users for mutations
@@ -20,12 +20,21 @@ class IsAdminUser(permissions.BasePermission):
 class MainSettingsViewSet(viewsets.ModelViewSet):
     """
     ViewSet for MainSettings.
-    GET: Public access to all settings
+    GET: Public access to all settings (no authentication required)
     PUT/PATCH: Admin only - update settings
     """
     queryset = MainSettings.objects.all()
     serializer_class = MainSettingsSerializer
-    permission_classes = [IsAdminUser]  # Custom permission
+    permission_classes = [IsAdminUser]
+    
+    def get_authenticators(self):
+        """
+        Skip authentication for GET requests to allow public access.
+        This prevents 401 errors when JWT token expires.
+        """
+        if self.request.method == 'GET':
+            return []
+        return super().get_authenticators()
     
     def list(self, request, *args, **kwargs):
         """Return the single settings instance"""

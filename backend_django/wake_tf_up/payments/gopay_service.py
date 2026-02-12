@@ -12,6 +12,7 @@ from typing import Dict, Optional
 from decimal import Decimal
 from django.conf import settings
 from .models import PaymentTransaction
+from core.email_utils import get_email_language
 
 logger = logging.getLogger(__name__)
 
@@ -322,8 +323,10 @@ class GoPayService:
                 if not was_already_paid:
                     try:
                         from orders.emails import send_payment_confirmation_email
-                        logger.info(f"[GoPay Webhook] Sending payment confirmation email for order #{transaction.order.id}")
-                        send_payment_confirmation_email(transaction.order)
+                        # Get language from user preference (no request available in webhook)
+                        language = get_email_language(user=transaction.order.user)
+                        logger.info(f"[GoPay Webhook] Sending payment confirmation email for order #{transaction.order.id} in {language}")
+                        send_payment_confirmation_email(transaction.order, language=language)
                         logger.info(f"[GoPay Webhook] ✓ Payment confirmation email sent successfully")
                     except Exception as email_exc:
                         logger.error(f"[GoPay Webhook] ✗ Failed to send payment confirmation email: {email_exc}", exc_info=True)
