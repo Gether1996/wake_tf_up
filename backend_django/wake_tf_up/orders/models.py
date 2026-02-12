@@ -116,6 +116,12 @@ class Order(models.Model):
     )
     
     # Order totals
+    shipping_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text="Shipping cost (EUR)"
+    )
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
     # Timestamps
@@ -182,7 +188,8 @@ class Order(models.Model):
         if result['valid']:
             self.discount_code = discount_code_obj
             self.discount_amount = result['discount_amount']
-            self.total_amount = subtotal - self.discount_amount
+            # Recalculate total with shipping cost
+            self.total_amount = subtotal - self.discount_amount + self.shipping_cost
             self.save()
             
             # Increment usage count
@@ -197,7 +204,7 @@ class Order(models.Model):
     def remove_discount(self):
         """
         Remove applied discount code from this order.
-        Recalculates total without discount.
+        Recalculates total without discount (but with shipping).
         """
         if self.discount_code:
             # Decrement usage count
@@ -210,9 +217,9 @@ class Order(models.Model):
             self.discount_code = None
             self.discount_amount = 0
             
-            # Recalculate total
+            # Recalculate total with shipping
             subtotal = sum(item.price_at_purchase * item.quantity for item in self.items.all())
-            self.total_amount = subtotal
+            self.total_amount = subtotal + self.shipping_cost
             self.save()
             
             return True
@@ -327,13 +334,16 @@ class StockReservationService:
         Raises:
             ValidationError: If stock validation fails
         """
+        from settings.models import MainSettings
+        from decimal import Decimal
+        
         # Create order
         order = Order.objects.create(
             user=user,
             **shipping_data
         )
         
-        total = 0
+        subtotal = Decimal('0.00')
         
         # Create order items with stock validation
         for item_data in items_data:
@@ -350,10 +360,31 @@ class StockReservationService:
             # This will validate stock and raise ValidationError if needed
             order_item.save()
             
-            total += order_item.subtotal
+            subtotal += order_item.subtotal
         
-        # Update order total
-        order.total_amount = total
+        # Calculate shipping cost based on shipping method and settings
+        settings = MainSettings.objects.first()
+        shipping_method = shipping_data.get('shipping_method', 'dpd_courier')
+        
+        if settings:
+            # Get shipping cost based on method
+            shipping_cost_map = {
+                'pickup': settings.pickup_cost,
+                'dpd_courier': settings.dpd_courier_cost,
+                'packeta_box': settings.packeta_box_cost,
+                'packeta_courier': settings.packeta_courier_cost,
+            }
+            shipping_cost = shipping_cost_map.get(shipping_method, Decimal('0.00'))
+            
+            # Apply free shipping threshold
+            if subtotal >= settings.free_shipping_threshold:
+                shipping_cost = Decimal('0.00')
+        else:
+            shipping_cost = Decimal('0.00')
+        
+        # Update order with shipping cost and total
+        order.shipping_cost = shipping_cost
+        order.total_amount = subtotal + shipping_cost
         order.save()
         
         return order

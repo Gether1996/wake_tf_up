@@ -74,6 +74,10 @@
                                         <td colspan="2" align="right" style="padding: 12px; color: #6b7280;">Subtotal</td>
                                         <td align="right" style="padding: 12px; color: #111827;">€{{ subtotal|floatformat:2 }}</td>
                                     </tr>
+                                    <tr>
+                                        <td colspan="2" align="right" style="padding: 12px; color: #6b7280;">Shipping</td>
+                                        <td align="right" style="padding: 12px; color: #111827;">{% if shipping_cost == 0 %}<span style="color: #16a34a;">Free</span>{% else %}€{{ shipping_cost|floatformat:2 }}{% endif %}</td>
+                                    </tr>
                                     {% if discount_amount and discount_amount > 0 %}
                                     <tr>
                                         <td colspan="2" align="right" style="padding: 12px; color: #6b7280;">Discount</td>

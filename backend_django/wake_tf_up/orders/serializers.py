@@ -79,7 +79,7 @@ class OrderListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = (
-            'id', 'status', 'shipping_method', 'total_amount', 'discount_amount',
+            'id', 'status', 'shipping_method', 'shipping_cost', 'total_amount', 'discount_amount',
             'discount_code_display', 'payment_method', 'items', 'items_count',
             'is_pre_order', 'created_at', 'updated_at'
         )
@@ -102,7 +102,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
             'phone', 'packeta_point_id', 'packeta_point_name', 'packeta_point_address',
             'tracking_number', 'carrier_tracking_url',
             'is_company_purchase', 'billing_company', 'billing_ico', 
-            'billing_dic', 'billing_ic_dph', 'total_amount', 'discount_amount',
+            'billing_dic', 'billing_ic_dph', 'shipping_cost', 'total_amount', 'discount_amount',
             'discount_code_display', 'payment_method', 'is_pre_order', 'items',
             'created_at', 'updated_at'
         )

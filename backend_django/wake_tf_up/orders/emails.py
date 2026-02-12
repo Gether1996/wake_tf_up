@@ -44,6 +44,7 @@ def send_order_confirmation_email(order, language=None):
         "user": order.user,
         "items": items,
         "subtotal": subtotal,
+        "shipping_cost": order.shipping_cost,
         "discount_amount": order.discount_amount,
         "total_amount": order.total_amount,
         "shipping_method_display": order.get_shipping_method_display(),

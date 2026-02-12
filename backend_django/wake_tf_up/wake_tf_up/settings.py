@@ -218,7 +218,7 @@ CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:4200,
 CORS_ALLOW_CREDENTIALS = True
 
 # CSRF Trusted Origins (required for admin and forms)
-CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:9006,https://wake-tf-up.eu,https://www.wake-tf-up.eu').split(',')
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:9006,https://wake-tf-up.eu').split(',')
 
 # Packeta API Configuration
 PACKETA_API_KEY = os.getenv('PACKETA_API_KEY', '9dbc4fa2f90c9113')  # Widget API key for frontend
@@ -244,7 +244,7 @@ DEFAULT_CHARSET = 'utf-8'
 GOPAY_CLIENT_ID = os.getenv('GOPAY_CLIENT_ID', '')  # GoPay GoID
 GOPAY_CLIENT_SECRET = os.getenv('GOPAY_CLIENT_SECRET', '')  # GoPay Client Secret
 GOPAY_ENVIRONMENT = os.getenv('GOPAY_ENVIRONMENT', 'test')  # 'test' or 'production'
-GOPAY_CALLBACK_BASE_URL = os.getenv('GOPAY_CALLBACK_BASE_URL', 'https://www.wake-tf-up.eu')  # Base URL for GoPay callbacks
+GOPAY_CALLBACK_BASE_URL = os.getenv('GOPAY_CALLBACK_BASE_URL', 'https://wake-tf-up.eu')  # Base URL for GoPay callbacks
 _gopay_disable_env = os.getenv('GOPAY_DISABLE_PAYMENTS')
 if _gopay_disable_env is None:
     # Default: disable payments automatically when not in production environment
