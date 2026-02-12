@@ -60,9 +60,13 @@ class CreatePaymentView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Get language from request (same as order creation)
+        language = request.data.get('language') or getattr(request, 'LANGUAGE_CODE', 'sk')
+        logger.info(f"[Payment API] Language detected: {language}")
+        
         if getattr(settings, 'GOPAY_DISABLE_PAYMENTS', False):
             logger.info(f"[Payment API] GOPAY_DISABLE_PAYMENTS=True - simulating payment")
-            return self._simulate_payment_success(order)
+            return self._simulate_payment_success(order, language)
         
         # Check if payment already exists and is pending
         existing_payment = PaymentTransaction.objects.filter(
@@ -115,11 +119,12 @@ class CreatePaymentView(generics.CreateAPIView):
         # Build return and notification URLs using configured backend URL
         # GoPay needs URLs where it can reach the backend API, not frontend
         base_url = settings.GOPAY_CALLBACK_BASE_URL.rstrip('/')
-        return_url = f"{base_url}/api/v1/payments/return/"
+        return_url = f"{base_url}/api/v1/payments/return/?lang={language}"
         notify_url = f"{base_url}/api/v1/payments/notification/"
         
         logger.info(f"[Payment API] Creating new GoPay payment for Order #{order.id}")
         logger.debug(f"[Payment API] Callback base URL: {base_url}")
+        logger.debug(f"[Payment API] Return URL: {return_url}")
         
         # Create payment with GoPay
         gopay = GoPayService()
@@ -144,7 +149,7 @@ class CreatePaymentView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    def _simulate_payment_success(self, order):
+    def _simulate_payment_success(self, order, language='sk'):
         """Skip real GoPay call and mark the order as paid in test environments."""
         # Close other pending transactions
         PaymentTransaction.objects.filter(order=order, status='pending').update(status='failed')
@@ -156,8 +161,8 @@ class CreatePaymentView(generics.CreateAPIView):
         # Send payment confirmation email
         if not was_already_paid:
             try:
-                logger.info(f"[Payment API] Sending payment confirmation email for order #{order.id} (test mode)")
-                send_payment_confirmation_email(order)
+                logger.info(f"[Payment API] Sending payment confirmation email for order #{order.id} (test mode, language={language})")
+                send_payment_confirmation_email(order, language=language)
                 logger.info(f"[Payment API] ✓ Payment confirmation email sent successfully")
             except Exception as email_exc:
                 logger.error(f"[Payment API] ✗ Failed to send payment confirmation email: {email_exc}", exc_info=True)
@@ -175,7 +180,7 @@ class CreatePaymentView(generics.CreateAPIView):
             }
         )
         
-        confirmation_url = f"{settings.FRONTEND_URL.rstrip('/')}/en/order-confirmation?order_id={order.id}&status=paid&testPayment=1"
+        confirmation_url = f"{settings.FRONTEND_URL.rstrip('/')}/{language}/order-confirmation?order_id={order.id}&status=paid&testPayment=1"
         
         return Response({
             'success': True,
@@ -199,11 +204,14 @@ def payment_return_view(request):
     from django.conf import settings
     
     gopay_id = request.GET.get('id')
+    language = request.GET.get('lang', 'sk')
+    
+    logger.info(f"[Payment Return] User returned from GoPay, ID: {gopay_id}, Language: {language}")
     
     if not gopay_id:
         # Redirect to home if no payment ID
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:4200')
-        return HttpResponseRedirect(f"{frontend_url}/en/shop")
+        return HttpResponseRedirect(f"{frontend_url}/{language}/shop")
     
     # Check payment status
     gopay = GoPayService()
@@ -229,8 +237,8 @@ def payment_return_view(request):
                 # Send payment confirmation email
                 if not was_already_paid:
                     try:
-                        logger.info(f"[Payment Return] Sending payment confirmation email for order #{transaction.order.id}")
-                        send_payment_confirmation_email(transaction.order)
+                        logger.info(f"[Payment Return] Sending payment confirmation email for order #{transaction.order.id} in {language}")
+                        send_payment_confirmation_email(transaction.order, language=language)
                         logger.info(f"[Payment Return] ✓ Payment confirmation email sent successfully")
                     except Exception as email_exc:
                         logger.error(f"[Payment Return] ✗ Failed to send payment confirmation email: {email_exc}", exc_info=True)
@@ -240,16 +248,16 @@ def payment_return_view(request):
             transaction.provider_response = result.get('data')
             transaction.save()
             
-            # Redirect to frontend with status - use default language (en)
+            # Redirect to frontend with status and language
             return HttpResponseRedirect(
-                f"{frontend_url}/en/order-confirmation?order_id={transaction.order.id}&status={state.lower()}"
+                f"{frontend_url}/{language}/order-confirmation?order_id={transaction.order.id}&status={state.lower()}"
             )
             
         except PaymentTransaction.DoesNotExist:
             logger.error(f"Transaction not found for GoPay ID: {gopay_id}")
-            return HttpResponseRedirect(f"{frontend_url}/en/order-confirmation?error=transaction_not_found")
+            return HttpResponseRedirect(f"{frontend_url}/{language}/order-confirmation?error=transaction_not_found")
     else:
-        return HttpResponseRedirect(f"{frontend_url}/en/order-confirmation?error=status_check_failed")
+        return HttpResponseRedirect(f"{frontend_url}/{language}/order-confirmation?error=status_check_failed")
 
 
 @api_view(['GET', 'POST'])
