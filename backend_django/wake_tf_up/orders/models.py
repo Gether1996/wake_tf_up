@@ -124,6 +124,14 @@ class Order(models.Model):
     )
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
+    # Language preference
+    language = models.CharField(
+        max_length=2,
+        choices=[('sk', 'Slovak'), ('en', 'English')],
+        default='sk',
+        help_text="Language preference for emails and communications"
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

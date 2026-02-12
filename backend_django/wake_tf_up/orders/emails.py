@@ -88,7 +88,7 @@ def send_payment_confirmation_email(order, language=None):
     
     Args:
         order: Order instance
-        language: Language code ('sk' or 'en'). If None, will try to detect from user preferences.
+        language: Language code ('sk' or 'en'). If None, will use order.language or detect from user.
     """
     if order is None or not order.user or not order.user.email:
         logger.warning("Cannot send payment confirmation email without user email")
@@ -106,8 +106,8 @@ def send_payment_confirmation_email(order, language=None):
     support_email = MainSettings.objects.first().contact_email if MainSettings.objects.exists() else settings.DEFAULT_CONTACT_EMAIL
     sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", support_email)
     
-    # Get language from parameter or user preferences
-    language_code = language if language else get_email_language(user=order.user)
+    # Get language: 1) from parameter, 2) from order.language, 3) from user preferences
+    language_code = language if language else (order.language if hasattr(order, 'language') else get_email_language(user=order.user))
 
     logger.debug("Payment email config - support_email: %s, base_url: %s, language param: %s, final language: %s", support_email, base_url, language, language_code)
 
