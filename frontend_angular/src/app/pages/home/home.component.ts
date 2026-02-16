@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed, effect, untracked } from '
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
+import { retry, timer } from 'rxjs';
 import { CatalogService } from '../../core/api/catalog.service';
 import { ReviewService } from '../../core/api/review.service';
 import { LanguageService } from '../../core/services/language.service';
@@ -243,45 +244,75 @@ export class HomeComponent implements OnInit {
     this.loading.set(true);
     this.error.set('');
 
-    this.catalogService.getProducts({ ordering: '-created_at', page: 1 }).subscribe({
-      next: (response) => {
-        this.featuredProducts.set(response.results);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set(err.error?.message || 'Failed to load products');
-        this.loading.set(false);
-      }
-    });
+    this.catalogService.getProducts({ ordering: '-created_at', page: 1 })
+      .pipe(
+        retry({
+          count: 3,
+          delay: (error, retryCount) => {
+            console.log(`Retrying featured products (attempt ${retryCount})...`);
+            return timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000));
+          }
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.featuredProducts.set(response.results);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.error.set(err.error?.message || 'Failed to load products');
+          this.loading.set(false);
+        }
+      });
   }
 
   loadReviews() {
     this.reviewsLoading.set(true);
 
-    this.reviewService.getFeaturedReviews().subscribe({
-      next: (reviews) => {
-        this.featuredReviews.set(reviews);
-        this.reviewsLoading.set(false);
-      },
-      error: () => {
-        this.reviewsLoading.set(false);
-      }
-    });
+    this.reviewService.getFeaturedReviews()
+      .pipe(
+        retry({
+          count: 3,
+          delay: (error, retryCount) => {
+            console.log(`Retrying reviews (attempt ${retryCount})...`);
+            return timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000));
+          }
+        })
+      )
+      .subscribe({
+        next: (reviews) => {
+          this.featuredReviews.set(reviews);
+          this.reviewsLoading.set(false);
+        },
+        error: () => {
+          this.reviewsLoading.set(false);
+        }
+      });
   }
 
   loadDrops() {
     this.dropsLoading.set(true);
 
-    this.catalogService.getProducts({ is_limited_drop: 'true', page: 1 }).subscribe({
-      next: (response) => {
-        this.limitedDrops.set(response.results);
-        this.dropsLoading.set(false);
-      },
-      error: (err) => {
-        console.warn('Limited drops unavailable:', err);
-        this.limitedDrops.set([]); // Set empty array on error
-        this.dropsLoading.set(false);
-      }
-    });
+    this.catalogService.getProducts({ is_limited_drop: 'true', page: 1 })
+      .pipe(
+        retry({
+          count: 3,
+          delay: (error, retryCount) => {
+            console.log(`Retrying limited drops (attempt ${retryCount})...`);
+            return timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000));
+          }
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.limitedDrops.set(response.results);
+          this.dropsLoading.set(false);
+        },
+        error: (err) => {
+          console.warn('Limited drops unavailable:', err);
+          this.limitedDrops.set([]); // Set empty array on error
+          this.dropsLoading.set(false);
+        }
+      });
   }
 }

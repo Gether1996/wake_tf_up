@@ -112,6 +112,10 @@ const appRoutes: Routes = [
     loadComponent: () => import('./pages/cookies-policy/cookies-policy.component').then(m => m.CookiesPolicyComponent)
   },
   {
+    path: 'downloads',
+    loadComponent: () => import('./pages/downloads/downloads.component').then(m => m.DownloadsComponent)
+  },
+  {
     path: 'newsletter/unsubscribe',
     loadComponent: () => import('./pages/newsletter-unsubscribe/newsletter-unsubscribe.component').then(m => m.NewsletterUnsubscribeComponent)
   },

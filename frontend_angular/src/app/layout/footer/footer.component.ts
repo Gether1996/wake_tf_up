@@ -5,6 +5,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { NewsletterService } from '../../core/api/newsletter.service';
 import { LanguageService } from '../../core/services/language.service';
 import { SettingsService } from '../../core/api/settings.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { ButtonComponent } from '../../shared/button/button.component';
 import { FormsModule } from '@angular/forms';
 
@@ -17,7 +18,7 @@ import { FormsModule } from '@angular/forms';
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
           <!-- Brand -->
           <div>
-            <h2 class="text-xl font-bold tracking-tighter mb-4" style="font-family: 'Shlop', sans-serif;">WAKE_TF_UP</h2>
+            <h2 class="text-xl font-bold tracking-tighter mb-4" style="font-family: 'Shlop', sans-serif;">WAKE TF UP</h2>
             <p class="text-sm text-muted-foreground mb-4">
               {{ 'footer.tagline' | transloco }}
             </p>
@@ -145,7 +146,7 @@ import { FormsModule } from '@angular/forms';
           <!-- Copyright and Links -->
           <div class="flex flex-col md:flex-row justify-between items-center gap-4">
             <p class="text-sm text-muted-foreground font-mono">
-              © 2026 WAKE_TF_UP. {{ 'footer.rights' | transloco }}
+              © 2026 WAKE TF UP. {{ 'footer.rights' | transloco }}
             </p>
             
             <div class="flex gap-6">
@@ -157,6 +158,9 @@ import { FormsModule } from '@angular/forms';
               </a>
               <a [routerLink]="cookiesLink()" (click)="scrollToTop()" class="text-sm text-muted-foreground hover:text-accent transition-colors font-mono">
                 {{ 'footer.cookies' | transloco }}
+              </a>
+              <a [routerLink]="downloadsLink()" (click)="scrollToTop()" class="text-sm text-muted-foreground hover:text-accent transition-colors font-mono">
+                {{ 'footer.downloads_short' | transloco }}
               </a>
             </div>
 
@@ -224,6 +228,7 @@ export class FooterComponent {
   privacyLink = computed(() => `/${this.currentLang()}/privacy`);
   termsLink = computed(() => `/${this.currentLang()}/terms`);
   cookiesLink = computed(() => `/${this.currentLang()}/cookies`);
+  downloadsLink = computed(() => `/${this.currentLang()}/downloads`);
 
   // Social media links from settings
   instagramUrl = computed(() => this.settingsService.settings()?.instagram_url || '');

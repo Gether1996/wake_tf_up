@@ -29,18 +29,13 @@ class SubscriberSerializer(serializers.ModelSerializer):
         }
 
 
-class NewsletterPopupStatSerializer(serializers.ModelSerializer):
+class NewsletterPopupStatSerializer(serializers.Serializer):
     """Serializer for tracking newsletter popup interactions"""
-    class Meta:
-        model = NewsletterPopupStat
-        fields = ('session_id', 'email', 'action', 'ip_address', 'user_agent')
-        extra_kwargs = {
-            'session_id': {'required': False},
-            'email': {'required': False},
-            'action': {'required': False},
-            'ip_address': {'required': False},
-            'user_agent': {'required': False},
-        }
+    action = serializers.ChoiceField(
+        choices=['shown', 'subscribed', 'dismissed'],
+        required=True,
+        help_text="Popup interaction action: 'shown', 'subscribed', or 'dismissed'"
+    )
 
 
 class NewsletterImageSerializer(serializers.ModelSerializer):

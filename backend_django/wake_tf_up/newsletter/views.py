@@ -15,7 +15,7 @@ from rest_framework.views import APIView
 from settings.models import MainSettings
 from core.email_utils import get_email_language, send_localized_email
 from .models import Subscriber, NewsletterPopupStat, NewsletterTemplate, DiscountCodeTemplate, NewsletterImage
-from .serializers import SubscriberSerializer, NewsletterImageSerializer
+from .serializers import SubscriberSerializer, NewsletterImageSerializer, NewsletterPopupStatSerializer
 
 
 logger = logging.getLogger(__name__)
@@ -171,10 +171,14 @@ class NewsletterPopupTrackView(generics.GenericAPIView):
     
     Increments the appropriate counter in the singleton stats record.
     """
+    serializer_class = NewsletterPopupStatSerializer
     permission_classes = [permissions.AllowAny]
     
     def post(self, request, *args, **kwargs):
-        action = request.data.get('action', '')
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        action = serializer.validated_data['action']
         
         # Get or create the singleton stats instance
         stats = NewsletterPopupStat.load()
@@ -186,25 +190,11 @@ class NewsletterPopupTrackView(generics.GenericAPIView):
             stats.increment_subscribed()
         elif action == 'dismissed':
             stats.increment_dismissed()
-        else:
-            return Response(
-                {'error': 'Invalid action. Must be "shown", "subscribed", or "dismissed"'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
         
         return Response(
             {'message': 'Popup interaction tracked successfully'},
             status=status.HTTP_200_OK
         )
-    
-    def get_client_ip(self, request):
-        """Get client IP address from request"""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
-        else:
-            ip = request.META.get('REMOTE_ADDR')
-        return ip
 
 
 class IsSuperuser(permissions.BasePermission):

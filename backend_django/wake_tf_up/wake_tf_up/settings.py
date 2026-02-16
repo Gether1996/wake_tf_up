@@ -112,6 +112,9 @@ DATABASES = {
         'OPTIONS': {
             'charset': 'utf8mb4',
         },
+        # Connection pooling - reuse DB connections instead of creating new ones
+        'CONN_MAX_AGE': 600,  # 10 minutes
+        'CONN_HEALTH_CHECKS': True,
     }
 }
 

@@ -104,5 +104,5 @@ class ProductEvent(models.Model):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        user_str = self.user.email if self.user else f"session:{self.session_id}"
+        user_str = self.user.email if self.user else "Anonymous"
         return f"{self.event_type} - {self.product.name} by {user_str}"

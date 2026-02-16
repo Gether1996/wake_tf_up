@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed, OnDestroy, HostListener, e
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
+import { retry, timer } from 'rxjs';
 import { CatalogService } from '../../core/api/catalog.service';
 import { CartService } from '../../core/api/cart.service';
 import { AnalyticsService } from '../../core/api/analytics.service';
@@ -422,22 +423,32 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.error.set('');
 
-    this.catalogService.getProduct(productSlug).subscribe({
-      next: (product) => {
-        this.product.set(product);
-        if (product.images && product.images.length > 0) {
-          this.selectedImage.set(product.images[0].image);
+    this.catalogService.getProduct(productSlug)
+      .pipe(
+        retry({
+          count: 3,
+          delay: (error, retryCount) => {
+            console.log(`Retrying product (attempt ${retryCount})...`);
+            return timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000));
+          }
+        })
+      )
+      .subscribe({
+        next: (product) => {
+          this.product.set(product);
+          if (product.images && product.images.length > 0) {
+            this.selectedImage.set(product.images[0].image);
+          }
+          this.loading.set(false);
+          
+          // Track product view
+          this.analyticsService.trackProductView(product.id).subscribe();
+        },
+        error: (err) => {
+          this.error.set(err.error?.message || 'Product not found');
+          this.loading.set(false);
         }
-        this.loading.set(false);
-        
-        // Track product view
-        this.analyticsService.trackProductView(product.id).subscribe();
-      },
-      error: (err) => {
-        this.error.set(err.error?.message || 'Product not found');
-        this.loading.set(false);
-      }
-    });
+      });
   }
 
   selectImage(imageUrl: string, isVideo: boolean = false) {

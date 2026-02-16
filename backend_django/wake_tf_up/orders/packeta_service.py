@@ -51,13 +51,18 @@ class PacketaService:
         if order.shipping_method == 'packeta_box' and not order.packeta_point_id:
             raise PacketaAPIError("Packeta point ID is required for packeta_box shipping")
         
+        # Split shipping name into first name and surname
+        name_parts = order.shipping_name.strip().split(maxsplit=1)
+        first_name = name_parts[0] if name_parts else order.shipping_name
+        surname = name_parts[1] if len(name_parts) > 1 else first_name
+        
         # Prepare packet data
         packet_data = {
             "apiPassword": self.api_password,
             "packetAttributes": {
                 "number": str(order.id),  # Your internal order number
-                "name": order.shipping_name,
-                "surname": "",  # Split if needed
+                "name": first_name,
+                "surname": surname,
                 "email": order.user.email,
                 "phone": order.phone,
                 "addressId": order.packeta_point_id if order.shipping_method == 'packeta_box' else None,

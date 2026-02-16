@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
+import { retry, timer } from 'rxjs';
 import { CatalogService, ProductFilters } from '../../core/api/catalog.service';
 import { Product, Category, Color } from '../../core/api/api.models';
 import { ProductCardComponent } from '../../shared/product-card/product-card.component';
@@ -374,32 +375,56 @@ export class ShopComponent implements OnInit {
     if (this.showLimitedDrops()) filters.is_limited_drop = 'true';
     if (this.showRecycled()) filters.is_recycled = 'true';
 
-    this.catalogService.getProducts(filters).subscribe({
-      next: (response) => {
-        this.products.set(response.results);
-        this.totalProducts.set(response.count);
-        this.loading.set(false);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      },
-      error: (err) => {
-        this.error.set(err.error?.message || 'Failed to load products');
-        this.loading.set(false);
-      }
-    });
+    this.catalogService.getProducts(filters)
+      .pipe(
+        retry({
+          count: 3,
+          delay: (error, retryCount) => {
+            console.log(`Retrying products (attempt ${retryCount})...`);
+            return timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000));
+          }
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.products.set(response.results);
+          this.totalProducts.set(response.count);
+          this.loading.set(false);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        error: (err) => {
+          this.error.set(err.error?.message || 'Failed to load products');
+          this.loading.set(false);
+        }
+      });
   }
 
   loadCategories() {
-    this.catalogService.getCategories().subscribe({
-      next: (categories) => this.categories.set(categories),
-      error: () => {}
-    });
+    this.catalogService.getCategories()
+      .pipe(
+        retry({
+          count: 2,
+          delay: () => timer(1000)
+        })
+      )
+      .subscribe({
+        next: (categories) => this.categories.set(categories),
+        error: () => {}
+      });
   }
 
   loadColors() {
-    this.catalogService.getColors().subscribe({
-      next: (colors) => this.colors.set(colors),
-      error: () => {}
-    });
+    this.catalogService.getColors()
+      .pipe(
+        retry({
+          count: 2,
+          delay: () => timer(1000)
+        })
+      )
+      .subscribe({
+        next: (colors) => this.colors.set(colors),
+        error: () => {}
+      });
   }
 
   toggleColor(colorId: number) {
