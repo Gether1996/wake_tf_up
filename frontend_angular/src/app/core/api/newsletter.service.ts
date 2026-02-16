@@ -14,9 +14,7 @@ export interface NewsletterResponse {
 }
 
 export interface PopupTrackRequest {
-  session_id: string;
-  action: 'subscribed' | 'dismissed';
-  email?: string;
+  action: 'shown' | 'subscribed' | 'dismissed';
 }
 
 @Injectable({

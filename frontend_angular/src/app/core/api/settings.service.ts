@@ -121,7 +121,7 @@ export class SettingsService implements OnDestroy {
           max_cart_quantity: 10,
           maintenance_mode: false,
           maintenance_message: '',
-          newsletter_popup_delay: 5,
+          newsletter_popup_delay: 300,
           newsletter_popup_enabled: true
         });
       }

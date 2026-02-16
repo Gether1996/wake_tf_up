@@ -127,10 +127,10 @@ class MainSettings(models.Model):
     
     # Newsletter Popup Settings
     newsletter_popup_delay = models.PositiveIntegerField(
-        default=5,
+        default=300,
         null=True,
         blank=True,
-        help_text="Minutes before showing newsletter popup (default: 5)"
+        help_text="Seconds before showing newsletter popup (default: 300)"
     )
     newsletter_popup_enabled = models.BooleanField(
         default=True,

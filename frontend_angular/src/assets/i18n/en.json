@@ -50,7 +50,7 @@
     "email_placeholder": "Enter your email",
     "email_required": "Email is required",
     "email_invalid": "Please enter a valid email",
-    "subscribe_button": "Get Discount!",
+    "subscribe_button": "SUBSCRIBE",
     "subscribing": "Subscribing...",
     "no_thanks": "No, thanks",
     "subscribed_success": "Great! You'll receive your discount code via email in 5 minutes.",
@@ -792,5 +792,23 @@
     "error_empty_review": "Please write your review",
     "error_name_required": "Please enter your name or select anonymous",
     "error_submit_failed": "Failed to submit review. Please try again."
+  },
+  "cookies": {
+    "title": "We Use Cookies",
+    "description": "We use cookies to enhance your browsing experience and analyze our traffic.",
+    "learn_more": "Learn more",
+    "accept_all": "Accept All",
+    "reject": "Reject All",
+    "settings": "Settings",
+    "settings_title": "Cookie Settings",
+    "settings_description": "Choose which cookies you want to accept. You can change your preferences at any time.",
+    "essential_title": "Essential Cookies",
+    "essential_description": "These cookies are necessary for the website to function and cannot be disabled.",
+    "analytics_title": "Analytics Cookies",
+    "analytics_description": "These cookies help us understand how visitors interact with our website.",
+    "marketing_title": "Marketing Cookies",
+    "marketing_description": "These cookies are used to track visitors across websites to display relevant advertisements.",
+    "always_active": "Always Active",
+    "save_preferences": "Save Preferences"
   }
 }

@@ -105,7 +105,7 @@ import { SettingsService } from '../../core/api/settings.service';
         <!-- Section 10: Cookies -->
         <section>
           <h2 class="text-2xl font-bold mt-8 mb-4">{{ 'privacy.section10.title' | transloco }}</h2>
-          <p>{{ 'privacy.section10.content' | transloco }}</p>
+          <div [innerHTML]="'privacy.section10.content' | transloco"></div>
         </section>
 
         <!-- Section 11: Changes -->

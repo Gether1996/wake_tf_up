@@ -268,57 +268,53 @@ Odhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscrib
 
 @admin.register(NewsletterPopupStat)
 class NewsletterPopupStatAdmin(admin.ModelAdmin):
-    list_display = ('user_display', 'email', 'action_badge', 'created_at', 'ip_address')
-    list_filter = ('action', 'created_at')
-    search_fields = ('email', 'session_id', 'ip_address', 'user__email', 'user__first_name', 'user__last_name')
-    readonly_fields = ('user', 'session_id', 'email', 'action', 'ip_address', 'user_agent', 'created_at')
-    date_hierarchy = 'created_at'
-    list_per_page = 100
+    """Admin for newsletter popup statistics - READ ONLY view"""
+    
+    fieldsets = (
+        ('📊 Newsletter Popup Štatistiky', {
+            'fields': ('shown_count', 'subscribed_count', 'dismissed_count', 'last_updated'),
+            'description': '⚠️ Tieto štatistiky sú iba na zobrazenie. Hodnoty sa aktualizujú automaticky z frontend interakcií.'
+        }),
+        ('📈 Vypočítané hodnoty', {
+            'fields': ('total_interactions_display', 'conversion_rate_display'),
+            'description': 'Automaticky vypočítané metriky na základe vyššie uvedených počtov'
+        }),
+    )
+    
+    readonly_fields = ('shown_count', 'subscribed_count', 'dismissed_count', 'last_updated', 
+                      'total_interactions_display', 'conversion_rate_display')
     
     def has_add_permission(self, request):
-        return False
+        """Only one instance allowed"""
+        return not NewsletterPopupStat.objects.exists()
     
     def has_change_permission(self, request, obj=None):
+        """Read-only view - no changes allowed"""
         return False
     
-    def user_display(self, obj):
-        if obj.user:
-            return obj.user.email
-        session_preview = obj.session_id[:8] if obj.session_id else 'N/A'
-        return format_html('<span style="color: gray;">Anonymous ({})</span>', session_preview)
-    user_display.short_description = 'User'
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion"""
+        return False
     
-    def action_badge(self, obj):
-        if obj.action == 'subscribed':
-            return format_html('<span style="color: green; font-weight: bold;">✓ Subscribed</span>')
-        return format_html('<span style="color: orange;">✕ Dismissed</span>')
-    action_badge.short_description = 'Action'
-    action_badge.admin_order_field = 'action'
+    def total_interactions_display(self, obj):
+        """Display total interactions (subscribed + dismissed)"""
+        return obj.total_interactions
+    total_interactions_display.short_description = 'Celkový počet interakcií (Subscribe + Dismiss)'
     
-    # Custom admin method to get statistics
-    def changelist_view(self, request, extra_context=None):
-        from django.db.models import Count, Q
-        extra_context = extra_context or {}
-        
-        stats = NewsletterPopupStat.objects.aggregate(
-            total=Count('id'),
-            subscribed=Count('id', filter=Q(action='subscribed')),
-            dismissed=Count('id', filter=Q(action='dismissed')),
+    def conversion_rate_display(self, obj):
+        """Display conversion rate as percentage"""
+        return format_html(
+            '<strong style="color: {};">{:.2f}%</strong>',
+            'green' if obj.conversion_rate >= 10 else 'orange' if obj.conversion_rate >= 5 else 'red',
+            obj.conversion_rate
         )
-        
-        if stats['total'] > 0:
-            conversion_rate = (stats['subscribed'] / stats['total']) * 100
-        else:
-            conversion_rate = 0
-        
-        extra_context['popup_stats'] = {
-            'total': stats['total'],
-            'subscribed': stats['subscribed'],
-            'dismissed': stats['dismissed'],
-            'conversion_rate': f"{conversion_rate:.1f}%"
-        }
-        
-        return super().changelist_view(request, extra_context)
+    conversion_rate_display.short_description = 'Konverzný pomer (Subscribe / Interakcie)'
+    
+    def changelist_view(self, request, extra_context=None):
+        """Redirect to single instance edit page"""
+        stats = NewsletterPopupStat.load()
+        from django.shortcuts import redirect
+        return redirect('admin:newsletter_newsletterpopupstat_change', stats.pk)
 
 
 class SingletonModelAdmin(admin.ModelAdmin):

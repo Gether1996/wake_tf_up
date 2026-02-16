@@ -50,7 +50,7 @@
     "email_placeholder": "Zadajte váš email",
     "email_required": "Email je povinný",
     "email_invalid": "Zadajte platný email",
-    "subscribe_button": "Chcem zľavu!",
+    "subscribe_button": "ODOBERAŤ",
     "subscribing": "Prihlasuje sa...",
     "no_thanks": "Nie, ďakujem",
     "subscribed_success": "Skvelé! Zľavový kód dostanete emailom o 5 minút.",
@@ -790,5 +790,23 @@
     "error_empty_review": "Prosím napíšte svoju recenziu",
     "error_name_required": "Prosím zadajte svoje meno alebo vyberte anonymné",
     "error_submit_failed": "Nepodarilo sa odoslať recenziu. Skúste prosím znova."
+  },
+  "cookies": {
+    "title": "Používame Cookies",
+    "description": "Používame cookies pre zlepšenie vášho zážitku z prehliadania a analýzu návštevnosti.",
+    "learn_more": "Zistiť viac",
+    "accept_all": "Prijať všetko",
+    "reject": "Odmietnuť všetko",
+    "settings": "Nastavenia",
+    "settings_title": "Nastavenia Cookies",
+    "settings_description": "Vyberte si, ktoré cookies chcete prijať. Svoje preferencie môžete kedykoľvek zmeniť.",
+    "essential_title": "Nevyhnutné Cookies",
+    "essential_description": "Tieto cookies sú potrebné pre fungovanie webovej stránky a nemožno ich vypnúť.",
+    "analytics_title": "Analytické Cookies",
+    "analytics_description": "Tieto cookies nám pomáhajú pochopiť, ako návštevníci interagujú s našou webovou stránkou.",
+    "marketing_title": "Marketingové Cookies",
+    "marketing_description": "Tieto cookies sa používajú na sledovanie návštevníkov naprieč webovými stránkami s cieľom zobrazovať relevantné reklamy.",
+    "always_active": "Vždy aktívne",
+    "save_preferences": "Uložiť preferencie"
   }
 }

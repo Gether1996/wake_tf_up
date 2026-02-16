@@ -15,7 +15,7 @@ from rest_framework.views import APIView
 from settings.models import MainSettings
 from core.email_utils import get_email_language, send_localized_email
 from .models import Subscriber, NewsletterPopupStat, NewsletterTemplate, DiscountCodeTemplate, NewsletterImage
-from .serializers import SubscriberSerializer, NewsletterPopupStatSerializer, NewsletterImageSerializer
+from .serializers import SubscriberSerializer, NewsletterImageSerializer
 
 
 logger = logging.getLogger(__name__)
@@ -160,43 +160,41 @@ class UnsubscribeView(APIView):
             )
 
 
-class NewsletterPopupTrackView(generics.CreateAPIView):
+class NewsletterPopupTrackView(generics.GenericAPIView):
     """
-    Track newsletter popup interactions (subscribed or dismissed).
+    Track newsletter popup interactions for statistics only.
     POST /api/v1/newsletter/popup-track/
     
     Body: {
-        "session_id": "unique-session-id",
-        "action": "subscribed" or "dismissed",
-        "email": "user@example.com" (optional, only for subscribed),
-        "ip_address": "192.168.1.1" (optional),
-        "user_agent": "Mozilla/5.0..." (optional)
+        "action": "shown" or "subscribed" or "dismissed"
     }
+    
+    Increments the appropriate counter in the singleton stats record.
     """
-    serializer_class = NewsletterPopupStatSerializer
     permission_classes = [permissions.AllowAny]
     
-    def create(self, request, *args, **kwargs):
-        # Get client IP
-        ip_address = self.get_client_ip(request)
+    def post(self, request, *args, **kwargs):
+        action = request.data.get('action', '')
         
-        # Get user agent
-        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        # Get or create the singleton stats instance
+        stats = NewsletterPopupStat.load()
         
-        data = request.data.copy()
-        data['ip_address'] = ip_address
-        data['user_agent'] = user_agent
-        
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        
-        # Add user if authenticated
-        user = request.user if request.user.is_authenticated else None
-        serializer.save(user=user)
+        # Increment the appropriate counter
+        if action == 'shown':
+            stats.increment_shown()
+        elif action == 'subscribed':
+            stats.increment_subscribed()
+        elif action == 'dismissed':
+            stats.increment_dismissed()
+        else:
+            return Response(
+                {'error': 'Invalid action. Must be "shown", "subscribed", or "dismissed"'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         return Response(
             {'message': 'Popup interaction tracked successfully'},
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_200_OK
         )
     
     def get_client_ip(self, request):

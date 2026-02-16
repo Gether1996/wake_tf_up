@@ -154,73 +154,57 @@ class Subscriber(models.Model):
         return self.email
 
 
-class NewsletterPopupStat(models.Model):
-    """Track newsletter popup interactions for analytics"""
-    ACTION_CHOICES = [
-        ('subscribed', 'Subscribed'),
-        ('dismissed', 'Dismissed/Closed'),
-    ]
+class NewsletterPopupStat(SingletonModel):
+    """Track newsletter popup interaction counts - simple statistics only"""
     
-    user = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        help_text="User who interacted (if logged in)"
+    shown_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of times popup was shown"
     )
-    session_id = models.CharField(
-        max_length=100,
-        null=True,
-        blank=True,
-        default='',
-        help_text="Session identifier for anonymous users"
+    subscribed_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of times users subscribed via popup"
     )
-    email = models.EmailField(
-        null=True,
-        blank=True,
-        help_text="Email if user subscribed"
+    dismissed_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of times popup was dismissed/closed"
     )
-    action = models.CharField(
-        max_length=20,
-        choices=ACTION_CHOICES,
-        null=True,
-        blank=True,
-        default='dismissed',
-        help_text="What the user did with the popup"
-    )
-    ip_address = models.GenericIPAddressField(
-        null=True,
-        blank=True,
-        help_text="User's IP address"
-    )
-    user_agent = models.TextField(
-        blank=True,
-        default='',
-        help_text="Browser user agent string"
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
     
     class Meta:
         db_table = 'newsletter_popup_stats'
-        verbose_name = 'Newsletter Štatistika'
-        verbose_name_plural = 'Newsletter Štatistiky'
-        ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['-created_at']),
-            models.Index(fields=['action']),
-            models.Index(fields=['session_id']),
-        ]
+        verbose_name = 'Newsletter Popup Štatistika'
+        verbose_name_plural = 'Newsletter Popup Štatistiky'
+    
+    def increment_shown(self):
+        """Increment shown counter"""
+        self.shown_count += 1
+        self.save(update_fields=['shown_count', 'last_updated'])
+    
+    def increment_subscribed(self):
+        """Increment subscribed counter"""
+        self.subscribed_count += 1
+        self.save(update_fields=['subscribed_count', 'last_updated'])
+    
+    def increment_dismissed(self):
+        """Increment dismissed counter"""
+        self.dismissed_count += 1
+        self.save(update_fields=['dismissed_count', 'last_updated'])
+    
+    @property
+    def total_interactions(self):
+        """Total number of interactions (subscribed + dismissed, excluding shown)"""
+        return self.subscribed_count + self.dismissed_count
+    
+    @property
+    def conversion_rate(self):
+        """Conversion rate: subscribed / total_interactions * 100"""
+        if self.total_interactions > 0:
+            return (self.subscribed_count / self.total_interactions) * 100
+        return 0
     
     def __str__(self):
-        if self.email:
-            user_info = self.email
-        elif self.user:
-            user_info = str(self.user)
-        elif self.session_id:
-            user_info = f"Session: {self.session_id[:8]}"
-        else:
-            user_info = "Anonymous"
-        return f"{user_info} - {self.action} at {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+        return f"Newsletter Popup Stats (Updated: {self.last_updated.strftime('%Y-%m-%d %H:%M')})"
 
 
 class NewsletterImage(models.Model):

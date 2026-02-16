@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, signal, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
@@ -13,7 +13,7 @@ import { NotificationService } from '../../core/services/notification.service';
   templateUrl: './newsletter-popup.component.html',
   styleUrls: ['./newsletter-popup.component.css']
 })
-export class NewsletterPopupComponent implements OnInit {
+export class NewsletterPopupComponent {
   private fb = inject(FormBuilder);
   private newsletterService = inject(NewsletterService);
   private settingsService = inject(SettingsService);
@@ -27,26 +27,18 @@ export class NewsletterPopupComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]]
   });
   
-  private sessionId: string = '';
   private readonly STORAGE_KEY = 'newsletterPopupShown';
-  private readonly SESSION_ID_KEY = 'newsletterSessionId';
+  private popupTimerStarted = false;
 
-  ngOnInit() {
-    this.sessionId = this.getOrCreateSessionId();
-    this.checkAndShowPopup();
-  }
-
-  private getOrCreateSessionId(): string {
-    let sessionId = localStorage.getItem(this.SESSION_ID_KEY);
-    if (!sessionId) {
-      sessionId = this.generateSessionId();
-      localStorage.setItem(this.SESSION_ID_KEY, sessionId);
-    }
-    return sessionId;
-  }
-
-  private generateSessionId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  constructor() {
+    // Watch for settings changes and show popup when ready
+    effect(() => {
+      const settings = this.settingsService.settings();
+      if (settings && !this.popupTimerStarted) {
+        this.checkAndShowPopup();
+        this.popupTimerStarted = true;
+      }
+    });
   }
 
   private checkAndShowPopup() {
@@ -74,14 +66,19 @@ export class NewsletterPopupComponent implements OnInit {
       return;
     }
 
-    // Get delay from settings (in minutes)
-    const delayMinutes = settings.newsletter_popup_delay || 5;
-    const delayMs = delayMinutes * 60 * 1000;
+    // Get delay from settings (in seconds)
+    const delaySeconds = settings.newsletter_popup_delay || 300;
+    const delayMs = delaySeconds * 1000;
 
     // Show popup after delay
     setTimeout(() => {
       this.isVisible.set(true);
       sessionStorage.setItem(this.STORAGE_KEY, 'true');
+      
+      // Track that popup was shown
+      this.newsletterService.trackPopupInteraction({
+        action: 'shown'
+      }).subscribe();
     }, delayMs);
   }
 
@@ -96,17 +93,15 @@ export class NewsletterPopupComponent implements OnInit {
     // Subscribe to newsletter
     this.newsletterService.subscribe(email).subscribe({
       next: (response) => {
-        // Track subscription
+        // Track subscription (email not needed, already in subscriber table)
         this.newsletterService.trackPopupInteraction({
-          session_id: this.sessionId,
-          action: 'subscribed',
-          email: email
+          action: 'subscribed'
         }).subscribe();
 
         this.notificationService.success(
           this.translocoService.translate('newsletter_popup.subscribed_success')
         );
-        this.close(true);
+        this.close(true, false); // permanent=true, trackDismiss=false
       },
       error: (error) => {
         this.notificationService.error(
@@ -117,26 +112,19 @@ export class NewsletterPopupComponent implements OnInit {
     });
   }
 
-  close(permanent: boolean = false) {
-    // Track dismissal
-    if (!permanent) {
+  close(permanent: boolean = false, trackDismiss: boolean = true) {
+    this.isVisible.set(false);
+    
+    // Track dismissal only if user didn't subscribe
+    if (trackDismiss) {
       this.newsletterService.trackPopupInteraction({
-        session_id: this.sessionId,
         action: 'dismissed'
       }).subscribe();
     }
-
-    this.isVisible.set(false);
     
     // Store permanently dismissed status
     if (permanent) {
       localStorage.setItem(this.STORAGE_KEY, 'true');
-    }
-  }
-
-  onBackdropClick(event: MouseEvent) {
-    if ((event.target as HTMLElement).classList.contains('popup-backdrop')) {
-      this.close(false);
     }
   }
 }
