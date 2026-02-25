@@ -527,10 +527,10 @@ import { environment } from '../../../environments/environment';
                       </p>
                     }
                     <p class="font-medium mt-2">
-                      @if (cartService.subtotal() >= freeShippingThreshold()) {
+                      @if (finalShippingCost() === 0) {
                         <span class="text-success">{{ 'cart.free' | transloco }}</span>
                       } @else {
-                        {{ selectedShippingCost() | currency: 'EUR' }}
+                        {{ finalShippingCost() | currency: 'EUR' }}
                       }
                     </p>
                   </div>
