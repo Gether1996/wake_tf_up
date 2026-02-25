@@ -28,13 +28,18 @@ class DiscountCode(models.Model):
     discount_percentage = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        help_text="Discount percentage (e.g., 10.00 for 10%)"
+        default=0.00,
+        help_text="Discount percentage (e.g., 10.00 for 10%, can be 0 for free shipping only)"
     )
     minimum_order_value = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=0.00,
         help_text="Minimum order value to apply discount (e.g., 50.00 for 50€)"
+    )
+    is_free_shipping = models.BooleanField(
+        default=False,
+        help_text="If True, this code provides free shipping regardless of order value"
     )
     max_uses = models.IntegerField(
         null=True,
@@ -154,7 +159,7 @@ class LoyaltyService:
             user: User instance (optional, for user-specific code validation)
             
         Returns:
-            dict: {'valid': bool, 'discount_amount': Decimal, 'message': str}
+            dict: {'valid': bool, 'discount_amount': Decimal, 'message': str, 'is_free_shipping': bool}
         """
         from datetime import datetime
         from decimal import Decimal
@@ -162,29 +167,29 @@ class LoyaltyService:
         try:
             code = DiscountCode.objects.get(code=code_str)
         except DiscountCode.DoesNotExist:
-            return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'Invalid code', 'error_code': 'INVALID_CODE'}
+            return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'Invalid code', 'error_code': 'INVALID_CODE', 'is_free_shipping': False}
         
         # Check if code is user-specific and belongs to the requesting user
         if code.user is not None:
             if user is None:
-                return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'This code requires authentication', 'error_code': 'AUTH_REQUIRED'}
+                return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'This code requires authentication', 'error_code': 'AUTH_REQUIRED', 'is_free_shipping': False}
             if code.user.id != user.id:
-                return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'This code is not valid for your account', 'error_code': 'WRONG_USER'}
+                return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'This code is not valid for your account', 'error_code': 'WRONG_USER', 'is_free_shipping': False}
         
         # Check if code is active
         if not code.is_active:
-            return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'Code is inactive', 'error_code': 'INACTIVE'}
+            return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'Code is inactive', 'error_code': 'INACTIVE', 'is_free_shipping': False}
         
         # Check if already used
         if code.is_used:
-            return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'Code already used', 'error_code': 'ALREADY_USED'}
+            return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'Code already used', 'error_code': 'ALREADY_USED', 'is_free_shipping': False}
         
         # Check validity period
         now = datetime.now()
         if now < code.valid_from:
-            return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'Code not yet valid', 'error_code': 'NOT_YET_VALID'}
+            return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'Code not yet valid', 'error_code': 'NOT_YET_VALID', 'is_free_shipping': False}
         if code.valid_until is not None and now > code.valid_until:
-            return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'Code expired', 'error_code': 'EXPIRED'}
+            return {'valid': False, 'discount_amount': Decimal('0'), 'message': 'Code expired', 'error_code': 'EXPIRED', 'is_free_shipping': False}
         
         # Check minimum order value
         if order_total < code.minimum_order_value:
@@ -193,7 +198,8 @@ class LoyaltyService:
                 'discount_amount': Decimal('0'), 
                 'message': f'Minimum order value is {code.minimum_order_value}€',
                 'error_code': 'MIN_ORDER_VALUE',
-                'min_value': float(code.minimum_order_value)
+                'min_value': float(code.minimum_order_value),
+                'is_free_shipping': False
             }
         
         # Check max uses (only if max_uses is set)
@@ -202,19 +208,29 @@ class LoyaltyService:
                 'valid': False,
                 'discount_amount': Decimal('0'),
                 'message': 'Code usage limit reached',
-                'error_code': 'MAX_USES_REACHED'
+                'error_code': 'MAX_USES_REACHED',
+                'is_free_shipping': False
             }
         
         # Calculate discount
         discount_amount = (order_total * code.discount_percentage) / Decimal('100')
         
+        # Build message
+        if code.is_free_shipping and code.discount_percentage > 0:
+            message = f'{code.discount_percentage}% discount + free shipping applied'
+        elif code.is_free_shipping:
+            message = 'Free shipping applied'
+        else:
+            message = f'{code.discount_percentage}% discount applied'
+        
         return {
             'valid': True,
             'discount_amount': discount_amount,
-            'message': f'{code.discount_percentage}% discount applied',
+            'message': message,
             'error_code': None,
             'code_id': code.id,
-            'discount_percentage': float(code.discount_percentage)
+            'discount_percentage': float(code.discount_percentage),
+            'is_free_shipping': code.is_free_shipping
         }
     
     @staticmethod

@@ -9,8 +9,8 @@ class DiscountCodeSerializer(serializers.ModelSerializer):
         model = DiscountCode
         fields = [
             'id', 'code', 'discount_percentage', 'minimum_order_value',
-            'code_type', 'is_active', 'is_used', 'usage_count', 'max_uses',
-            'valid_from', 'valid_until', 'created_at'
+            'is_free_shipping', 'code_type', 'is_active', 'is_used', 
+            'usage_count', 'max_uses', 'valid_from', 'valid_until', 'created_at'
         ]
         read_only_fields = ['id', 'created_at', 'usage_count']
 
@@ -27,6 +27,7 @@ class ApplyDiscountCodeResponseSerializer(serializers.Serializer):
     discount_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
     message = serializers.CharField()
     code_id = serializers.IntegerField(required=False)
+    is_free_shipping = serializers.BooleanField(required=False)
     final_total = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
 
 

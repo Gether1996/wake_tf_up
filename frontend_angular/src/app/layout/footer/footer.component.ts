@@ -159,9 +159,6 @@ import { FormsModule } from '@angular/forms';
               <a [routerLink]="cookiesLink()" (click)="scrollToTop()" class="text-sm text-muted-foreground hover:text-accent transition-colors font-mono">
                 {{ 'footer.cookies' | transloco }}
               </a>
-              <a [routerLink]="downloadsLink()" (click)="scrollToTop()" class="text-sm text-muted-foreground hover:text-accent transition-colors font-mono">
-                {{ 'footer.downloads_short' | transloco }}
-              </a>
             </div>
 
             <!-- Social Links -->
@@ -228,7 +225,6 @@ export class FooterComponent {
   privacyLink = computed(() => `/${this.currentLang()}/privacy`);
   termsLink = computed(() => `/${this.currentLang()}/terms`);
   cookiesLink = computed(() => `/${this.currentLang()}/cookies`);
-  downloadsLink = computed(() => `/${this.currentLang()}/downloads`);
 
   // Social media links from settings
   instagramUrl = computed(() => this.settingsService.settings()?.instagram_url || '');

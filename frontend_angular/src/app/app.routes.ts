@@ -113,7 +113,8 @@ const appRoutes: Routes = [
   },
   {
     path: 'downloads',
-    loadComponent: () => import('./pages/downloads/downloads.component').then(m => m.DownloadsComponent)
+    redirectTo: 'terms',
+    pathMatch: 'full'
   },
   {
     path: 'newsletter/unsubscribe',

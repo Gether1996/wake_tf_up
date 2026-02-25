@@ -7,8 +7,8 @@ from .models import DiscountCode, QRCode
 
 @admin.register(DiscountCode)
 class DiscountCodeAdmin(admin.ModelAdmin):
-    list_display = ('code', 'user_email', 'discount_percentage', 'minimum_order_value', 'code_type', 'usage_info', 'status_badge', 'valid_until')
-    list_filter = ('code_type', 'is_active', 'is_used', 'created_at', 'user')
+    list_display = ('code', 'user_email', 'discount_percentage', 'free_shipping_badge', 'minimum_order_value', 'code_type', 'usage_info', 'status_badge', 'valid_until')
+    list_filter = ('code_type', 'is_active', 'is_used', 'is_free_shipping', 'created_at', 'user')
     search_fields = ('code', 'user__email', 'user__first_name', 'user__last_name')
     readonly_fields = ('created_at', 'used_at', 'usage_count')
     date_hierarchy = 'created_at'
@@ -22,8 +22,11 @@ class DiscountCodeAdmin(admin.ModelAdmin):
         ('Code Info', {
             'fields': ('code', 'user', 'discount_percentage', 'code_type')
         }),
+        ('Benefits', {
+            'fields': ('is_free_shipping', 'minimum_order_value')
+        }),
         ('Usage Limits', {
-            'fields': ('minimum_order_value', 'max_uses', 'usage_count')
+            'fields': ('max_uses', 'usage_count')
         }),
         ('Status', {
             'fields': ('is_active', 'is_used')
@@ -47,6 +50,12 @@ class DiscountCodeAdmin(admin.ModelAdmin):
             return f"{obj.usage_count}/∞"
         return f"{obj.usage_count}/{obj.max_uses}"
     usage_info.short_description = 'Usage'
+    
+    def free_shipping_badge(self, obj):
+        if obj.is_free_shipping:
+            return format_html('<span style="color: blue; font-weight: bold;">🚚 Free</span>')
+        return ''
+    free_shipping_badge.short_description = 'Shipping'
     
     def status_badge(self, obj):
         if obj.is_used or (obj.max_uses is not None and obj.usage_count >= obj.max_uses):

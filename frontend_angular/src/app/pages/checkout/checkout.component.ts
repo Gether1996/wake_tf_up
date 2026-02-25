@@ -666,17 +666,22 @@ import { environment } from '../../../environments/environment';
                 <div class="flex justify-between">
                   <span class="text-muted-foreground">{{ 'cart.shipping' | transloco }}</span>
                   <span class="font-medium">
-                    @if (cartService.subtotal() >= freeShippingThreshold()) {
+                    @if (finalShippingCost() === 0) {
                       <span class="text-success">{{ 'cart.free' | transloco }}</span>
                     } @else {
-                      {{ selectedShippingCost() | currency: 'EUR' }}
+                      {{ finalShippingCost() | currency: 'EUR' }}
                     }
                   </span>
                 </div>
 
                 @if (discountValidation()?.valid) {
                   <div class="flex justify-between text-success">
-                    <span>{{ 'checkout.discount' | transloco }} ({{ discountCode() }})</span>
+                    <span>
+                      {{ 'checkout.discount' | transloco }} ({{ discountCode() }})
+                      @if (discountValidation()?.is_free_shipping && discountValidation()!.discount_percentage! > 0) {
+                        <span class="text-xs ml-1">+ {{ 'checkout.free_shipping' | transloco }}</span>
+                      }
+                    </span>
                     <span>-{{ discountValidation()!.discount_amount | currency: 'EUR' }}</span>
                   </div>
                 }
@@ -879,6 +884,24 @@ export class CheckoutComponent implements OnInit {
     }
   });
 
+  // Final shipping cost after applying free shipping from threshold or discount code
+  finalShippingCost = computed(() => {
+    const subtotal = this.cartService.subtotal();
+    const baseShippingCost = this.selectedShippingCost();
+    
+    // Free shipping from threshold
+    if (subtotal >= this.freeShippingThreshold()) {
+      return 0;
+    }
+    
+    // Free shipping from discount code
+    if (this.discountValidation()?.valid && this.discountValidation()?.is_free_shipping) {
+      return 0;
+    }
+    
+    return baseShippingCost;
+  });
+
   checkoutForm: FormGroup;
 
   constructor() {
@@ -1012,9 +1035,9 @@ export class CheckoutComponent implements OnInit {
 
   total(): number {
     const subtotal = this.cartService.subtotal();
-    const shipping = subtotal >= this.freeShippingThreshold() ? 0 : this.selectedShippingCost();
+    const shipping = this.finalShippingCost();
     const discount = this.discountValidation()?.valid ? this.discountValidation()!.discount_amount : 0;
-    // Discount applies only to subtotal, then add shipping
+    // Discount applies only to subtotal, then add shipping (which may be 0 from free shipping code)
     return Math.max(0, (subtotal - discount) + shipping);
   }
 

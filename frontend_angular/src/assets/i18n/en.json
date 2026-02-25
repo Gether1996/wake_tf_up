@@ -240,6 +240,7 @@
     "payment": "Payment Method",
     "total": "Total",
     "discount": "Discount",
+    "free_shipping": "Free Shipping",
     "discount_code": "Discount Code",
     "code": "Code",
     "apply_code": "Apply",

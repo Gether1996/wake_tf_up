@@ -34,7 +34,8 @@ import { LanguageService } from '../../../core/services/language.service';
             <a 
               [routerLink]="loginLink()" 
               [queryParams]="{verified: 'true'}"
-              class="inline-block px-6 py-3 border border-foreground hover:bg-foreground hover:text-background transition-colors font-mono uppercase text-sm">
+              style="font-family: 'Shlop', sans-serif;"
+              class="inline-block px-6 py-3 border border-foreground hover:bg-foreground hover:text-background transition-colors uppercase text-sm">
               {{ 'auth.verify.go_to_login' | transloco }}
             </a>
           } @else if (error()) {
@@ -48,7 +49,8 @@ import { LanguageService } from '../../../core/services/language.service';
             <p class="text-muted-foreground mb-8">{{ error() }}</p>
             <a 
               [routerLink]="registerLink()" 
-              class="inline-block px-6 py-3 border border-foreground hover:bg-foreground hover:text-background transition-colors font-mono uppercase text-sm">
+              style="font-family: 'Shlop', sans-serif;"
+              class="inline-block px-6 py-3 border border-foreground hover:bg-foreground hover:text-background transition-colors uppercase text-sm">
               {{ 'auth.verify.go_to_register' | transloco }}
             </a>
           }

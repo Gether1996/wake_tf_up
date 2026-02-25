@@ -63,6 +63,7 @@ import { ButtonComponent } from '../../../shared/button/button.component';
               <button
                 type="button"
                 (click)="showForgotPassword.set(!showForgotPassword())"
+                style="font-family: 'Shlop', sans-serif;"
                 class="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 {{ 'auth.login.forgot_password' | transloco }}
               </button>
@@ -151,7 +152,7 @@ import { ButtonComponent } from '../../../shared/button/button.component';
           <!-- Register Link -->
           <div class="mt-6 text-center text-sm">
             <span class="text-muted-foreground">{{ 'auth.login.noAccount' | transloco }}</span>
-            <a [routerLink]="registerLink()" class="ml-2 text-foreground hover:text-accent font-medium">
+            <a [routerLink]="registerLink()" style="font-family: 'Shlop', sans-serif;" class="ml-2 text-foreground hover:text-accent font-medium">
               {{ 'auth.login.register' | transloco }}
             </a>
           </div>

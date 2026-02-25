@@ -8,6 +8,7 @@ export interface DiscountCode {
   code: string;
   discount_percentage: number;
   minimum_order_value: number;
+  is_free_shipping: boolean;
   code_type: string;
   is_active: boolean;
   is_used: boolean;
@@ -29,6 +30,7 @@ export interface ValidateDiscountCodeResponse {
   message: string;
   error_code?: string | null;
   code_id?: number;
+  is_free_shipping?: boolean;
   final_total?: number;
   min_value?: number;
   discount_percentage?: number;

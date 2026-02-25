@@ -21,20 +21,20 @@ import { LanguageService } from '../../core/services/language.service';
           </a>
 
           <!-- Desktop Navigation -->
-          <nav class="hidden md:flex items-center gap-6">
-            <a [routerLink]="shopLink()" routerLinkActive="text-accent" class="font-mono text-sm uppercase tracking-wide hover:text-accent transition-colors">
+          <nav class="hidden md:flex items-center gap-6" style="font-family: 'Shlop', sans-serif;">
+            <a [routerLink]="shopLink()" routerLinkActive="text-accent" class="text-base uppercase tracking-wide hover:text-accent transition-colors">
               {{ 'nav.shop' | transloco }}
             </a>
-            <a [routerLink]="blogLink()" routerLinkActive="text-accent" class="font-mono text-sm uppercase tracking-wide hover:text-accent transition-colors">
+            <a [routerLink]="blogLink()" routerLinkActive="text-accent" class="text-base uppercase tracking-wide hover:text-accent transition-colors">
               {{ 'nav.blog' | transloco }}
             </a>
-            <a [routerLink]="eventsLink()" routerLinkActive="text-accent" class="font-mono text-sm uppercase tracking-wide hover:text-accent transition-colors">
+            <a [routerLink]="eventsLink()" routerLinkActive="text-accent" class="text-base uppercase tracking-wide hover:text-accent transition-colors">
               {{ 'nav.events' | transloco }}
             </a>
-            <a [routerLink]="aboutLink()" routerLinkActive="text-accent" class="font-mono text-sm uppercase tracking-wide hover:text-accent transition-colors">
+            <a [routerLink]="aboutLink()" routerLinkActive="text-accent" class="text-base uppercase tracking-wide hover:text-accent transition-colors">
               {{ 'nav.about' | transloco }}
             </a>
-            <a [routerLink]="contactLink()" routerLinkActive="text-accent" class="font-mono text-sm uppercase tracking-wide hover:text-accent transition-colors">
+            <a [routerLink]="contactLink()" routerLinkActive="text-accent" class="text-base uppercase tracking-wide hover:text-accent transition-colors">
               {{ 'nav.contact' | transloco }}
             </a>
           </nav>
@@ -106,7 +106,7 @@ import { LanguageService } from '../../core/services/language.service';
                 }
               </div>
             } @else {
-              <a [routerLink]="loginLink()" class="hidden md:block font-mono text-sm hover:text-accent transition-colors">
+              <a [routerLink]="loginLink()" class="hidden md:block text-base hover:text-accent transition-colors" style="font-family: 'Shlop', sans-serif;">
                 {{ 'auth._login' | transloco }}
               </a>
             }
@@ -123,19 +123,19 @@ import { LanguageService } from '../../core/services/language.service';
         <!-- Mobile Navigation -->
         @if (mobileMenuOpen) {
           <nav class="md:hidden border-t border-border py-4 space-y-2" style="font-family: 'Shlop', sans-serif;">
-            <a [routerLink]="shopLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+            <a [routerLink]="shopLink()" (click)="closeMobileMenu()" class="block text-base uppercase tracking-wide hover:text-accent transition-colors py-2">
               {{ 'nav.shop' | transloco }}
             </a>
-            <a [routerLink]="blogLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+            <a [routerLink]="blogLink()" (click)="closeMobileMenu()" class="block text-base uppercase tracking-wide hover:text-accent transition-colors py-2">
               {{ 'nav.blog' | transloco }}
             </a>
-            <a [routerLink]="eventsLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+            <a [routerLink]="eventsLink()" (click)="closeMobileMenu()" class="block text-base uppercase tracking-wide hover:text-accent transition-colors py-2">
               {{ 'nav.events' | transloco }}
             </a>
-            <a [routerLink]="aboutLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+            <a [routerLink]="aboutLink()" (click)="closeMobileMenu()" class="block text-base uppercase tracking-wide hover:text-accent transition-colors py-2">
               {{ 'nav.about' | transloco }}
             </a>
-            <a [routerLink]="contactLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+            <a [routerLink]="contactLink()" (click)="closeMobileMenu()" class="block text-base uppercase tracking-wide hover:text-accent transition-colors py-2">
               {{ 'nav.contact' | transloco }}
             </a>
 
@@ -143,19 +143,19 @@ import { LanguageService } from '../../core/services/language.service';
 
             <!-- User Profile Links - Mobile -->
             @if (isAuthenticated()) {
-              <a [routerLink]="profileLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+              <a [routerLink]="profileLink()" (click)="closeMobileMenu()" class="block text-base uppercase tracking-wide hover:text-accent transition-colors py-2">
                 {{ 'nav.profile' | transloco }}
               </a>
-              <a [routerLink]="ordersLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+              <a [routerLink]="ordersLink()" (click)="closeMobileMenu()" class="block text-base uppercase tracking-wide hover:text-accent transition-colors py-2">
                 {{ 'nav.orders' | transloco }}
               </a>
               @if (isSuperuser()) {
-                <a href="/admin/" target="_blank" class="block text-sm uppercase tracking-wide text-accent hover:opacity-80 transition-colors py-2">
+                <a href="/admin/" target="_blank" class="block text-base uppercase tracking-wide text-accent hover:opacity-80 transition-colors py-2">
                   Admin Panel
                 </a>
               }
             } @else {
-              <a [routerLink]="loginLink()" (click)="closeMobileMenu()" class="block text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+              <a [routerLink]="loginLink()" (click)="closeMobileMenu()" class="block text-base uppercase tracking-wide hover:text-accent transition-colors py-2">
                 {{ 'auth._login' | transloco }}
               </a>
             }
@@ -165,14 +165,14 @@ import { LanguageService } from '../../core/services/language.service';
             <!-- Language Toggle - Mobile -->
             <button 
               (click)="toggleLanguage()" 
-              class="w-full text-left text-sm uppercase tracking-wide hover:text-accent transition-colors py-2">
+              class="w-full text-left text-base uppercase tracking-wide hover:text-accent transition-colors py-2">
               {{ 'nav.change_language' | transloco }}: {{ currentLang() === 'en' ? 'SK' : 'EN' }}
             </button>
 
             <!-- Theme Toggle - Mobile -->
             <button 
               (click)="toggleTheme()" 
-              class="w-full text-left text-sm uppercase tracking-wide hover:text-accent transition-colors py-2 flex items-center gap-2">
+              class="w-full text-left text-base uppercase tracking-wide hover:text-accent transition-colors py-2 flex items-center gap-2">
               <span>{{ 'nav.toggle_theme' | transloco }}</span>
               @if (isDark()) {
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,7 +189,7 @@ import { LanguageService } from '../../core/services/language.service';
             @if (isAuthenticated()) {
               <button 
                 (click)="logout(); closeMobileMenu()" 
-                class="w-full text-left text-sm uppercase tracking-wide text-danger hover:opacity-80 transition-colors py-2">
+                class="w-full text-left text-base uppercase tracking-wide text-danger hover:opacity-80 transition-colors py-2">
                 {{ 'auth._logout' | transloco }}
               </button>
             }

@@ -240,6 +240,7 @@
     "payment": "Spôsob platby",
     "total": "Celkom",
     "discount": "Zľava",
+    "free_shipping": "Doprava zadarmo",
     "discount_code": "Zľavový kód",
     "code": "Kód",
     "apply_code": "Použiť",

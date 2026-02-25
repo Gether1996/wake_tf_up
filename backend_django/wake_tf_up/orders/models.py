@@ -206,13 +206,19 @@ class Order(models.Model):
         if result['valid']:
             self.discount_code = discount_code_obj
             self.discount_amount = result['discount_amount']
-            # Recalculate total with shipping cost
+            
+            # Apply free shipping if code provides it
+            # Update the actual shipping_cost field in database to 0
+            if result.get('is_free_shipping', False):
+                self.shipping_cost = Decimal('0')
+            
+            # Recalculate total with discount and updated shipping cost
             self.total_amount = subtotal - self.discount_amount + self.shipping_cost
             self.save()
             
             # Increment usage count
             discount_code_obj.usage_count += 1
-            if discount_code_obj.usage_count >= discount_code_obj.max_uses:
+            if discount_code_obj.max_uses is not None and discount_code_obj.usage_count >= discount_code_obj.max_uses:
                 discount_code_obj.is_used = True
             discount_code_obj.save()
             
@@ -222,12 +228,15 @@ class Order(models.Model):
     def remove_discount(self):
         """
         Remove applied discount code from this order.
-        Recalculates total without discount (but with shipping).
+        Recalculates total without discount and restores original shipping cost.
         """
         if self.discount_code:
+            # Store whether the code provided free shipping
+            had_free_shipping = self.discount_code.is_free_shipping
+            
             # Decrement usage count
             self.discount_code.usage_count = max(0, self.discount_code.usage_count - 1)
-            if self.discount_code.usage_count < self.discount_code.max_uses:
+            if self.discount_code.max_uses is not None and self.discount_code.usage_count < self.discount_code.max_uses:
                 self.discount_code.is_used = False
             self.discount_code.save()
             
@@ -235,8 +244,31 @@ class Order(models.Model):
             self.discount_code = None
             self.discount_amount = 0
             
-            # Recalculate total with shipping
+            # Recalculate subtotal
             subtotal = sum(item.price_at_purchase * item.quantity for item in self.items.all())
+            
+            # If the code provided free shipping, recalculate shipping cost from settings
+            if had_free_shipping:
+                from settings.models import MainSettings
+                from decimal import Decimal
+                
+                settings = MainSettings.objects.first()
+                if settings:
+                    shipping_cost_map = {
+                        'pickup': settings.pickup_cost,
+                        'dpd_courier': settings.dpd_courier_cost,
+                        'packeta_box': settings.packeta_box_cost,
+                        'packeta_courier': settings.packeta_courier_cost,
+                    }
+                    shipping_cost = shipping_cost_map.get(self.shipping_method, Decimal('0.00'))
+                    
+                    # Apply free shipping threshold
+                    if subtotal >= settings.free_shipping_threshold:
+                        shipping_cost = Decimal('0.00')
+                    
+                    self.shipping_cost = shipping_cost
+            
+            # Recalculate total
             self.total_amount = subtotal + self.shipping_cost
             self.save()
             

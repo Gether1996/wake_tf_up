@@ -32,7 +32,8 @@ import { ButtonComponent } from '../../../shared/button/button.component';
             <p class="text-sm text-muted-foreground mb-8">{{ 'auth.register.success_instructions' | transloco }}</p>
             <a 
               [routerLink]="loginLink()" 
-              class="inline-block px-6 py-3 border border-foreground hover:bg-foreground hover:text-background transition-colors font-mono uppercase text-sm">
+              style="font-family: 'Shlop', sans-serif;"
+              class="inline-block px-6 py-3 border border-foreground hover:bg-foreground hover:text-background transition-colors uppercase text-sm">
               {{ 'auth.register.go_to_login' | transloco }}
             </a>
           </div>
@@ -258,7 +259,7 @@ import { ButtonComponent } from '../../../shared/button/button.component';
           <!-- Login Link -->
           <div class="mt-6 text-center text-sm">
             <span class="text-muted-foreground">{{ 'auth.register.hasAccount' | transloco }}</span>
-            <a [routerLink]="loginLink()" class="ml-2 text-foreground hover:text-accent font-medium">
+            <a [routerLink]="loginLink()" style="font-family: 'Shlop', sans-serif;" class="ml-2 text-foreground hover:text-accent font-medium">
               {{ 'auth.register.login' | transloco }}
             </a>
           </div>

@@ -49,7 +49,8 @@ import { AuthService } from '../../../core/auth/auth.service';
               </p>
               <div class="mt-6">
                 <a [routerLink]="['/' + currentLang() + '/auth/login']"
-                   class="w-full flex justify-center py-3 px-4 border border-black text-sm font-bold uppercase tracking-widest text-black bg-white hover:bg-black hover:text-white transition-colors">
+                   style="font-family: 'Shlop', sans-serif;"
+                   class="w-full flex justify-center py-3 px-4 border border-black text-sm uppercase tracking-widest text-black bg-white hover:bg-black hover:text-white transition-colors">
                   {{ 'auth.reset_password.go_to_login' | transloco }}
                 </a>
               </div>
@@ -70,10 +71,12 @@ import { AuthService } from '../../../core/auth/auth.service';
               </p>
               <div class="mt-6 space-y-3">
                 <a [routerLink]="['/' + currentLang() + '/auth/login']"
-                   class="w-full flex justify-center py-3 px-4 border border-black text-sm font-bold uppercase tracking-widest text-black bg-white hover:bg-black hover:text-white transition-colors">
+                   style="font-family: 'Shlop', sans-serif;"
+                   class="w-full flex justify-center py-3 px-4 border border-black text-sm uppercase tracking-widest text-black bg-white hover:bg-black hover:text-white transition-colors">
                   {{ 'auth.reset_password.go_to_login' | transloco }}
                 </a>
                 <a [routerLink]="['/' + currentLang() + '/auth/register']"
+                   style="font-family: 'Shlop', sans-serif;"
                    class="w-full flex justify-center py-3 px-4 text-sm font-medium text-gray-600 hover:text-gray-900">
                   {{ 'auth.reset_password.go_to_register' | transloco }}
                 </a>
@@ -152,7 +155,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 
             <!-- Back to Login -->
             <div class="mt-6 text-center">
-              <a [routerLink]="['/' + currentLang() + '/auth/login']" class="text-sm font-medium text-gray-600 hover:text-gray-900">
+              <a [routerLink]="['/' + currentLang() + '/auth/login']" style="font-family: 'Shlop', sans-serif;" class="text-sm font-medium text-gray-600 hover:text-gray-900">
                 {{ 'auth.reset_password.back_to_login' | transloco }}
               </a>
             </div>
