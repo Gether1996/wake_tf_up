@@ -1,5 +1,5 @@
-import { Component, inject, signal, effect } from '@angular/core';
-import { RouterOutlet, Router } from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from './layout/header/header.component';
 import { FooterComponent } from './layout/footer/footer.component';
@@ -8,6 +8,7 @@ import { ConfirmDialogComponent } from './shared/confirm-dialog/confirm-dialog.c
 import { CookieConsentComponent } from './shared/cookie-consent/cookie-consent.component';
 import { NewsletterPopupComponent } from './shared/newsletter-popup/newsletter-popup.component';
 import { ThemeService } from './core/services/theme.service';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -19,13 +20,21 @@ export class App {
   private themeService = inject(ThemeService);
   private router = inject(Router);
   
-  showLayout = signal(true);
+  showLayout = signal(false); // Default to false for Coming Soon
   
   constructor() {
     // Initialize theme
     this.themeService.initTheme();
     
-    // Show layout on all routes
-    this.showLayout.set(true);
+    // Hide layout - everything goes to Coming Soon now
+    this.showLayout.set(false);
+    
+    // Monitor route changes (in case we need it later)
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      // Always hide layout since all routes go to Coming Soon
+      this.showLayout.set(false);
+    });
   }
 }
