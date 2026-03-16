@@ -20,21 +20,17 @@ export class App {
   private themeService = inject(ThemeService);
   private router = inject(Router);
   
-  showLayout = signal(false); // Default to false for Coming Soon
+  showLayout = signal(true);
   
   constructor() {
     // Initialize theme
     this.themeService.initTheme();
     
-    // Hide layout - everything goes to Coming Soon now
-    this.showLayout.set(false);
-    
-    // Monitor route changes (in case we need it later)
+    // Monitor route changes - hide layout only on coming-soon page
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
-    ).subscribe(() => {
-      // Always hide layout since all routes go to Coming Soon
-      this.showLayout.set(false);
+    ).subscribe((event: NavigationEnd) => {
+      this.showLayout.set(!event.urlAfterRedirects.includes('coming-soon'));
     });
   }
 }

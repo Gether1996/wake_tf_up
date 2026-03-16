@@ -2,7 +2,7 @@
 
 ## Rýchly postup
 
-Aby ste obnovili normálnu funkcionalitu aplikácie, musíte upraviť **1 súbor**:
+Aby ste obnovili normálnu funkcionalitu aplikácie, musíte upraviť **2 súbory**:
 
 ### 📄 `frontend_angular/src/app/app.routes.ts`
 
@@ -38,9 +38,48 @@ export const routes: Routes = [
 ];
 ```
 
+### 📄 `frontend_angular/src/app/app.ts`
+
+6. V súbore `app.ts` obnovte pôvodný `showLayout` signal:
+
+**ZMEŇTE** tento kód:
+```typescript
+showLayout = signal(false); // Default to false for Coming Soon
+
+constructor() {
+  this.themeService.initTheme();
+
+  // Hide layout - everything goes to Coming Soon now
+  this.showLayout.set(false);
+
+  this.router.events.pipe(
+    filter(event => event instanceof NavigationEnd)
+  ).subscribe(() => {
+    // Always hide layout since all routes go to Coming Soon
+    this.showLayout.set(false);
+  });
+}
+```
+
+**NA** tento kód:
+```typescript
+showLayout = signal(true);
+
+constructor() {
+  this.themeService.initTheme();
+
+  // Monitor route changes - hide layout only on coming-soon page
+  this.router.events.pipe(
+    filter(event => event instanceof NavigationEnd)
+  ).subscribe((event: NavigationEnd) => {
+    this.showLayout.set(!event.urlAfterRedirects.includes('coming-soon'));
+  });
+}
+```
+
 ## ℹ️ Poznámky
 
-- **Header a Footer** sa automaticky obnovia po obnovení pôvodného routingu
+- **Header a Footer** sa obnovia po oprave `app.ts` aj `app.routes.ts`
 - Coming Soon komponent zostane v projekte (môžete ho neskôr vymazať zo zložky `frontend_angular/src/app/pages/coming-soon/`)
 - Zmeny v `app.ts` pre skrytie layoutu sa automaticky prispôsobia novému routingu
 

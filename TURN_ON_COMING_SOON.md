@@ -2,7 +2,7 @@
 
 ## Rýchly postup
 
-Aby ste aktivovali Coming Soon stránku a zablokovali prístup k aplikácii, musíte upraviť **1 súbor**:
+Aby ste aktivovali Coming Soon stránku a zablokovali prístup k aplikácii, musíte upraviť **2 súbory**:
 
 ### 📄 `frontend_angular/src/app/app.routes.ts`
 
@@ -38,9 +38,47 @@ export const routes: Routes = [
 ];
 ```
 
+### 📄 `frontend_angular/src/app/app.ts`
+
+6. V súbore `app.ts` zmeňte `showLayout` signal aby bol vždy `false`:
+
+**ZMEŇTE** tento kód:
+```typescript
+showLayout = signal(true);
+
+constructor() {
+  this.themeService.initTheme();
+
+  this.router.events.pipe(
+    filter(event => event instanceof NavigationEnd)
+  ).subscribe((event: NavigationEnd) => {
+    this.showLayout.set(!event.urlAfterRedirects.includes('coming-soon'));
+  });
+}
+```
+
+**NA** tento kód:
+```typescript
+showLayout = signal(false); // Default to false for Coming Soon
+
+constructor() {
+  this.themeService.initTheme();
+
+  // Hide layout - everything goes to Coming Soon now
+  this.showLayout.set(false);
+
+  this.router.events.pipe(
+    filter(event => event instanceof NavigationEnd)
+  ).subscribe(() => {
+    // Always hide layout since all routes go to Coming Soon
+    this.showLayout.set(false);
+  });
+}
+```
+
 ## ℹ️ Poznámky
 
-- **Header a Footer** sa automaticky skryjú po aktivácii Coming Soon režimu
+- **Header a Footer** sa skryjú po oprave oboch súborov (`app.ts` aj `app.routes.ts`)
 - Coming Soon stránka zablokuje všetky routes v aplikácii
 - Všetci návštevníci uvidia len Coming Soon obrazovku bez ohľadu na URL
 

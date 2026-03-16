@@ -2,16 +2,6 @@ import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/auth/auth.guard';
 import { languageGuard } from './core/guards/language.guard';
 
-// TEMPORARY: Coming Soon page - all routes blocked
-const appRoutes: Routes = [
-  {
-    path: '**',
-    loadComponent: () => import('./pages/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent)
-  }
-];
-
-// ORIGINAL ROUTES - Commented out for Coming Soon mode
-/*
 const appRoutes: Routes = [
   {
     path: '',
@@ -139,18 +129,7 @@ const appRoutes: Routes = [
     loadComponent: () => import('./pages/review-detail/review-detail').then(m => m.ReviewDetail)
   }
 ];
-*/
 
-export const routes: Routes = [
-  // TEMPORARY: All routes redirect to Coming Soon
-  {
-    path: '**',
-    loadComponent: () => import('./pages/coming-soon/coming-soon.component').then(m => m.ComingSoonComponent)
-  }
-];
-
-// ORIGINAL ROUTING - Commented out for Coming Soon mode
-/*
 export const routes: Routes = [
   // Legacy unsubscribe links without language prefix
   {
@@ -174,4 +153,3 @@ export const routes: Routes = [
     redirectTo: '/en'
   }
 ];
-*/
