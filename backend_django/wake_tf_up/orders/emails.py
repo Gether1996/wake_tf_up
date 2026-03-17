@@ -144,3 +144,49 @@ def send_payment_confirmation_email(order, language=None):
     except Exception as exc:
         logger.error("Failed to send payment confirmation email for order %s: %s", order.id, exc, exc_info=True)
 
+
+def send_ticket_purchased_email(order, purchased_tickets, language=None):
+    """Send 'Purchased Ticket' email with unique access codes after successful payment.
+
+    Args:
+        order: Order instance
+        purchased_tickets: List of PurchasedTicket instances belonging to this order
+        language: Language code ('sk' or 'en'). Defaults to order.language.
+    """
+    if order is None or not order.user or not order.user.email:
+        logger.warning("Cannot send ticket purchased email without user email")
+        return
+
+    if not purchased_tickets:
+        return
+
+    logger.info("Sending ticket purchased email for order %s to %s", order.id, order.user.email)
+
+    base_url = getattr(settings, "FRONTEND_URL", "http://www.wake-tf-up.eu").rstrip("/")
+    settings_obj = MainSettings.objects.first()
+    support_email = settings_obj.contact_email if settings_obj else settings.DEFAULT_CONTACT_EMAIL
+    sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", support_email)
+    language_code = language if language else (order.language if hasattr(order, 'language') else get_email_language(user=order.user))
+
+    context = {
+        "order": order,
+        "user": order.user,
+        "purchased_tickets": purchased_tickets,
+        "frontend_base_url": base_url,
+        "support_email": support_email,
+    }
+
+    try:
+        send_localized_email(
+            subject_sk=f"Zakúpená vstupenka – Objednávka #{order.id}",
+            subject_en=f"Purchased Ticket – Order #{order.id}",
+            template_path="orders/ticket_purchased_email.html",
+            context=context,
+            recipient_list=[order.user.email],
+            language=language_code,
+            from_email=sender_email,
+        )
+        logger.info("Sent ticket purchased email for order %s", order.id)
+    except Exception as exc:
+        logger.error("Failed to send ticket purchased email for order %s: %s", order.id, exc, exc_info=True)
+

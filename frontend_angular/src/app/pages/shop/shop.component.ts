@@ -5,14 +5,17 @@ import { FormsModule } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
 import { retry, timer } from 'rxjs';
 import { CatalogService, ProductFilters } from '../../core/api/catalog.service';
-import { Product, Category, Color } from '../../core/api/api.models';
+import { Product, Category, Color, Ticket } from '../../core/api/api.models';
 import { ProductCardComponent } from '../../shared/product-card/product-card.component';
+import { TicketCardComponent } from '../../shared/ticket-card/ticket-card.component';
 import { ButtonComponent } from '../../shared/button/button.component';
 import { LanguageService } from '../../core/services/language.service';
 
+const TICKET_CATEGORY_SLUG = 'vstupenka';
+
 @Component({
   selector: 'app-shop',
-  imports: [CommonModule, RouterModule, FormsModule, TranslocoModule, ProductCardComponent, ButtonComponent],
+  imports: [CommonModule, RouterModule, FormsModule, TranslocoModule, ProductCardComponent, TicketCardComponent, ButtonComponent],
   template: `
     <div class="container mx-auto px-4 py-8">
       <div class="flex flex-col lg:flex-row gap-8">
@@ -33,10 +36,12 @@ import { LanguageService } from '../../core/services/language.service';
               @for (category of categories(); track category.id) {
                 <option [value]="category.slug">{{ category.name }}</option>
               }
+              <option [value]="TICKET_SLUG">{{ 'shop.filters.tickets' | transloco }}</option>
             </select>
           </div>
 
           <!-- Color Filter -->
+          @if (!isTicketMode()) {
           <div>
             <h3 class="font-mono text-sm uppercase tracking-wide mb-3">{{ 'shop.filters.color' | transloco }}</h3>
             <div class="grid grid-cols-6 gap-2">
@@ -97,6 +102,7 @@ import { LanguageService } from '../../core/services/language.service';
               </label>
             </div>
           </div>
+          } <!-- end @if !isTicketMode -->
 
           <!-- Clear Filters -->
           @if (hasActiveFilters()) {
@@ -174,11 +180,22 @@ import { LanguageService } from '../../core/services/language.service';
             </div>
           }
 
-          <!-- Products Grid -->
-          @else if (products().length > 0) {
+          <!-- Products / Tickets Grid -->
+          @else if (isTicketMode() ? tickets().length > 0 : (products().length > 0 || (showTicketsInGrid() && tickets().length > 0))) {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              @for (product of products(); track product.id) {
-                <app-product-card [product]="product" />
+              @if (isTicketMode()) {
+                @for (ticket of tickets(); track ticket.id) {
+                  <app-ticket-card [ticket]="ticket" />
+                }
+              } @else {
+                @if (showTicketsInGrid()) {
+                  @for (ticket of tickets(); track ticket.id) {
+                    <app-ticket-card [ticket]="ticket" />
+                  }
+                }
+                @for (product of products(); track product.id) {
+                  <app-product-card [product]="product" />
+                }
               }
             </div>
 
@@ -237,16 +254,22 @@ export class ShopComponent implements OnInit {
   private router = inject(Router);
   private languageService = inject(LanguageService);
 
+  readonly TICKET_SLUG = TICKET_CATEGORY_SLUG;
+
   products = signal<Product[]>([]);
+  tickets = signal<Ticket[]>([]);
   categories = signal<Category[]>([]);
   colors = signal<Color[]>([]);
   loading = signal(false);
   error = signal('');
-  
+
   totalProducts = signal(0);
   currentPage = signal(1);
   pageSize = 12;
   totalPages = computed(() => Math.ceil(this.totalProducts() / this.pageSize));
+
+  isTicketMode = computed(() => this.selectedCategory() === TICKET_CATEGORY_SLUG);
+  showTicketsInGrid = computed(() => !this.isTicketMode() && this.selectedCategory() === '');
   
   // Filters
   selectedCategory = signal<string>('');
@@ -270,13 +293,16 @@ export class ShopComponent implements OnInit {
     const filters: Array<{ type: string; label: string; value: any }> = [];
     
     if (this.selectedCategory() && this.selectedCategory() !== '') {
-      const category = this.categories().find(c => c.slug === this.selectedCategory());
-      // Show category filter even if not loaded yet
-      filters.push({ 
-        type: 'category', 
-        label: category ? category.name : this.selectedCategory(), 
-        value: this.selectedCategory() 
-      });
+      if (this.selectedCategory() === TICKET_CATEGORY_SLUG) {
+        filters.push({ type: 'category', label: 'shop.filters.tickets', value: this.selectedCategory() });
+      } else {
+        const category = this.categories().find(c => c.slug === this.selectedCategory());
+        filters.push({ 
+          type: 'category', 
+          label: category ? category.name : this.selectedCategory(), 
+          value: this.selectedCategory() 
+        });
+      }
     }
     
     if (this.selectedColor() !== null) {
@@ -337,6 +363,7 @@ export class ShopComponent implements OnInit {
       this.loadCategories();
       this.loadColors();
       this.loadProducts();
+      this.loadTickets();
     });
   }
 
@@ -360,6 +387,13 @@ export class ShopComponent implements OnInit {
   }
 
   loadProducts() {
+    if (this.isTicketMode()) {
+      this.loadTickets();
+      return;
+    }
+
+    this.loadTickets();
+
     this.loading.set(true);
     this.error.set('');
 
@@ -397,6 +431,23 @@ export class ShopComponent implements OnInit {
           this.loading.set(false);
         }
       });
+  }
+
+  loadTickets() {
+    this.loading.set(true);
+    this.error.set('');
+    this.catalogService.getTickets().subscribe({
+      next: (tickets) => {
+        this.tickets.set(tickets);
+        this.totalProducts.set(tickets.length);
+        this.loading.set(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      error: (err) => {
+        this.error.set('Failed to load tickets');
+        this.loading.set(false);
+      }
+    });
   }
 
   loadCategories() {

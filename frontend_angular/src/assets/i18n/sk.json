@@ -127,7 +127,8 @@
       "all": "Všetko",
       "clear": "Vymazať Filtre",
       "active": "Aktívne filtre",
-      "clearAll": "Vymazať všetko"
+      "clearAll": "Vymazať všetko",
+      "tickets": "Vstupenky"
     },
     "sort": {
       "newest": "Najnovšie",
@@ -212,6 +213,9 @@
     "packeta_box_desc": "Doručenie na Packeta výdajné miesto",
     "packeta_courier": "Packeta Kuriér",
     "packeta_courier_desc": "Doručenie domov kuriérom Packeta",
+    "digital_delivery": "Digitálne doručenie",
+    "digital_delivery_desc": "Vstupenky dostanete e-mailom okamžite po potvrdení platby",
+    "digital_delivery_contact_note": "Vstupenky Vám budú zaslané e-mailom. Nie je potrebná doručovacia adresa.",
     "dpd_courier": "DPD Kuriér",
     "dpd_courier_desc": "Rýchle doručenie na vašu adresu kuriérom DPD",
     "select_pickup_point": "Vybrať výdajné miesto",
@@ -436,6 +440,24 @@
     "copied": "Skopírované!",
     "date_time": "Dátum a čas",
     "location": "Miesto"
+  },
+  "ticket": {
+    "title": "Vstupenky",
+    "subtitle": "Kúpte si vstupenky na naše eventy",
+    "no_tickets": "Zatiaľ žiadne vstupenky",
+    "no_tickets_description": "Vráťte sa čoskoro pre nadchádzajúce eventy",
+    "details": "Zobraziť detail",
+    "back": "Späť na vstupenky",
+    "published": "Publikované",
+    "draft": "Návrh",
+    "type_label": "Vstupenka",
+    "event_date": "Dátum eventu",
+    "event_location": "Miesto konania",
+    "available": "dostupných",
+    "sold_out": "Vypredané",
+    "add_to_cart": "Kúpiť vstupenku",
+    "added_to_cart": "Vstupenka pridaná do košíka",
+    "not_found": "Vstupenka sa nenašla"
   },
   "about": {
     "title": "Inak vyrobené",

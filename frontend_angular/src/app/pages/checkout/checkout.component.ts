@@ -95,7 +95,7 @@ import { environment } from '../../../environments/environment';
 
       <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center">{{ 'checkout.title' | transloco }}</h1>
 
-      @if (cartService.items().length === 0) {
+      @if (cartService.items().length === 0 && cartService.ticketCartItems().length === 0) {
         <div class="text-center py-16">
           <p class="text-muted-foreground mb-4">{{ 'cart.empty' | transloco }}</p>
           <app-button [routerLink]="shopLink()">
@@ -168,6 +168,7 @@ import { environment } from '../../../environments/environment';
                   }
 
                   <!-- DPD Courier -->
+                  @if (!isTicketOnlyCart()) {
                   <label class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
                          [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'dpd_courier'"
                          [class.bg-muted]="checkoutForm.get('shippingMethod')?.value === 'dpd_courier'">
@@ -200,6 +201,21 @@ import { environment } from '../../../environments/environment';
                       } @else {
                         {{ packetaCourierCost() | currency: 'EUR' }}
                       }
+                    </div>
+                  </label>
+                  } <!-- end @if !isTicketOnlyCart -->
+
+                  <!-- Digital Delivery (tickets only) -->
+                  <label class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
+                         [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'digital_delivery'"
+                         [class.bg-muted]="checkoutForm.get('shippingMethod')?.value === 'digital_delivery'">
+                    <input type="radio" formControlName="shippingMethod" value="digital_delivery" class="mr-3">
+                    <div class="flex-1">
+                      <div class="font-mono uppercase font-bold">{{ 'checkout.digital_delivery' | transloco }}</div>
+                      <div class="text-sm text-muted-foreground">{{ 'checkout.digital_delivery_desc' | transloco }}</div>
+                    </div>
+                    <div class="font-mono font-bold">
+                      <span class="text-success">{{ 'checkout.free' | transloco }}</span>
                     </div>
                   </label>
                 </div>
@@ -254,6 +270,7 @@ import { environment } from '../../../environments/environment';
                       [class.border-danger]="checkoutForm.get('phone')?.invalid && checkoutForm.get('phone')?.touched">
                   </div>
 
+                  @if (!isDigitalDelivery()) {
                   <!-- Address -->
                   <div class="md:col-span-2">
                     <label class="block text-sm font-mono uppercase mb-2" for="address">
@@ -310,6 +327,12 @@ import { environment } from '../../../environments/environment';
                       <option value="DE">Germany</option>
                     </select>
                   </div>
+                  } <!-- end @if !isDigitalDelivery -->
+                  @else {
+                  <div class="md:col-span-2 bg-muted/50 border border-border p-4">
+                    <p class="text-sm text-muted-foreground">🎟️ {{ 'checkout.digital_delivery_contact_note' | transloco }}</p>
+                  </div>
+                  }
                 </div>
               </div>
 
@@ -512,6 +535,31 @@ import { environment } from '../../../environments/environment';
                         </div>
                       </div>
                     }
+                    @for (item of cartService.ticketCartItems(); track item.ticket.id) {
+                      <div class="flex gap-4 pb-4 border-b border-border last:border-0">
+                        <div class="w-20 h-24 bg-muted overflow-hidden flex-shrink-0 flex items-center justify-center">
+                          @if (item.ticket.primary_image) {
+                            <img [src]="item.ticket.primary_image" [alt]="item.ticket.name" class="w-full h-full object-cover">
+                          } @else {
+                            <svg class="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                            </svg>
+                          }
+                        </div>
+                        <div class="flex-1">
+                          <p class="font-medium">{{ item.ticket.name }}</p>
+                          <p class="text-xs text-muted-foreground font-mono uppercase mb-1">{{ 'ticket.type_label' | transloco }}</p>
+                          <p class="text-sm text-muted-foreground">{{ 'checkout.qty' | transloco }}: {{ item.quantity }}</p>
+                          <p class="font-medium mt-2 flex items-baseline gap-2">
+                            <span>{{ (+(item.ticket.discount_price ?? item.ticket.price)) * item.quantity | currency: 'EUR' }}</span>
+                            <span class="text-xs font-normal text-muted-foreground">({{ 'product.price_with_vat' | transloco }})</span>
+                          </p>
+                          <p class="text-xs text-muted-foreground mt-1">
+                            {{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(+(item.ticket.discount_price ?? item.ticket.price)) * item.quantity | currency: 'EUR' }}
+                          </p>
+                        </div>
+                      </div>
+                    }
                   </div>
                 </div>
 
@@ -650,6 +698,33 @@ import { environment } from '../../../environments/environment';
                       </p>
                       <p class="text-xs text-muted-foreground mt-1">
                         {{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(+(item.product.discount_price || item.product.price)) | currency: 'EUR' }}
+                      </p>
+                    </div>
+                  </a>
+                }
+                @for (item of cartService.ticketCartItems(); track item.ticket.id) {
+                  <a
+                    [routerLink]="'/' + currentLang() + '/tickets/' + item.ticket.slug"
+                    class="flex gap-3 hover:opacity-70 transition-opacity cursor-pointer group">
+                    <div class="w-16 h-20 bg-muted overflow-hidden flex-shrink-0 flex items-center justify-center">
+                      @if (item.ticket.primary_image) {
+                        <img [src]="item.ticket.primary_image" [alt]="item.ticket.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                      } @else {
+                        <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                        </svg>
+                      }
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium truncate group-hover:text-accent transition-colors">{{ item.ticket.name }}</p>
+                      <p class="text-xs text-muted-foreground font-mono uppercase">🎟️ {{ 'ticket.type_label' | transloco }}</p>
+                      <p class="text-xs text-muted-foreground">{{ 'checkout.qty' | transloco }}: {{ item.quantity }}</p>
+                      <p class="text-sm font-medium mt-1 flex items-baseline gap-2">
+                        <span>{{ (item.ticket.discount_price || item.ticket.price) | currency: 'EUR' }}</span>
+                        <span class="text-xs font-normal text-muted-foreground">({{ 'product.price_with_vat' | transloco }})</span>
+                      </p>
+                      <p class="text-xs text-muted-foreground mt-1">
+                        {{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(+(item.ticket.discount_price || item.ticket.price)) | currency: 'EUR' }}
                       </p>
                     </div>
                   </a>
@@ -837,9 +912,14 @@ export class CheckoutComponent implements OnInit {
   error = signal('');
   currentStep = signal(1); // 1=shipping, 2=contact, 3=payment, 4=review
   isCompanyPurchase = signal(false);
-  selectedShippingMethod = signal<'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier'>('dpd_courier');
+  selectedShippingMethod = signal<'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier' | 'digital_delivery'>('dpd_courier');
   selectedPacketaPoint = signal<{ id: string; name: string; address: string } | null>(null);
   selectedPaymentMethod = signal<'gopay' | 'cash_on_pickup'>('gopay');
+
+  isTicketOnlyCart = computed(() =>
+    this.cartService.ticketCartItems().length > 0 && this.cartService.items().length === 0
+  );
+  isDigitalDelivery = computed(() => this.selectedShippingMethod() === 'digital_delivery');
   
   // Discount code
   discountCode = signal('');
@@ -880,6 +960,7 @@ export class CheckoutComponent implements OnInit {
       case 'dpd_courier': return this.dpdCourierCost();
       case 'packeta_box': return this.packetaBoxCost();
       case 'packeta_courier': return this.packetaCourierCost();
+      case 'digital_delivery': return 0;
       default: return 0;
     }
   });
@@ -930,10 +1011,19 @@ export class CheckoutComponent implements OnInit {
         this.prefillContactFromUser();
       }
     });
+
+    // Auto-select digital delivery for ticket-only carts
+    effect(() => {
+      if (this.isTicketOnlyCart() && this.checkoutForm.get('shippingMethod')?.value !== 'digital_delivery') {
+        this.checkoutForm.patchValue({ shippingMethod: 'digital_delivery' }, { emitEvent: false });
+        this.selectedShippingMethod.set('digital_delivery');
+        this._updateAddressValidators('digital_delivery');
+      }
+    });
   }
 
   ngOnInit() {
-    if (this.cartService.items().length === 0) {
+    if (this.cartService.items().length === 0 && this.cartService.ticketCartItems().length === 0) {
       const lang = this.languageService.currentLang();
       this.router.navigate([lang, 'cart']);
       return;
@@ -947,7 +1037,7 @@ export class CheckoutComponent implements OnInit {
       if (!value) {
         return;
       }
-      const method = value as 'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier';
+      const method = value as 'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier' | 'digital_delivery';
       this.selectedShippingMethod.set(method);
       // Reset Packeta point when changing shipping method
       if (method !== 'packeta_box') {
@@ -957,6 +1047,8 @@ export class CheckoutComponent implements OnInit {
       if (method !== 'pickup') {
         this.selectedPaymentMethod.set('gopay');
       }
+      // Toggle address validators for digital delivery
+      this._updateAddressValidators(method);
       this.saveCheckoutData();
     });
 
@@ -964,6 +1056,21 @@ export class CheckoutComponent implements OnInit {
     this.checkoutForm.valueChanges.subscribe(() => {
       this.saveCheckoutData();
     });
+  }
+
+  private _updateAddressValidators(method: string) {
+    const addressFields = ['address', 'city', 'postalCode', 'country'];
+    if (method === 'digital_delivery') {
+      addressFields.forEach(f => {
+        this.checkoutForm.get(f)?.clearValidators();
+        this.checkoutForm.get(f)?.updateValueAndValidity();
+      });
+    } else {
+      addressFields.forEach(f => {
+        this.checkoutForm.get(f)?.setValidators([Validators.required]);
+        this.checkoutForm.get(f)?.updateValueAndValidity();
+      });
+    }
   }
 
   toggleCompanyPurchase() {
@@ -1069,7 +1176,12 @@ export class CheckoutComponent implements OnInit {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (this.currentStep() === 2) {
       // Validate contact and address fields
-      const requiredFields = ['email', 'fullName', 'phone', 'address', 'city', 'postalCode', 'country'];
+      const requiredFields = ['email', 'fullName', 'phone'];
+
+      // Address fields only required for physical delivery
+      if (!this.isDigitalDelivery()) {
+        requiredFields.push('address', 'city', 'postalCode', 'country');
+      }
       
       // Add company fields if company purchase is enabled
       if (this.isCompanyPurchase()) {
@@ -1229,7 +1341,8 @@ export class CheckoutComponent implements OnInit {
       'pickup': this.currentLang() === 'sk' ? 'Osobný odber' : 'Personal Pickup',
       'dpd_courier': this.currentLang() === 'sk' ? 'DPD Kuriér' : 'DPD Courier',
       'packeta_box': this.currentLang() === 'sk' ? 'Packeta Z-Box' : 'Packeta Z-Box',
-      'packeta_courier': this.currentLang() === 'sk' ? 'Packeta Kuriér' : 'Packeta Courier'
+      'packeta_courier': this.currentLang() === 'sk' ? 'Packeta Kuriér' : 'Packeta Courier',
+      'digital_delivery': this.currentLang() === 'sk' ? 'Digitálne doručenie' : 'Digital Delivery'
     };
     return names[method] || method;
   }
@@ -1358,10 +1471,16 @@ export class CheckoutComponent implements OnInit {
         billing_dic: formValue.billingDic || '',
         billing_ic_dph: formValue.billingIcDph || ''
       }),
-      items: this.cartService.items().map(item => ({
-        product_id: item.product.id,
-        quantity: item.quantity
-      })),
+      items: [
+        ...this.cartService.items().map(item => ({
+          product_id: item.product.id,
+          quantity: item.quantity
+        })),
+        ...this.cartService.ticketCartItems().map(item => ({
+          ticket_id: item.ticket.id,
+          quantity: item.quantity
+        }))
+      ],
       ...(this.discountValidation()?.valid && this.discountCode() && {
         discount_code_str: this.discountCode()
       })

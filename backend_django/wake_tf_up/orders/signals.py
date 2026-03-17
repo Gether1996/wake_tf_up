@@ -7,6 +7,9 @@ from django.utils.html import strip_tags
 from django.utils import timezone
 from core.email_utils import get_email_language, send_localized_email
 from .models import Order
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(pre_save, sender=Order)
@@ -32,3 +35,41 @@ def send_review_request_email(sender, instance, created, **kwargs):
     The command 'send_review_requests' should be run periodically (e.g., daily cron job).
     """
     pass
+
+
+@receiver(post_save, sender=Order)
+def generate_ticket_codes_on_payment(sender, instance, created, **kwargs):
+    """Generate unique ticket codes and send ticket email when an order is paid."""
+    if created or instance.status != 'paid':
+        return
+
+    from .models import PurchasedTicket, OrderItem, generate_ticket_code
+
+    # Only generate once per order
+    if PurchasedTicket.objects.filter(order=instance).exists():
+        return
+
+    ticket_items = OrderItem.objects.filter(order=instance, ticket__isnull=False)
+    if not ticket_items.exists():
+        return
+
+    purchased_tickets = []
+    for item in ticket_items:
+        for _ in range(item.quantity):
+            code = generate_ticket_code()
+            pt = PurchasedTicket.objects.create(
+                order=instance,
+                ticket=item.ticket,
+                order_item=item,
+                code=code,
+            )
+            purchased_tickets.append(pt)
+
+    if purchased_tickets:
+        from .emails import send_ticket_purchased_email
+        try:
+            send_ticket_purchased_email(instance, purchased_tickets)
+        except Exception as exc:
+            logger.error(
+                "Failed to send ticket email for order #%s: %s", instance.id, exc, exc_info=True
+            )

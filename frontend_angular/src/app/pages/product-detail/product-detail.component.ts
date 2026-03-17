@@ -222,9 +222,9 @@ import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
                 <div class="flex items-center gap-3">
                   <div 
                     class="w-8 h-8 rounded-full border-2 border-border"
-                    [style.background-color]="product()!.color.hex_code">
+                    [style.background-color]="product()!.color?.hex_code">
                   </div>
-                  <span>{{ product()!.color.name }}</span>
+                  <span>{{ product()!.color?.name }}</span>
                 </div>
               </div>
             }

@@ -1,14 +1,15 @@
 from django.contrib import admin
 from django.contrib import messages
-from .models import Order, OrderItem
+from django.utils.html import format_html
+from .models import Order, OrderItem, PurchasedTicket
 from .packeta_service import PacketaService, PacketaAPIError
 
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ('price_at_purchase', 'is_pre_order', 'subtotal')
-    fields = ('product', 'quantity', 'price_at_purchase', 'is_pre_order', 'subtotal')
+    readonly_fields = ('product', 'ticket', 'price_at_purchase', 'is_pre_order', 'subtotal')
+    fields = ('product', 'ticket', 'quantity', 'price_at_purchase', 'is_pre_order', 'subtotal')
     can_delete = False
     
     def has_add_permission(self, request, obj=None):
@@ -214,3 +215,58 @@ class OrderAdmin(admin.ModelAdmin):
             )
     
     create_packeta_shipment.short_description = "Create Packeta shipment for selected orders"
+
+@admin.register(PurchasedTicket)
+class PurchasedTicketAdmin(admin.ModelAdmin):
+    list_display = ('code', 'ticket_name', 'order_link', 'user_email', 'is_used', 'used_at', 'created_at')
+    list_filter = ('is_used', 'ticket', 'created_at')
+    search_fields = ('code', 'order__id', 'order__user__email', 'ticket__name')
+    readonly_fields = ('code', 'order', 'order_item', 'ticket', 'created_at')
+    date_hierarchy = 'created_at'
+    list_per_page = 50
+    actions = ['mark_as_used', 'mark_as_unused']
+
+    fieldsets = (
+        ('Vstupenka', {
+            'fields': ('code', 'ticket', 'order', 'order_item')
+        }),
+        ('Stav', {
+            'fields': ('is_used', 'used_at', 'used_by_note')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def ticket_name(self, obj):
+        return obj.ticket.name
+    ticket_name.short_description = 'Vstupenka'
+    ticket_name.admin_order_field = 'ticket__name'
+
+    def order_link(self, obj):
+        from django.urls import reverse
+        url = reverse('admin:orders_order_change', args=[obj.order.id])
+        return format_html('<a href="#{id}">#{id}</a>', id=obj.order.id)
+    order_link.short_description = 'Objednávka'
+
+    def user_email(self, obj):
+        return obj.order.user.email
+    user_email.short_description = 'Email'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def mark_as_used(self, request, queryset):
+        from django.utils import timezone
+        queryset.update(is_used=True, used_at=timezone.now())
+        self.message_user(request, f'Označené ako použité: {queryset.count()}')
+    mark_as_used.short_description = 'Označiť ako použité'
+
+    def mark_as_unused(self, request, queryset):
+        queryset.update(is_used=False, used_at=None)
+        self.message_user(request, f'Označené ako nepoužité: {queryset.count()}')
+    mark_as_unused.short_description = 'Označiť ako nepoužité'

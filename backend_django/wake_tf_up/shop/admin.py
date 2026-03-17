@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Category, Color, Product, ProductImage, ProductVideo
+from .models import Category, Color, Product, ProductImage, ProductVideo, Ticket, TicketImage
 
 
 @admin.register(Category)
@@ -88,6 +88,8 @@ class ProductAdmin(admin.ModelAdmin):
     )
     
     def color_badge(self, obj):
+        if not obj.color:
+            return format_html('<span style="color: #999;">—</span>')
         return format_html(
             '<span style="display: inline-block; width: 20px; height: 20px; background-color: {}; border: 1px solid #ccc; vertical-align: middle; margin-right: 5px;"></span>{}',
             obj.color.hex_code,
@@ -158,3 +160,63 @@ class ProductAdmin(admin.ModelAdmin):
     def unmark_as_recycled(self, request, queryset):
         queryset.update(is_recycled=False)
     unmark_as_recycled.short_description = "Unmark as Recycled"
+
+
+class TicketImageInline(admin.TabularInline):
+    model = TicketImage
+    extra = 1
+    fields = ('image', 'order')
+
+
+@admin.register(Ticket)
+class TicketAdmin(admin.ModelAdmin):
+    list_display = (
+        'name', 'price_display', 'event_date', 'event_location',
+        'total_quantity', 'sold_quantity', 'is_published', 'created_at'
+    )
+    list_filter = ('is_published', 'event_date', 'created_at')
+    search_fields = ('name', 'slug', 'description', 'event_location')
+    prepopulated_fields = {'slug': ('name',)}
+    inlines = [TicketImageInline]
+    readonly_fields = ('sold_quantity', 'created_at', 'updated_at')
+    date_hierarchy = 'created_at'
+    list_per_page = 25
+    actions = ['publish_tickets', 'unpublish_tickets']
+
+    fieldsets = (
+        ('Základné informácie', {
+            'fields': ('name', 'en_name', 'description', 'en_description', 'slug')
+        }),
+        ('Cena', {
+            'fields': ('price', 'discount_price')
+        }),
+        ('Event', {
+            'fields': ('event_date', 'event_location', 'total_quantity', 'sold_quantity')
+        }),
+        ('Nastavenia', {
+            'fields': ('is_published',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def price_display(self, obj):
+        if obj.discount_price:
+            return format_html(
+                '<span style="text-decoration: line-through; color: #999;">€{}</span> '
+                '<strong style="color: #16a34a;">€{}</strong>',
+                obj.price, obj.discount_price
+            )
+        return f"€{obj.price}"
+    price_display.short_description = 'Cena'
+    price_display.admin_order_field = 'price'
+
+    def publish_tickets(self, request, queryset):
+        queryset.update(is_published=True)
+    publish_tickets.short_description = "Zverejniť vybrané vstupenky"
+
+    def unpublish_tickets(self, request, queryset):
+        queryset.update(is_published=False)
+    unpublish_tickets.short_description = "Skryť vybrané vstupenky"

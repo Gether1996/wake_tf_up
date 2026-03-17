@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { CartService } from '../../core/api/cart.service';
 import { SettingsService } from '../../core/api/settings.service';
@@ -47,7 +47,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
         </div>
       }
 
-      @if (cartService.items().length === 0) {
+      @if (cartService.items().length === 0 && cartService.ticketCartItems().length === 0) {
         <!-- Empty Cart -->
         <div class="text-center py-16">
           <svg class="w-24 h-24 mx-auto mb-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +64,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <!-- Cart Items -->
           <div class="lg:col-span-2 space-y-4">
-            @for (item of cartService.items(); track item.product.id) {
+            @for (item of cartService.items(); track item.product.id) {  <!-- Product items -->
               <div class="flex gap-4 border border-border p-4 transition-all hover:border-foreground">
                 <!-- Product Image -->
                 <a [routerLink]="productLink(item.product.slug)" class="flex-shrink-0">
@@ -165,6 +165,88 @@ import { ButtonComponent } from '../../shared/button/button.component';
                 </div>
               </div>
             }
+
+            <!-- Ticket Items -->
+            @for (item of cartService.ticketCartItems(); track item.ticket.id) {
+              <div class="flex gap-4 border border-border p-4 transition-all hover:border-foreground">
+                <!-- Ticket Image -->
+                <div class="flex-shrink-0 w-24 h-32 bg-muted overflow-hidden">
+                  @if (item.ticket.primary_image) {
+                    <img
+                      [src]="item.ticket.primary_image"
+                      [alt]="item.ticket.name"
+                      class="w-full h-full object-cover">
+                  } @else {
+                    <div class="w-full h-full flex items-center justify-center">
+                      <svg class="w-12 h-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                      </svg>
+                    </div>
+                  }
+                </div>
+
+                <!-- Ticket Info -->
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium block mb-1">{{ item.ticket.name }}</p>
+                  <p class="text-sm text-muted-foreground font-mono uppercase mb-2">{{ 'ticket.type_label' | transloco }}</p>
+
+                  @if (item.ticket.event_date) {
+                    <p class="text-sm text-muted-foreground mb-1">📅 {{ item.ticket.event_date | date: 'mediumDate' }}</p>
+                  }
+                  @if (item.ticket.event_location) {
+                    <p class="text-sm text-muted-foreground mb-2">📍 {{ item.ticket.event_location }}</p>
+                  }
+
+                  <!-- Price -->
+                  <div class="mb-3">
+                    @if (item.ticket.discount_price) {
+                      <div class="text-lg font-medium flex items-baseline gap-2">
+                        <span>{{ item.ticket.discount_price | currency: 'EUR' }}</span>
+                        <span class="text-sm text-muted-foreground line-through">{{ item.ticket.price | currency: 'EUR' }}</span>
+                        <span class="text-xs text-muted-foreground font-normal">({{ 'product.price_with_vat' | transloco }})</span>
+                      </div>
+                      <div class="text-xs text-muted-foreground mt-1">
+                        <p>{{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(item.ticket.discount_price) | currency: 'EUR' }}</p>
+                      </div>
+                    } @else {
+                      <div class="text-lg font-medium flex items-baseline gap-2">
+                        <span>{{ item.ticket.price | currency: 'EUR' }}</span>
+                        <span class="text-xs text-muted-foreground font-normal">({{ 'product.price_with_vat' | transloco }})</span>
+                      </div>
+                      <div class="text-xs text-muted-foreground mt-1">
+                        <p>{{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(item.ticket.price) | currency: 'EUR' }}</p>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Quantity Controls -->
+                  <div class="flex items-center gap-4">
+                    <div class="flex items-center border border-border">
+                      <button
+                        (click)="updateTicketQuantity(item.ticket.id, item.quantity - 1)"
+                        class="px-3 py-1 hover:bg-muted transition-colors">-</button>
+                      <span class="px-4 py-1 font-mono min-w-[3rem] text-center">{{ item.quantity }}</span>
+                      <button
+                        (click)="updateTicketQuantity(item.ticket.id, item.quantity + 1)"
+                        [disabled]="item.ticket.total_quantity > 0 && item.quantity >= item.ticket.total_quantity"
+                        class="px-3 py-1 hover:bg-muted transition-colors disabled:opacity-50">+</button>
+                    </div>
+
+                    <button
+                      (click)="removeTicketItem(item.ticket.id)"
+                      class="text-sm text-danger hover:underline">
+                      {{ 'cart.remove' | transloco }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Item Total -->
+                <div class="text-right flex-shrink-0">
+                  <p class="font-bold">{{ getTicketItemTotal(item) | currency: 'EUR' }}</p>
+                </div>
+              </div>
+            }
           </div>
 
           <!-- Order Summary -->
@@ -194,7 +276,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
                 [size]="'lg'"
                 [fullWidth]="true"
                 [disabled]="updating()"
-                [routerLink]="checkoutLink()">
+                (clicked)="goToCheckout()">
                 {{ 'cart.checkout' | transloco }}
               </app-button>
 
@@ -222,6 +304,7 @@ export class CartComponent implements OnInit {
   settingsService = inject(SettingsService);
   private languageService = inject(LanguageService);
   private dialogService = inject(DialogService);
+  private router = inject(Router);
   
   currentLang = this.languageService.currentLang;
   shopLink = computed(() => `/${this.currentLang()}/shop`);
@@ -251,11 +334,38 @@ export class CartComponent implements OnInit {
     this.cartService.refreshCartProducts();
   }
 
+  goToCheckout() {
+    this.router.navigate([this.checkoutLink()]);
+  }
+
   getItemTotal(item: { product: any; quantity: number }): number {
     const price = item.product.discount_price 
       ? parseFloat(item.product.discount_price) 
       : parseFloat(item.product.price);
     return price * item.quantity;
+  }
+
+  getTicketItemTotal(item: { ticket: any; quantity: number }): number {
+    const price = item.ticket.discount_price
+      ? parseFloat(item.ticket.discount_price)
+      : parseFloat(item.ticket.price);
+    return price * item.quantity;
+  }
+
+  updateTicketQuantity(ticketId: number, newQuantity: number) {
+    this.cartService.updateTicketQuantity(ticketId, newQuantity);
+  }
+
+  async removeTicketItem(ticketId: number) {
+    const confirmed = await this.dialogService.confirm({
+      title: 'Remove Item',
+      message: 'Are you sure you want to remove this ticket from your cart?',
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+    if (!confirmed) return;
+    this.cartService.removeTicketFromCart(ticketId);
   }
 
   getPriceWithoutVat(priceWithVat: string | number): number {

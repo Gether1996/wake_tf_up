@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Zakúpená vstupenka</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f7f7f7; margin: 0; padding: 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f7f7f7; padding: 24px 0;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; padding: 32px; text-align: left;">
+                    <tr>
+                        <td style="padding-bottom: 24px; border-bottom: 1px solid #e6e6e6;">
+                            <h1 style="margin: 0; font-size: 24px; color: #111827; letter-spacing: 1px;">🎟 ZAKÚPENÁ VSTUPENKA</h1>
+                            <p style="margin: 8px 0 0 0; color: #6b7280;">
+                                Ďakujeme za zakúpenie! Nižšie nájdete váš unikátny kód vstupenky pre objednávku <strong>#{{ order.id }}</strong>.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 24px 0;">
+                            <h2 style="margin: 0 0 16px 0; font-size: 18px; color: #111827;">Tu je váš unikátny kód</h2>
+
+                            {% for pt in purchased_tickets %}
+                            <div style="background-color: #f0fdf4; border: 2px solid #16a34a; border-radius: 8px; padding: 20px; margin-bottom: 16px; text-align: center;">
+                                <p style="margin: 0 0 6px 0; color: #374151; font-size: 14px;">
+                                    <strong>{{ pt.ticket.name }}</strong>
+                                    {% if pt.ticket.event_date %} &mdash; {{ pt.ticket.event_date|date:"d.m.Y H:i" }}{% endif %}
+                                    {% if pt.ticket.event_location %} &mdash; {{ pt.ticket.event_location }}{% endif %}
+                                </p>
+                                <p style="margin: 10px 0 0 0; font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #111827; font-family: 'Courier New', monospace;">
+                                    {{ pt.code }}
+                                </p>
+                            </div>
+                            {% endfor %}
+
+                            <p style="margin: 16px 0 0 0; color: #6b7280; font-size: 13px;">
+                                ⚠️ Tento kód je unikátny a platný iba raz. Prosíme, nevystavujte ho verejne.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 0 0 24px 0;">
+                            <p style="margin: 0; color: #374151;">
+                                Ak máte akékoľvek otázky, neváhajte nás kontaktovať na
+                                <a href="mailto:{{ support_email }}" style="color: #2563eb;">{{ support_email }}</a>.
+                            </p>
+                            <p style="margin: 12px 0 0 0; color: #374151;">
+                                Ďakujeme, že ste s nami!<br>
+                                <strong>Tím WAKE TF UP</strong>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding-top: 24px; border-top: 1px solid #e6e6e6;">
+                            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                                Tento email bol odoslaný automaticky. Prosíme, neodpovedajte naň priamo.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

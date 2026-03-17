@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django import forms
-from .models import Subscriber, NewsletterPopupStat, NewsletterTemplate, DiscountCodeTemplate, NewsletterImage
+from .models import Subscriber, NewsletterPopupStat, NewsletterTemplate, DiscountCodeTemplate, NewsletterImage, EventsTemplate, BlogsTemplate
 from datetime import datetime
 import re
 from django.template import Template, Context
@@ -63,7 +63,7 @@ class SubscriberAdmin(admin.ModelAdmin):
     readonly_fields = ('subscribed_at', 'unsubscribed_at')
     date_hierarchy = 'subscribed_at'
     list_per_page = 50
-    actions = ['activate_subscribers', 'deactivate_subscribers', 'send_bulk_newsletter_news', 'send_bulk_discount_codes']
+    actions = ['activate_subscribers', 'deactivate_subscribers', 'send_bulk_newsletter_news', 'send_bulk_discount_codes', 'send_bulk_events', 'send_bulk_blogs']
     
     def status_badge(self, obj):
         if obj.is_active:
@@ -264,6 +264,96 @@ Odhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscrib
             level=messages.SUCCESS
         )
     send_bulk_discount_codes.short_description = "Hromadný email so zľavovými kódmi"
+
+    def send_bulk_events(self, request, queryset):
+        """Send events newsletter HTML template to selected subscribers"""
+        from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
+
+        try:
+            template = EventsTemplate.objects.get(pk=1)
+        except EventsTemplate.DoesNotExist:
+            self.message_user(request, "Eventy šablóna neexistuje. Vytvorte ju najprv.", level=messages.ERROR)
+            return
+
+        if not template.content_html:
+            self.message_user(request, "Eventy šablóna nemá žiadny HTML obsah.", level=messages.ERROR)
+            return
+
+        sent_count = 0
+        failed_count = 0
+        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
+        language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+
+        for subscriber in queryset:
+            try:
+                plain_text = f"Ahoj,\n\nPozrite si nadchádzajúce eventy na:\n{base_url}/{language_code}/events\n\nOdhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}".strip()
+                unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}"
+                html_content = Template(template.content_html).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
+                html_content = clean_text_for_email(html_content)
+                email = EmailMultiAlternatives(
+                    subject=template.subject,
+                    body=plain_text,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[subscriber.email],
+                )
+                email.attach_alternative(html_content, "text/html")
+                email.send(fail_silently=False)
+                sent_count += 1
+            except Exception as e:
+                failed_count += 1
+                self.message_user(request, f"Nepodarilo sa odoslať na {subscriber.email}: {str(e)}", level=messages.WARNING)
+
+        template.last_sent = datetime.now()
+        template.save()
+        self.message_user(request, f"Úspešne odoslané na {sent_count} emailov. Neúspešných: {failed_count}", level=messages.SUCCESS)
+
+    send_bulk_events.short_description = "Hromadný email o eventoch"
+
+    def send_bulk_blogs(self, request, queryset):
+        """Send blogs newsletter HTML template to selected subscribers"""
+        from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
+
+        try:
+            template = BlogsTemplate.objects.get(pk=1)
+        except BlogsTemplate.DoesNotExist:
+            self.message_user(request, "Blogy šablóna neexistuje. Vytvorte ju najprv.", level=messages.ERROR)
+            return
+
+        if not template.content_html:
+            self.message_user(request, "Blogy šablóna nemá žiadny HTML obsah.", level=messages.ERROR)
+            return
+
+        sent_count = 0
+        failed_count = 0
+        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
+        language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+
+        for subscriber in queryset:
+            try:
+                plain_text = f"Ahoj,\n\nPozrite si nové blogy na:\n{base_url}/{language_code}/blog\n\nOdhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}".strip()
+                unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}"
+                html_content = Template(template.content_html).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
+                html_content = clean_text_for_email(html_content)
+                email = EmailMultiAlternatives(
+                    subject=template.subject,
+                    body=plain_text,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[subscriber.email],
+                )
+                email.attach_alternative(html_content, "text/html")
+                email.send(fail_silently=False)
+                sent_count += 1
+            except Exception as e:
+                failed_count += 1
+                self.message_user(request, f"Nepodarilo sa odoslať na {subscriber.email}: {str(e)}", level=messages.WARNING)
+
+        template.last_sent = datetime.now()
+        template.save()
+        self.message_user(request, f"Úspešne odoslané na {sent_count} emailov. Neúspešných: {failed_count}", level=messages.SUCCESS)
+
+    send_bulk_blogs.short_description = "Hromadný email o blogoch"
 
 
 @admin.register(NewsletterPopupStat)
@@ -625,7 +715,7 @@ Odhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscrib
 
 @admin.register(NewsletterImage)
 class NewsletterImageAdmin(admin.ModelAdmin):
-    list_display = ('title', 'image_preview', 'filename', 'created_at', 'copy_url_button')
+    list_display = ('title', 'image_preview', 'created_at', 'copy_url_button')
     list_filter = ('created_at',)
     search_fields = ('title', 'alt_text', 'caption')
     readonly_fields = ('image_preview', 'created_at', 'updated_at', 'full_url_display')
@@ -687,3 +777,164 @@ class NewsletterImageAdmin(admin.ModelAdmin):
             )
         return "No image uploaded"
     full_url_display.short_description = 'Image URL'
+
+
+PLACEHOLDER_DOCS = (
+    'Vložte HTML email šablónu. V HTML obsahu môžete použiť tieto placeholdery:<br>'
+    '<strong>{{site_url}}</strong> - nahradi sa za URL vašej stránky (napr. https://wake-tf-up.sk)<br>'
+    '<strong>{{unsubscribe_url}}</strong> - automaticky sa nahradi kompletným unsubscribe linkom s emailom príjemcu<br>'
+    '<br><strong>Príklady:</strong><br>'
+    '&lt;a href="{{site_url}}"&gt;Navštíviť obchod&lt;/a&gt;<br>'
+    '&lt;a href="{{unsubscribe_url}}"&gt;Odhlásiť sa&lt;/a&gt;<br>'
+    '<br>URL sa automaticky vygeneruje z nastavení (FRONTEND_URL).'
+)
+
+
+@admin.register(EventsTemplate)
+class EventsTemplateAdmin(SingletonModelAdmin):
+    fieldsets = (
+        ('Email Settings', {
+            'fields': ('subject',)
+        }),
+        ('Content', {
+            'fields': ('content_html',),
+            'description': PLACEHOLDER_DOCS
+        }),
+        ('Statistics', {
+            'fields': ('last_sent', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('last_sent', 'created_at', 'updated_at')
+
+    def save_model(self, request, obj, form, change):
+        obj.full_clean()
+        super().save_model(request, obj, form, change)
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        try:
+            obj = self.model.objects.get(pk=1)
+            if obj and obj.content_html:
+                preview_url = reverse('newsletter:events_template_preview', args=[1])
+                extra_context['preview_url'] = preview_url
+                extra_context['show_preview'] = True
+        except self.model.DoesNotExist:
+            pass
+        extra_context['newsletter_images'] = NewsletterImage.objects.only(
+            'id', 'title', 'image', 'created_at'
+        ).order_by('-created_at')[:50]
+        return super().changeform_view(request, object_id, form_url, extra_context)
+
+    actions = ['send_to_all_subscribers']
+
+    def send_to_all_subscribers(self, request, queryset):
+        from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
+
+        template = EventsTemplate.load()
+        if not template.content_html:
+            self.message_user(request, "Eventy šablóna nemá žiadny HTML obsah.", level=messages.ERROR)
+            return
+
+        from .models import Subscriber
+        subscribers = Subscriber.objects.filter(is_active=True)
+        sent_count = 0
+        failed_count = 0
+        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
+        language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+
+        for subscriber in subscribers:
+            try:
+                plain_text = f"Ahoj,\n\nPozrite si nadchádzajúce eventy na:\n{base_url}/{language_code}/events\n\nOdhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}".strip()
+                unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}"
+                html_content = Template(template.content_html).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
+                html_content = clean_text_for_email(html_content)
+                email = EmailMultiAlternatives(subject=template.subject, body=plain_text, from_email=settings.DEFAULT_FROM_EMAIL, to=[subscriber.email])
+                email.attach_alternative(html_content, "text/html")
+                email.send(fail_silently=False)
+                sent_count += 1
+            except Exception as e:
+                failed_count += 1
+                self.message_user(request, f"Nepodarilo sa odoslať na {subscriber.email}: {str(e)}", level=messages.WARNING)
+
+        template.last_sent = datetime.now()
+        template.save()
+        self.message_user(request, f"Úspešne odoslané na {sent_count} odberateľov. Neúspešných: {failed_count}", level=messages.SUCCESS)
+
+    send_to_all_subscribers.short_description = "Odoslať newsletter všetkým aktivným odberateľom"
+
+
+@admin.register(BlogsTemplate)
+class BlogsTemplateAdmin(SingletonModelAdmin):
+    fieldsets = (
+        ('Email Settings', {
+            'fields': ('subject',)
+        }),
+        ('Content', {
+            'fields': ('content_html',),
+            'description': PLACEHOLDER_DOCS
+        }),
+        ('Statistics', {
+            'fields': ('last_sent', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('last_sent', 'created_at', 'updated_at')
+
+    def save_model(self, request, obj, form, change):
+        obj.full_clean()
+        super().save_model(request, obj, form, change)
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        try:
+            obj = self.model.objects.get(pk=1)
+            if obj and obj.content_html:
+                preview_url = reverse('newsletter:blogs_template_preview', args=[1])
+                extra_context['preview_url'] = preview_url
+                extra_context['show_preview'] = True
+        except self.model.DoesNotExist:
+            pass
+        extra_context['newsletter_images'] = NewsletterImage.objects.only(
+            'id', 'title', 'image', 'created_at'
+        ).order_by('-created_at')[:50]
+        return super().changeform_view(request, object_id, form_url, extra_context)
+
+    actions = ['send_to_all_subscribers']
+
+    def send_to_all_subscribers(self, request, queryset):
+        from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
+
+        template = BlogsTemplate.load()
+        if not template.content_html:
+            self.message_user(request, "Blogy šablóna nemá žiadny HTML obsah.", level=messages.ERROR)
+            return
+
+        from .models import Subscriber
+        subscribers = Subscriber.objects.filter(is_active=True)
+        sent_count = 0
+        failed_count = 0
+        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
+        language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+
+        for subscriber in subscribers:
+            try:
+                plain_text = f"Ahoj,\n\nPozrite si nové blogy na:\n{base_url}/{language_code}/blog\n\nOdhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}".strip()
+                unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}"
+                html_content = Template(template.content_html).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
+                html_content = clean_text_for_email(html_content)
+                email = EmailMultiAlternatives(subject=template.subject, body=plain_text, from_email=settings.DEFAULT_FROM_EMAIL, to=[subscriber.email])
+                email.attach_alternative(html_content, "text/html")
+                email.send(fail_silently=False)
+                sent_count += 1
+            except Exception as e:
+                failed_count += 1
+                self.message_user(request, f"Nepodarilo sa odoslať na {subscriber.email}: {str(e)}", level=messages.WARNING)
+
+        template.last_sent = datetime.now()
+        template.save()
+        self.message_user(request, f"Úspešne odoslané na {sent_count} odberateľov. Neúspešných: {failed_count}", level=messages.SUCCESS)
+
+    send_to_all_subscribers.short_description = "Odoslať newsletter všetkým aktivným odberateľom"

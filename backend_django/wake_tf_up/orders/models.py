@@ -1,7 +1,9 @@
 from django.db import models, transaction
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from shop.models import Product
+from shop.models import Product, Ticket
+import secrets
+import string
 
 
 class Order(models.Model):
@@ -20,6 +22,7 @@ class Order(models.Model):
         ('dpd_courier', 'DPD Courier'),
         ('packeta_box', 'Packeta Z-Box'),
         ('packeta_courier', 'Packeta Courier'),
+        ('digital_delivery', 'Digital Delivery'),
     ]
     
     PAYMENT_METHOD_CHOICES = [
@@ -259,6 +262,7 @@ class Order(models.Model):
                         'dpd_courier': settings.dpd_courier_cost,
                         'packeta_box': settings.packeta_box_cost,
                         'packeta_courier': settings.packeta_courier_cost,
+                        'digital_delivery': Decimal('0.00'),
                     }
                     shipping_cost = shipping_cost_map.get(self.shipping_method, Decimal('0.00'))
                     
@@ -286,7 +290,16 @@ class OrderItem(models.Model):
     product = models.ForeignKey(
         Product,
         on_delete=models.PROTECT,
-        related_name='order_items'
+        related_name='order_items',
+        null=True,
+        blank=True,
+    )
+    ticket = models.ForeignKey(
+        Ticket,
+        on_delete=models.PROTECT,
+        related_name='order_items',
+        null=True,
+        blank=True,
     )
     quantity = models.PositiveIntegerField()
     price_at_purchase = models.DecimalField(
@@ -305,38 +318,50 @@ class OrderItem(models.Model):
         db_table = 'order_items'
         verbose_name = 'Položka objednávky'
         verbose_name_plural = 'Položky objednávky'
-    
+
     def __str__(self):
-        return f"{self.product.name} x{self.quantity}"
+        if self.product:
+            return f"{self.product.name} x{self.quantity}"
+        if self.ticket:
+            return f"[Vstupenka] {self.ticket.name} x{self.quantity}"
+        return f"Položka objednávky x{self.quantity}"
     
     def clean(self):
         """
-        Stock validation logic - prevent overselling
-        This is called before saving the order item
+        Validation logic - stock reservation for products, basic checks for tickets.
+        This is called before saving the order item.
         """
-        if not self.pk:  # Only check for new items
+        # Exactly one of product or ticket must be set
+        if not self.product and not self.ticket:
+            raise ValidationError("An order item must have either a product or a ticket.")
+        if self.product and self.ticket:
+            raise ValidationError("An order item cannot have both a product and a ticket.")
+
+        if self.product and not self.pk:  # Only check stock for new product items
             # Calculate currently available stock
             available = self.product.available_stock
-            
+
             # If not enough stock and pre-order not enabled
             if self.quantity > available and not self.product.pre_order_enabled:
                 raise ValidationError(
                     f"Not enough stock for {self.product.name}. "
                     f"Available: {available}, Requested: {self.quantity}"
                 )
-            
+
             # Mark as pre-order if stock is insufficient
             if self.quantity > available:
                 self.is_pre_order = True
-    
+
     def save(self, *args, **kwargs):
         # Store current price if not set
         if not self.price_at_purchase:
             if self.product and self.product.price:
                 # Use discount price if available, otherwise regular price
                 self.price_at_purchase = self.product.discount_price or self.product.price
+            elif self.ticket and self.ticket.price:
+                self.price_at_purchase = self.ticket.discount_price or self.ticket.price
             else:
-                raise ValidationError("Product must have a price set")
+                raise ValidationError("Product or ticket must have a price set")
         
         # Run validation
         self.clean()
@@ -397,19 +422,27 @@ class StockReservationService:
         
         # Create order items with stock validation
         for item_data in items_data:
-            product = Product.objects.select_for_update().get(
-                id=item_data['product_id']
-            )
-            
-            order_item = OrderItem(
-                order=order,
-                product=product,
-                quantity=item_data['quantity']
-            )
-            
+            ticket_id = item_data.get('ticket_id')
+            if ticket_id:
+                ticket = Ticket.objects.get(id=ticket_id)
+                order_item = OrderItem(
+                    order=order,
+                    ticket=ticket,
+                    quantity=item_data['quantity']
+                )
+            else:
+                product = Product.objects.select_for_update().get(
+                    id=item_data['product_id']
+                )
+                order_item = OrderItem(
+                    order=order,
+                    product=product,
+                    quantity=item_data['quantity']
+                )
+
             # This will validate stock and raise ValidationError if needed
             order_item.save()
-            
+
             subtotal += order_item.subtotal
         
         # Calculate shipping cost based on shipping method and settings
@@ -423,6 +456,7 @@ class StockReservationService:
                 'dpd_courier': settings.dpd_courier_cost,
                 'packeta_box': settings.packeta_box_cost,
                 'packeta_courier': settings.packeta_courier_cost,
+                'digital_delivery': Decimal('0.00'),
             }
             shipping_cost = shipping_cost_map.get(shipping_method, Decimal('0.00'))
             
@@ -452,3 +486,46 @@ class StockReservationService:
         
         # Stock is automatically freed because we calculate available_stock
         # dynamically based on order status
+
+
+def generate_ticket_code():
+    """Generate a unique 8-character uppercase alphanumeric code for a purchased ticket."""
+    alphabet = string.ascii_uppercase + string.digits
+    while True:
+        code = ''.join(secrets.choice(alphabet) for _ in range(8))
+        if not PurchasedTicket.objects.filter(code=code).exists():
+            return code
+
+
+class PurchasedTicket(models.Model):
+    """Unique access code generated for each ticket unit after successful payment."""
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.PROTECT,
+        related_name='purchased_tickets',
+    )
+    order_item = models.ForeignKey(
+        OrderItem,
+        on_delete=models.PROTECT,
+        related_name='purchased_tickets',
+    )
+    ticket = models.ForeignKey(
+        Ticket,
+        on_delete=models.PROTECT,
+        related_name='purchased_tickets',
+    )
+    code = models.CharField(max_length=8, unique=True, help_text="Unique 8-character access code")
+    is_used = models.BooleanField(default=False)
+    used_at = models.DateTimeField(null=True, blank=True)
+    used_by_note = models.CharField(max_length=200, blank=True, help_text="Optional note when marking as used")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'purchased_tickets'
+        verbose_name = 'Kúpená vstupenka'
+        verbose_name_plural = 'Kúpené vstupenky'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        status = "✓ použitá" if self.is_used else "platná"
+        return f"{self.code} – {self.ticket.name} ({status})"

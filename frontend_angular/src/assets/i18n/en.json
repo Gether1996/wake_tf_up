@@ -125,7 +125,8 @@
       "all": "All",
       "clear": "Clear Filters",
       "active": "Active filters",
-      "clearAll": "Clear all"
+      "clearAll": "Clear all",
+      "tickets": "Tickets"
     },
     "sort": {
       "newest": "Newest First",
@@ -212,6 +213,9 @@
     "packeta_box_desc": "Delivery to Packeta pickup point",
     "packeta_courier": "Packeta Courier",
     "packeta_courier_desc": "Home delivery via Packeta courier",
+    "digital_delivery": "Digital Delivery",
+    "digital_delivery_desc": "Your tickets will be emailed immediately after payment confirmation",
+    "digital_delivery_contact_note": "Tickets will be sent to your email. No delivery address required.",
     "dpd_courier": "DPD Courier",
     "dpd_courier_desc": "Fast delivery to your address via DPD",
     "select_pickup_point": "Select Pickup Point",
@@ -438,6 +442,24 @@
     "copied": "Copied!",
     "date_time": "Date & Time",
     "location": "Location"
+  },
+  "ticket": {
+    "title": "Tickets",
+    "subtitle": "Get your tickets for our events",
+    "no_tickets": "No tickets available",
+    "no_tickets_description": "Check back soon for upcoming events",
+    "details": "View details",
+    "back": "Back to tickets",
+    "published": "Published",
+    "draft": "Draft",
+    "type_label": "Ticket",
+    "event_date": "Event date",
+    "event_location": "Venue",
+    "available": "available",
+    "sold_out": "Sold out",
+    "add_to_cart": "Buy ticket",
+    "added_to_cart": "Ticket added to cart",
+    "not_found": "Ticket not found"
   },
   "about": {
     "title": "Made Different",

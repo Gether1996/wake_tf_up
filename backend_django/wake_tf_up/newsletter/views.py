@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 from settings.models import MainSettings
 from core.email_utils import get_email_language, send_localized_email
-from .models import Subscriber, NewsletterPopupStat, NewsletterTemplate, DiscountCodeTemplate, NewsletterImage
+from .models import Subscriber, NewsletterPopupStat, NewsletterTemplate, DiscountCodeTemplate, NewsletterImage, EventsTemplate, BlogsTemplate
 from .serializers import SubscriberSerializer, NewsletterImageSerializer, NewsletterPopupStatSerializer
 
 
@@ -365,4 +365,48 @@ def discount_template_preview(request, pk):
     </html>
     """
     
+    return HttpResponse(preview_html)
+
+
+from django.contrib.admin.views.decorators import staff_member_required as _smr
+
+@_smr
+def events_template_preview(request, pk):
+    """Preview events newsletter template HTML"""
+    from .models import EventsTemplate
+    from django.conf import settings
+    from django.http import HttpResponse
+    from django.shortcuts import get_object_or_404
+    template = get_object_or_404(EventsTemplate, pk=pk)
+    base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
+    language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+    unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email=example@example.com"
+    html_content = template.content_html
+    html_content = html_content.replace('{{unsubscribe_url}}', unsubscribe_link)
+    html_content = html_content.replace('{{site_url}}', base_url)
+    html_content = html_content.replace('{{email}}', 'example@example.com')
+    preview_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"><title>Preview: {template.subject}</title>
+    <style>body{{margin:0;padding:20px;background:#f5f5f5;font-family:Arial,sans-serif}}.preview-info{{background:#fff;padding:15px;margin-bottom:20px;border-left:4px solid #4CAF50;box-shadow:0 2px 4px rgba(0,0,0,.1)}}.email-container{{background:#fff;max-width:800px;margin:0 auto;box-shadow:0 2px 8px rgba(0,0,0,.1)}}</style>
+    </head><body><div class="preview-info"><h2>📅 Eventy Newsletter Preview</h2><p><strong>Subject:</strong> {template.subject}</p><p><strong>Last Sent:</strong> {template.last_sent.strftime('%d.%m.%Y %H:%M') if template.last_sent else 'Never'}</p></div><div class="email-container">{html_content}</div></body></html>"""
+    return HttpResponse(preview_html)
+
+
+@_smr
+def blogs_template_preview(request, pk):
+    """Preview blogs newsletter template HTML"""
+    from .models import BlogsTemplate
+    from django.conf import settings
+    from django.http import HttpResponse
+    from django.shortcuts import get_object_or_404
+    template = get_object_or_404(BlogsTemplate, pk=pk)
+    base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
+    language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+    unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email=example@example.com"
+    html_content = template.content_html
+    html_content = html_content.replace('{{unsubscribe_url}}', unsubscribe_link)
+    html_content = html_content.replace('{{site_url}}', base_url)
+    html_content = html_content.replace('{{email}}', 'example@example.com')
+    preview_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"><title>Preview: {template.subject}</title>
+    <style>body{{margin:0;padding:20px;background:#f5f5f5;font-family:Arial,sans-serif}}.preview-info{{background:#fff;padding:15px;margin-bottom:20px;border-left:4px solid #9C27B0;box-shadow:0 2px 4px rgba(0,0,0,.1)}}.email-container{{background:#fff;max-width:800px;margin:0 auto;box-shadow:0 2px 8px rgba(0,0,0,.1)}}</style>
+    </head><body><div class="preview-info"><h2>📝 Blogy Newsletter Preview</h2><p><strong>Subject:</strong> {template.subject}</p><p><strong>Last Sent:</strong> {template.last_sent.strftime('%d.%m.%Y %H:%M') if template.last_sent else 'Never'}</p></div><div class="email-container">{html_content}</div></body></html>"""
     return HttpResponse(preview_html)

@@ -158,58 +158,85 @@ import { environment } from '../../../environments/environment';
             } @else {
               <div class="divide-y divide-border">
                 @for (item of currentOrder.items || []; track item.id) {
-                  @if (item.product.is_published) {
-                    <a
-                      class="flex gap-4 py-4 group transition-colors hover:bg-muted/50 px-1 -mx-1 rounded"
-                      [routerLink]="['/', currentLang(), 'product', item.product.slug]">
-                      <div class="w-20 h-24 bg-muted overflow-hidden flex-shrink-0">
-                        @if (item.product.images && item.product.images.length > 0) {
-                          <img
-                            [src]="getImageUrl(item.product.images[0].image)"
-                            [alt]="item.product.name"
-                            class="w-full h-full object-cover" />
-                        } @else if (item.product.primary_image) {
-                          <img
-                            [src]="getImageUrl(item.product.primary_image)"
-                            [alt]="item.product.name"
-                            class="w-full h-full object-cover" />
-                        }
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <div class="flex items-start justify-between gap-4">
-                          <p class="font-semibold truncate group-hover:text-foreground">{{ item.product.name || 'Product' }}</p>
-                          <p class="text-sm text-muted-foreground">× {{ item.quantity }}</p>
-                        </div>
-                        <p class="text-sm text-muted-foreground mt-1">{{ 'orders.status' | transloco }}: {{ getStatusText(currentOrder.status) | transloco }}</p>
-                        <p class="text-base font-semibold mt-2 flex items-baseline gap-2"><span>{{ item.price_at_purchase | currency: 'EUR' }}</span><span class="text-xs font-normal text-muted-foreground">({{ 'product.price_with_vat' | transloco }})</span></p>
-                        <p class="text-xs text-muted-foreground mt-1">{{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(item.price_at_purchase) | currency: 'EUR' }}</p>
-                      </div>
-                    </a>
-                  } @else {
+                  @if (item.ticket) {
+                    <!-- Ticket item -->
                     <div class="flex gap-4 py-4">
-                      <div class="w-20 h-24 bg-muted overflow-hidden flex-shrink-0">
-                        @if (item.product.images && item.product.images.length > 0) {
-                          <img
-                            [src]="getImageUrl(item.product.images[0].image)"
-                            [alt]="item.product.name"
-                            class="w-full h-full object-cover" />
-                        } @else if (item.product.primary_image) {
-                          <img
-                            [src]="getImageUrl(item.product.primary_image)"
-                            [alt]="item.product.name"
-                            class="w-full h-full object-cover" />
-                        }
+                      <div class="w-20 h-24 bg-muted overflow-hidden flex-shrink-0 flex items-center justify-center">
+                        <svg class="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                        </svg>
                       </div>
                       <div class="flex-1 min-w-0">
                         <div class="flex items-start justify-between gap-4">
-                          <p class="font-semibold truncate">{{ item.product.name || 'Product' }}</p>
+                          <p class="font-semibold truncate">{{ item.ticket.name }}</p>
                           <p class="text-sm text-muted-foreground">× {{ item.quantity }}</p>
                         </div>
-                        <p class="text-sm text-muted-foreground mt-1">{{ 'orders.status' | transloco }}: {{ getStatusText(currentOrder.status) | transloco }}</p>
+                        <p class="text-xs font-mono uppercase tracking-wide text-muted-foreground mt-1">{{ 'ticket.type_label' | transloco }}</p>
+                        @if (item.ticket.event_date) {
+                          <p class="text-sm text-muted-foreground mt-1">📅 {{ item.ticket.event_date | date: 'mediumDate' }}</p>
+                        }
+                        @if (item.ticket.event_location) {
+                          <p class="text-sm text-muted-foreground">📍 {{ item.ticket.event_location }}</p>
+                        }
                         <p class="text-base font-semibold mt-2 flex items-baseline gap-2"><span>{{ item.price_at_purchase | currency: 'EUR' }}</span><span class="text-xs font-normal text-muted-foreground">({{ 'product.price_with_vat' | transloco }})</span></p>
                         <p class="text-xs text-muted-foreground mt-1">{{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(item.price_at_purchase) | currency: 'EUR' }}</p>
                       </div>
                     </div>
+                  } @else if (item.product) {
+                    @if (item.product.is_published) {
+                      <a
+                        class="flex gap-4 py-4 group transition-colors hover:bg-muted/50 px-1 -mx-1 rounded"
+                        [routerLink]="['/', currentLang(), 'product', item.product.slug]">
+                        <div class="w-20 h-24 bg-muted overflow-hidden flex-shrink-0">
+                          @if (item.product.images && item.product.images.length > 0) {
+                            <img
+                              [src]="getImageUrl(item.product.images[0].image)"
+                              [alt]="item.product.name"
+                              class="w-full h-full object-cover" />
+                          } @else if (item.product.primary_image) {
+                            <img
+                              [src]="getImageUrl(item.product.primary_image)"
+                              [alt]="item.product.name"
+                              class="w-full h-full object-cover" />
+                          }
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-start justify-between gap-4">
+                            <p class="font-semibold truncate group-hover:text-foreground">{{ item.product.name || 'Product' }}</p>
+                            <p class="text-sm text-muted-foreground">× {{ item.quantity }}</p>
+                          </div>
+                          <p class="text-sm text-muted-foreground mt-1">{{ 'orders.status' | transloco }}: {{ getStatusText(currentOrder.status) | transloco }}</p>
+                          <p class="text-base font-semibold mt-2 flex items-baseline gap-2"><span>{{ item.price_at_purchase | currency: 'EUR' }}</span><span class="text-xs font-normal text-muted-foreground">({{ 'product.price_with_vat' | transloco }})</span></p>
+                          <p class="text-xs text-muted-foreground mt-1">{{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(item.price_at_purchase) | currency: 'EUR' }}</p>
+                        </div>
+                      </a>
+                    } @else {
+                      <div class="flex gap-4 py-4">
+                        <div class="w-20 h-24 bg-muted overflow-hidden flex-shrink-0">
+                          @if (item.product.images && item.product.images.length > 0) {
+                            <img
+                              [src]="getImageUrl(item.product.images[0].image)"
+                              [alt]="item.product.name"
+                              class="w-full h-full object-cover" />
+                          } @else if (item.product.primary_image) {
+                            <img
+                              [src]="getImageUrl(item.product.primary_image)"
+                              [alt]="item.product.name"
+                              class="w-full h-full object-cover" />
+                          }
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-start justify-between gap-4">
+                            <p class="font-semibold truncate">{{ item.product.name || 'Product' }}</p>
+                            <p class="text-sm text-muted-foreground">× {{ item.quantity }}</p>
+                          </div>
+                          <p class="text-sm text-muted-foreground mt-1">{{ 'orders.status' | transloco }}: {{ getStatusText(currentOrder.status) | transloco }}</p>
+                          <p class="text-base font-semibold mt-2 flex items-baseline gap-2"><span>{{ item.price_at_purchase | currency: 'EUR' }}</span><span class="text-xs font-normal text-muted-foreground">({{ 'product.price_with_vat' | transloco }})</span></p>
+                          <p class="text-xs text-muted-foreground mt-1">{{ 'product.price_without_vat' | transloco }}: {{ getPriceWithoutVat(item.price_at_purchase) | currency: 'EUR' }}</p>
+                        </div>
+                      </div>
+                    }
                   }
                 }
               </div>

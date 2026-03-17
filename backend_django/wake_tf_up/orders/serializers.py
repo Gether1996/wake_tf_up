@@ -1,21 +1,32 @@
 from rest_framework import serializers
 from .models import Order, OrderItem
-from shop.serializers import ProductListSerializer
+from shop.serializers import ProductListSerializer, TicketListSerializer
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
     """Serializer for order items"""
     product = ProductListSerializer(read_only=True)
-    product_id = serializers.IntegerField(write_only=True)
+    product_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    ticket = TicketListSerializer(read_only=True)
+    ticket_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     subtotal = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = OrderItem
         fields = (
-            'id', 'product', 'product_id', 'quantity',
+            'id', 'product', 'product_id', 'ticket', 'ticket_id', 'quantity',
             'price_at_purchase', 'is_pre_order', 'subtotal'
         )
         read_only_fields = ('price_at_purchase', 'is_pre_order')
+
+    def validate(self, data):
+        product_id = data.get('product_id')
+        ticket_id = data.get('ticket_id')
+        if not product_id and not ticket_id:
+            raise serializers.ValidationError("Either product_id or ticket_id must be provided.")
+        if product_id and ticket_id:
+            raise serializers.ValidationError("Provide either product_id or ticket_id, not both.")
+        return data
 
 
 class OrderCreateSerializer(serializers.ModelSerializer):
@@ -26,6 +37,11 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         choices=[('gopay', 'GoPay'), ('cash_on_pickup', 'Cash on Pickup')],
         default='gopay'
     )
+    # Allow blank for digital delivery orders (tickets don't need a physical address)
+    shipping_address     = serializers.CharField(required=False, allow_blank=True, default='')
+    shipping_city        = serializers.CharField(required=False, allow_blank=True, default='')
+    shipping_postal_code = serializers.CharField(required=False, allow_blank=True, default='')
+    shipping_country     = serializers.CharField(required=False, allow_blank=True, default='SK')
     
     class Meta:
         model = Order

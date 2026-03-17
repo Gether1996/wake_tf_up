@@ -7,7 +7,8 @@ import { LanguageService } from '../services/language.service';
 
 export interface CreateOrderRequest {
   items: Array<{
-    product_id: number;
+    product_id?: number;
+    ticket_id?: number;
     quantity: number;
   }>;
   shipping_method: 'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier';
@@ -55,10 +56,15 @@ export class OrderService {
   }
 
   createOrderFromCart(shippingData: Omit<CreateOrderRequest, 'items'>): Observable<Order> {
-    const items = this.cartService.items().map(item => ({
+    const productItems = this.cartService.items().map(item => ({
       product_id: item.product.id,
       quantity: item.quantity
     }));
+    const ticketItems = this.cartService.ticketCartItems().map(item => ({
+      ticket_id: item.ticket.id,
+      quantity: item.quantity
+    }));
+    const items = [...productItems, ...ticketItems];
 
     const currentLanguage = this.languageService.currentLang();
     console.log('[OrderService] Creating order with language:', currentLanguage);

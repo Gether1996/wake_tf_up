@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Product, Category, Color } from './api.models';
+import { Product, Category, Color, Ticket } from './api.models';
 import { LanguageService } from '../services/language.service';
 
 export interface ProductFilters {
@@ -77,5 +77,15 @@ export class CatalogService {
       .set('search', query)
       .set('lang', this.languageService.currentLang());
     return this.api.get<Product[]>('products/', params);
+  }
+
+  getTickets(): Observable<Ticket[]> {
+    const params = new HttpParams().set('lang', this.languageService.currentLang());
+    return this.api.get<Ticket[]>('tickets/', params);
+  }
+
+  getTicket(slug: string): Observable<Ticket> {
+    const params = new HttpParams().set('lang', this.languageService.currentLang());
+    return this.api.get<Ticket>(`tickets/${slug}/`, params);
   }
 }

@@ -45,7 +45,7 @@ export interface Product {
   price: string;
   discount_price?: string;
   category: Category;
-  color: Color;
+  color: Color | null;
   total_stock: number;
   sold_quantity?: number; // Only in detail view
   available_stock: number;
@@ -125,11 +125,45 @@ export interface Order {
 
 export interface OrderItem {
   id?: number;
-  product: Product;
+  product: Product | null;
+  ticket: Ticket | null;
   quantity: number;
   price_at_purchase: string;
   is_pre_order: boolean;
   subtotal?: string; // Computed field from backend
+}
+
+export interface Ticket {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  price: string;
+  discount_price?: string;
+  event_date?: string;
+  event_location?: string;
+  total_quantity: number;
+  sold_quantity?: number;
+  is_published: boolean;
+  images?: TicketImage[];
+  primary_image?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface TicketImage {
+  id: number;
+  image: string;
+  order: number;
+}
+
+export interface PurchasedTicket {
+  id: number;
+  code: string;
+  ticket: Ticket;
+  is_used: boolean;
+  used_at?: string;
+  created_at: string;
 }
 
 export interface Review {

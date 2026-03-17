@@ -6,13 +6,16 @@ import { retry, timer } from 'rxjs';
 import { CatalogService } from '../../core/api/catalog.service';
 import { ReviewService } from '../../core/api/review.service';
 import { LanguageService } from '../../core/services/language.service';
-import { Product, FeaturedReview } from '../../core/api/api.models';
+import { Product, FeaturedReview, Ticket } from '../../core/api/api.models';
 import { ProductCardComponent } from '../../shared/product-card/product-card.component';
+import { TicketCardComponent } from '../../shared/ticket-card/ticket-card.component';
+
+type FeaturedItem = { kind: 'product'; data: Product } | { kind: 'ticket'; data: Ticket };
 import { ButtonComponent } from '../../shared/button/button.component';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, RouterModule, TranslocoModule, ProductCardComponent, ButtonComponent],
+  imports: [CommonModule, RouterModule, TranslocoModule, ProductCardComponent, TicketCardComponent, ButtonComponent],
   styles: [`
     :host {
       display: block;
@@ -106,10 +109,14 @@ import { ButtonComponent } from '../../shared/button/button.component';
             {{ 'common.retry' | transloco }}
           </app-button>
         </div>
-      } @else if (featuredProducts().length > 0) {
+      } @else if (featuredItems().length > 0) {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          @for (product of featuredProducts(); track product.id) {
-            <app-product-card [product]="product" />
+          @for (fi of featuredItems(); track fi.data.id) {
+            @if (fi.kind === 'product') {
+              <app-product-card [product]="$any(fi.data)" />
+            } @else {
+              <app-ticket-card [ticket]="$any(fi.data)" />
+            }
           }
         </div>
         
@@ -216,11 +223,20 @@ export class HomeComponent implements OnInit {
 
   featuredProducts = signal<Product[]>([]);
   featuredReviews = signal<FeaturedReview[]>([]);
+  featuredTickets = signal<Ticket[]>([]);
   limitedDrops = signal<Product[]>([]);
   loading = signal(false);
   reviewsLoading = signal(false);
   dropsLoading = signal(false);
   error = signal('');
+
+  featuredItems = computed<FeaturedItem[]>(() => {
+    const products: FeaturedItem[] = this.featuredProducts().map(p => ({ kind: 'product', data: p }));
+    const tickets: FeaturedItem[] = this.featuredTickets().map(t => ({ kind: 'ticket', data: t }));
+    return [...products, ...tickets]
+      .sort((a, b) => new Date(b.data.created_at).getTime() - new Date(a.data.created_at).getTime())
+      .slice(0, 4);
+  });
 
   constructor() {
     // Watch for language changes and reload products
@@ -230,6 +246,7 @@ export class HomeComponent implements OnInit {
       if (untracked(() => this.featuredProducts().length > 0 || this.limitedDrops().length > 0)) {
         this.loadFeatured();
         this.loadDrops();
+        this.loadFeaturedTickets();
       }
     });
   }
@@ -238,6 +255,7 @@ export class HomeComponent implements OnInit {
     this.loadFeatured();
     this.loadReviews();
     this.loadDrops();
+    this.loadFeaturedTickets();
   }
 
   loadFeatured() {
@@ -288,6 +306,13 @@ export class HomeComponent implements OnInit {
           this.reviewsLoading.set(false);
         }
       });
+  }
+
+  loadFeaturedTickets() {
+    this.catalogService.getTickets().subscribe({
+      next: (tickets) => this.featuredTickets.set(tickets.slice(0, 4)),
+      error: () => this.featuredTickets.set([])
+    });
   }
 
   loadDrops() {

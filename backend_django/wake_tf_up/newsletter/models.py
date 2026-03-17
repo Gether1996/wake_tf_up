@@ -238,6 +238,72 @@ class NewsletterImage(models.Model):
     
     def __str__(self):
         return self.title
+
+
+class EventsTemplate(SingletonModel):
+    """Template for events newsletter emails"""
+    subject = models.CharField(
+        max_length=200,
+        default="Nadchádzajúce eventy pre vás!",
+        help_text="Email subject line"
+    )
+    content_html = models.TextField(
+        blank=True,
+        default='',
+        help_text="HTML šablóna emailu. Dostupné Jinja2 premenné: {{site_url}}, {{unsubscribe_url}}, {{email}}."
+    )
+    last_sent = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Last time this template was sent"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'events_newsletter_template'
+        verbose_name = 'Eventy šablóna'
+        verbose_name_plural = 'Eventy šablóny'
+
+    def clean(self):
+        self.subject = clean_unicode_chars(self.subject)
+        self.content_html = clean_unicode_chars(self.content_html)
+
+    def __str__(self):
+        return f"Events Template: {self.subject}"
+
+
+class BlogsTemplate(SingletonModel):
+    """Template for blog newsletter emails"""
+    subject = models.CharField(
+        max_length=200,
+        default="Nové blogy na webe!",
+        help_text="Email subject line"
+    )
+    content_html = models.TextField(
+        blank=True,
+        default='',
+        help_text="HTML šablóna emailu. Dostupné Jinja2 premenné: {{site_url}}, {{unsubscribe_url}}, {{email}}."
+    )
+    last_sent = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Last time this template was sent"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'blogs_newsletter_template'
+        verbose_name = 'Blogy šablóna'
+        verbose_name_plural = 'Blogy šablóny'
+
+    def clean(self):
+        self.subject = clean_unicode_chars(self.subject)
+        self.content_html = clean_unicode_chars(self.content_html)
+
+    def __str__(self):
+        return f"Blogs Template: {self.subject}"
     
     @property
     def filename(self):

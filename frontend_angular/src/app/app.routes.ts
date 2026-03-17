@@ -100,6 +100,19 @@ const appRoutes: Routes = [
     ]
   },
   {
+    path: 'tickets',
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/tickets/ticket-list/ticket-list.component').then(m => m.TicketListComponent)
+      },
+      {
+        path: ':slug',
+        loadComponent: () => import('./pages/tickets/ticket-detail/ticket-detail.component').then(m => m.TicketDetailComponent)
+      }
+    ]
+  },
+  {
     path: 'privacy',
     loadComponent: () => import('./pages/privacy-policy/privacy-policy.component').then(m => m.PrivacyPolicyComponent)
   },

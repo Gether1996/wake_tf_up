@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Category, Color, ProductImage, ProductVideo
+from .models import Product, Category, Color, ProductImage, ProductVideo, Ticket, TicketImage
 
 
 class TranslatableSerializerMixin:
@@ -129,8 +129,10 @@ class ProductListSerializer(TranslatableSerializerMixin, serializers.ModelSerial
     
     def get_color(self, obj):
         """Return color with correct language"""
+        if not obj.color:
+            return None
         return ColorSerializer(obj.color, context=self.context).data
-    
+
     def get_primary_image(self, obj):
         """Get the first image as primary"""
         image = obj.images.first()
@@ -182,6 +184,8 @@ class ProductDetailSerializer(TranslatableSerializerMixin, serializers.ModelSeri
     
     def get_color(self, obj):
         """Return color with correct language"""
+        if not obj.color:
+            return None
         return ColorSerializer(obj.color, context=self.context).data
 
 
@@ -215,7 +219,9 @@ class ProductAdminSerializer(serializers.ModelSerializer):
     color_id = serializers.PrimaryKeyRelatedField(
         queryset=Color.objects.all(),
         source='color',
-        write_only=True
+        write_only=True,
+        required=False,
+        allow_null=True,
     )
     images = ProductImageSerializer(many=True, read_only=True)
     videos = ProductVideoSerializer(many=True, read_only=True)
@@ -233,3 +239,83 @@ class ProductAdminSerializer(serializers.ModelSerializer):
             'images', 'videos', 'created_at', 'updated_at'
         )
         read_only_fields = ('created_at', 'updated_at', 'available_stock', 'sold_quantity', 'is_in_stock')
+
+
+# ============ TICKET SERIALIZERS ============
+
+class TicketImageSerializer(serializers.ModelSerializer):
+    """Serializer for ticket images — returns absolute URLs so the browser can load from any origin"""
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TicketImage
+        fields = ('id', 'image', 'order')
+
+    def get_image(self, obj):
+        if not obj.image:
+            return None
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.image.url)
+        return obj.image.url
+
+
+class TicketListSerializer(TranslatableSerializerMixin, serializers.ModelSerializer):
+    """Public serializer for ticket list view"""
+    name = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
+    sold_quantity = serializers.ReadOnlyField()
+    primary_image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Ticket
+        fields = (
+            'id', 'name', 'description', 'slug',
+            'price', 'discount_price', 'event_date', 'event_location',
+            'total_quantity', 'sold_quantity', 'is_published', 'primary_image', 'created_at'
+        )
+
+    def get_name(self, obj):
+        lang = self.get_language()
+        if lang == 'en' and obj.en_name:
+            return obj.en_name
+        return obj.name
+
+    def get_description(self, obj):
+        lang = self.get_language()
+        if lang == 'en' and obj.en_description:
+            return obj.en_description
+        return obj.description
+
+    def get_primary_image(self, obj):
+        image = obj.images.first()
+        if image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(image.image.url)
+            return image.image.url
+        return None
+
+
+class TicketDetailSerializer(TicketListSerializer):
+    """Detailed public serializer for ticket detail view"""
+    images = TicketImageSerializer(many=True, read_only=True)
+
+    class Meta(TicketListSerializer.Meta):
+        fields = TicketListSerializer.Meta.fields + ('images', 'en_name', 'en_description', 'updated_at')
+
+
+class TicketAdminSerializer(serializers.ModelSerializer):
+    """Admin serializer for tickets - returns all language fields"""
+    sold_quantity = serializers.ReadOnlyField()
+    images = TicketImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Ticket
+        fields = (
+            'id', 'name', 'en_name', 'description', 'en_description', 'slug',
+            'price', 'discount_price', 'event_date', 'event_location',
+            'total_quantity', 'sold_quantity', 'is_published',
+            'images', 'created_at', 'updated_at'
+        )
+        read_only_fields = ('created_at', 'updated_at', 'sold_quantity')

@@ -5,7 +5,9 @@ from .views import (
     NewsletterPopupTrackView,
     NewsletterImageListView,
     newsletter_template_preview,
-    discount_template_preview
+    discount_template_preview,
+    events_template_preview,
+    blogs_template_preview,
 )
 
 app_name = 'newsletter'
@@ -18,4 +20,6 @@ urlpatterns = [
     # Admin preview URLs
     path('admin/newsletter-preview/<int:pk>/', newsletter_template_preview, name='newsletter_template_preview'),
     path('admin/discount-preview/<int:pk>/', discount_template_preview, name='discount_template_preview'),
+    path('admin/events-preview/<int:pk>/', events_template_preview, name='events_template_preview'),
+    path('admin/blogs-preview/<int:pk>/', blogs_template_preview, name='blogs_template_preview'),
 ]

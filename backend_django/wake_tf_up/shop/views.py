@@ -1,6 +1,6 @@
 from rest_framework import generics, filters, viewsets, permissions
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Product, Category, Color
+from .models import Product, Category, Color, Ticket
 from .serializers import (
     ProductListSerializer,
     ProductDetailSerializer,
@@ -8,7 +8,10 @@ from .serializers import (
     ColorSerializer,
     ProductAdminSerializer,
     CategoryAdminSerializer,
-    ColorAdminSerializer
+    ColorAdminSerializer,
+    TicketListSerializer,
+    TicketDetailSerializer,
+    TicketAdminSerializer,
 )
 
 
@@ -31,7 +34,14 @@ class ProductListView(generics.ListAPIView):
     ordering = ['-created_at']
     
     def get_queryset(self):
-        queryset = Product.objects.filter(is_published=True).select_related('category', 'color')
+        # Superadmins can see all products including unpublished
+        is_superadmin = (
+            self.request.user.is_authenticated and self.request.user.is_superuser
+        )
+        if is_superadmin:
+            queryset = Product.objects.all().select_related('category', 'color')
+        else:
+            queryset = Product.objects.filter(is_published=True).select_related('category', 'color')
         
         # Filter by category
         category = self.request.query_params.get('category')
@@ -80,9 +90,16 @@ class ProductDetailView(generics.RetrieveAPIView):
     Get product details by slug.
     GET /api/v1/products/{slug}/
     """
-    queryset = Product.objects.filter(is_published=True).select_related('category', 'color')
     serializer_class = ProductDetailSerializer
     lookup_field = 'slug'
+
+    def get_queryset(self):
+        is_superadmin = (
+            self.request.user.is_authenticated and self.request.user.is_superuser
+        )
+        if is_superadmin:
+            return Product.objects.all().select_related('category', 'color')
+        return Product.objects.filter(is_published=True).select_related('category', 'color')
 
 
 class CategoryListView(generics.ListAPIView):
@@ -148,3 +165,52 @@ class ColorAdminViewSet(viewsets.ModelViewSet):
     permission_classes = [IsSuperuser]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'hex_code']
+
+
+# ============ TICKET PUBLIC ENDPOINTS ============
+
+class TicketListView(generics.ListAPIView):
+    """
+    List all published tickets.
+    GET /api/v1/tickets/
+    """
+    serializer_class = TicketListSerializer
+    pagination_class = None  # return plain array, no pagination needed
+
+    def get_queryset(self):
+        is_superadmin = (
+            self.request.user.is_authenticated and self.request.user.is_superuser
+        )
+        if is_superadmin:
+            return Ticket.objects.all()
+        return Ticket.objects.filter(is_published=True)
+
+
+class TicketDetailView(generics.RetrieveAPIView):
+    """
+    Get ticket details by slug.
+    GET /api/v1/tickets/{slug}/
+    """
+    serializer_class = TicketDetailSerializer
+    lookup_field = 'slug'
+
+    def get_queryset(self):
+        is_superadmin = (
+            self.request.user.is_authenticated and self.request.user.is_superuser
+        )
+        if is_superadmin:
+            return Ticket.objects.all()
+        return Ticket.objects.filter(is_published=True)
+
+
+class TicketAdminViewSet(viewsets.ModelViewSet):
+    """
+    Admin-only CRUD operations for tickets.
+    """
+    queryset = Ticket.objects.all()
+    serializer_class = TicketAdminSerializer
+    permission_classes = [IsSuperuser]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'slug', 'description', 'event_location']
+    ordering_fields = ['price', 'created_at', 'event_date', 'name']
+    ordering = ['-created_at']

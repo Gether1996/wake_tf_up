@@ -61,7 +61,9 @@ class Product(models.Model):
     color = models.ForeignKey(
         Color,
         on_delete=models.PROTECT,
-        related_name='products'
+        related_name='products',
+        null=True,
+        blank=True,
     )
     
     price = models.DecimalField(
@@ -210,3 +212,96 @@ class ProductVideo(models.Model):
     
     def __str__(self):
         return f"Video {self.order + 1} for {self.product.name}"
+
+
+class Ticket(models.Model):
+    """Ticket model for events - digital items with unique access codes generated after payment"""
+    name = models.CharField(max_length=200)
+    en_name = models.CharField(max_length=200, blank=True, default="", help_text="English name")
+    description = models.TextField(blank=True, help_text="Ticket / event description")
+    en_description = models.TextField(blank=True, default="", help_text="English description")
+    slug = models.SlugField(unique=True, max_length=200, blank=True)
+
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0'))],
+        help_text="Price in EUR"
+    )
+    discount_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0'))],
+        null=True,
+        blank=True,
+        help_text="Discounted price in EUR (optional)"
+    )
+
+    # Event details
+    event_date = models.DateTimeField(null=True, blank=True, help_text="Date and time of the event")
+    event_location = models.CharField(max_length=300, blank=True, help_text="Event location / venue")
+
+    # How many tickets are available (0 = unlimited)
+    total_quantity = models.PositiveIntegerField(
+        default=0,
+        help_text="Total available tickets (0 = unlimited)"
+    )
+
+    is_published = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'tickets'
+        verbose_name = 'Vstupenka'
+        verbose_name_plural = 'Vstupenky'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['slug']),
+            models.Index(fields=['is_published']),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            while Ticket.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    @property
+    def sold_quantity(self):
+        """Calculate sold quantity from paid order items"""
+        from orders.models import OrderItem
+        return OrderItem.objects.filter(
+            ticket=self,
+            order__status__in=['paid', 'shipped', 'delivered']
+        ).aggregate(total=models.Sum('quantity'))['total'] or 0
+
+    def __str__(self):
+        return self.name
+
+
+class TicketImage(models.Model):
+    """Multiple images per ticket"""
+    ticket = models.ForeignKey(
+        Ticket,
+        on_delete=models.CASCADE,
+        related_name='images'
+    )
+    image = models.ImageField(upload_to='tickets/%Y/%m/')
+    order = models.PositiveIntegerField(default=0, help_text="Display order")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'ticket_images'
+        ordering = ['order', 'created_at']
+        verbose_name = 'Obrázok vstupenky'
+        verbose_name_plural = 'Obrázky vstupeniek'
+
+    def __str__(self):
+        return f"Image for {self.ticket.name}"

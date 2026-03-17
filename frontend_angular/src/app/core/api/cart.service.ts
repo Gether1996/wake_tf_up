@@ -1,12 +1,17 @@
 import { Injectable, signal, computed, effect, untracked, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { CartItem, Product } from '../api/api.models';
+import { CartItem, Product, Ticket } from '../api/api.models';
 import { NotificationService } from '../services/notification.service';import { LanguageService } from '../services/language.service';
 import { SettingsService } from './settings.service';
 import { environment } from '../../../environments/environment';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+
+export interface CartTicketItem {
+  ticket: Ticket;
+  quantity: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -20,19 +25,29 @@ export class CartService {
   private apiUrl = `${environment.apiUrl}/products`;
   
   private cartItems = signal<CartItem[]>(this.loadCart());
+  private ticketItems = signal<CartTicketItem[]>(this.loadTicketCart());
 
   readonly items = this.cartItems.asReadonly();
-  readonly itemCount = computed(() => 
-    this.items().reduce((total, item) => total + item.quantity, 0)
+  readonly ticketCartItems = this.ticketItems.asReadonly();
+  readonly itemCount = computed(() =>
+    this.items().reduce((total, item) => total + item.quantity, 0) +
+    this.ticketItems().reduce((total, item) => total + item.quantity, 0)
   );
-  readonly subtotal = computed(() => 
-    this.items().reduce((total, item) => {
-      const price = item.product.discount_price 
-        ? parseFloat(item.product.discount_price) 
+  readonly subtotal = computed(() => {
+    const productTotal = this.items().reduce((total, item) => {
+      const price = item.product.discount_price
+        ? parseFloat(item.product.discount_price)
         : parseFloat(item.product.price);
       return total + (price * item.quantity);
-    }, 0)
-  );
+    }, 0);
+    const ticketTotal = this.ticketItems().reduce((total, item) => {
+      const price = item.ticket.discount_price
+        ? parseFloat(item.ticket.discount_price)
+        : parseFloat(item.ticket.price);
+      return total + (price * item.quantity);
+    }, 0);
+    return productTotal + ticketTotal;
+  });
   readonly total = computed(() => this.subtotal());
   readonly isEmpty = computed(() => this.items().length === 0);
 
@@ -40,6 +55,9 @@ export class CartService {
     // Persist cart to localStorage on every change
     effect(() => {
       this.saveCart(this.cartItems());
+    });
+    effect(() => {
+      this.saveTicketCart(this.ticketItems());
     });
 
     // Refresh cart products when language changes
@@ -136,6 +154,41 @@ export class CartService {
 
   clearCart(): void {
     this.cartItems.set([]);
+    this.ticketItems.set([]);
+  }
+
+  addTicketToCart(ticket: Ticket, quantity: number = 1): void {
+    const currentItems = this.ticketItems();
+    const existingItem = currentItems.find(item => item.ticket.id === ticket.id);
+    if (existingItem) {
+      this.ticketItems.set(currentItems.map(item =>
+        item.ticket.id === ticket.id ? { ...item, quantity: item.quantity + quantity } : item
+      ));
+    } else {
+      this.ticketItems.set([...currentItems, { ticket, quantity }]);
+    }
+  }
+
+  removeTicketFromCart(ticketId: number): void {
+    this.ticketItems.set(this.ticketItems().filter(item => item.ticket.id !== ticketId));
+  }
+
+  updateTicketQuantity(ticketId: number, quantity: number): void {
+    if (quantity <= 0) {
+      this.removeTicketFromCart(ticketId);
+      return;
+    }
+    const limitedQuantity = Math.max(1, quantity);
+    this.ticketItems.set(
+      this.ticketItems().map(item =>
+        item.ticket.id === ticketId ? { ...item, quantity: limitedQuantity } : item
+      )
+    );
+  }
+
+  getTicketQuantity(ticketId: number): number {
+    const item = this.ticketItems().find(item => item.ticket.id === ticketId);
+    return item ? item.quantity : 0;
   }
 
   /**
@@ -260,6 +313,22 @@ export class CartService {
   private saveCart(items: CartItem[]): void {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem(this.CART_KEY, JSON.stringify(items));
+    }
+  }
+
+  private loadTicketCart(): CartTicketItem[] {
+    if (!isPlatformBrowser(this.platformId)) return [];
+    try {
+      const stored = localStorage.getItem('ticket_cart');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveTicketCart(items: CartTicketItem[]): void {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('ticket_cart', JSON.stringify(items));
     }
   }
 }
