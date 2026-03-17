@@ -116,8 +116,6 @@ class GoPayService:
         
         payment_data = {
             "payer": {
-                "default_payment_instrument": "BANK_ACCOUNT",
-                "allowed_payment_instruments": ["BANK_ACCOUNT", "PAYMENT_CARD", "GPAY", "APPLE_PAY"],
                 "contact": {
                     "first_name": order.shipping_name.split()[0] if order.shipping_name else "Customer",
                     "last_name": " ".join(order.shipping_name.split()[1:]) if len(order.shipping_name.split()) > 1 else "",
