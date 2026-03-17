@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewChecked, ViewChild, ElementRef, inject, signal, computed, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, inject, signal, computed, PLATFORM_ID, effect, Injector, afterNextRender } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -68,7 +68,7 @@ import { environment } from '../../../../environments/environment';
                 <div>
                   <p class="text-sm text-muted-foreground mb-1">{{ 'events.date_time' | transloco }}</p>
                   <time [attr.datetime]="event()!.datetime" class="font-semibold">
-                    {{ event()!.datetime | date: 'full' : '' : currentLang() }}
+                    {{ capitalizeFirst(event()!.datetime | date: 'full' : '' : currentLang()) }}
                   </time>
                 </div>
               </div>
@@ -90,7 +90,7 @@ import { environment } from '../../../../environments/environment';
           <!-- Meta -->
           <div class="flex items-center gap-4 text-muted-foreground mb-8 pb-8 border-b border-border">
             <time [attr.datetime]="event()!.created_at">
-              {{ event()!.created_at | date: 'longDate' : '' : currentLang() }}
+              {{ capitalizeFirst(event()!.created_at | date: 'longDate' : '' : currentLang()) }}
             </time>
             @if (event()!.author) {
               <span>•</span>
@@ -156,12 +156,13 @@ import { environment } from '../../../../environments/environment';
     }
   `]
 })
-export class EventDetailComponent implements OnInit, AfterViewChecked {
+export class EventDetailComponent implements OnInit {
   private eventsService = inject(EventsService);
   private route = inject(ActivatedRoute);
   private languageService = inject(LanguageService);
   private sanitizer = inject(DomSanitizer);
   private platformId = inject(PLATFORM_ID);
+  private injector = inject(Injector);
   authService = inject(AuthService);
 
   @ViewChild('contentDiv') contentDiv?: ElementRef;
@@ -174,6 +175,20 @@ export class EventDetailComponent implements OnInit, AfterViewChecked {
   loading = signal(false);
   error = signal('');
   copied = signal(false);
+
+  constructor() {
+    effect(() => {
+      const content = this.sanitizedContent();
+      if (content && isPlatformBrowser(this.platformId)) {
+        afterNextRender(() => {
+          if (this.contentDiv?.nativeElement && !this.scriptsDone) {
+            this.executeScripts(this.contentDiv.nativeElement);
+            this.scriptsDone = true;
+          }
+        }, { injector: this.injector });
+      }
+    });
+  }
   
   sanitizedContent = computed(() => {
     let content = this.event()?.content_html || '';
@@ -196,13 +211,6 @@ export class EventDetailComponent implements OnInit, AfterViewChecked {
         this.loadEvent(slug);
       }
     });
-  }
-
-  ngAfterViewChecked() {
-    if (this.event() && this.contentDiv && !this.scriptsDone && isPlatformBrowser(this.platformId)) {
-      this.executeScripts(this.contentDiv.nativeElement);
-      this.scriptsDone = true;
-    }
   }
 
   private executeScripts(container: HTMLElement) {
@@ -258,5 +266,10 @@ export class EventDetailComponent implements OnInit, AfterViewChecked {
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 2000);
     });
+  }
+
+  capitalizeFirst(value: string | null | undefined): string {
+    if (!value) return '';
+    return value.charAt(0).toUpperCase() + value.slice(1);
   }
 }
