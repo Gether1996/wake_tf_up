@@ -2,7 +2,11 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode } from
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { registerLocaleData } from '@angular/common';
+import localeSk from '@angular/common/locales/sk';
 import { provideTransloco } from '@jsverse/transloco';
+
+registerLocaleData(localeSk);
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';

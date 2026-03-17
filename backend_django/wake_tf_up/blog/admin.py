@@ -6,8 +6,10 @@
 #   - <script> tags ARE executed (DOM replacement workaround is in place)
 #   - Images: use src="/media/..." — auto-rewritten to full API URL on frontend
 #   - Do NOT use Angular template syntax: {{ }}, *ngIf, [binding], (event)
-#   - Inline styles, CDN links (fonts, icons, etc.) are fine
+#   - Inline styles, CDN links (fonts, etc.) are fine
 #   - JS countdowns / getElementById() work — just make sure the id is unique
+#   - !! CDN IKONY: NEPOUZIVAJ !! — flaticon, fontawesome, icons8 = spomalenie
+#     Pouzi inline SVG. Brandove SVG ikony zdarma: https://simpleicons.org
 # =============================================================================
 
 from django.contrib import admin
@@ -20,7 +22,12 @@ HTML_ANGULAR_HELP = (
     "• Images with <code>src=\"/media/...\"</code> are automatically rewritten to the full API URL.<br>"
     "• Do <strong>not</strong> use Angular template syntax (<code>{{ }}</code>, <code>*ngIf</code>, etc.) — it will break.<br>"
     "• Inline styles and external CDN links (fonts, icons) are allowed.<br>"
-    "• Countdown timers and any JS that targets an element by <code>id</code> work fine."
+    "• Countdown timers and any JS that targets an element by <code>id</code> work fine.<br>"
+    "<br>"
+    "<strong>🚫 CDN pre ikony — NEPOUŽÍVAJ:</strong><br>"
+    "• <strong>Nekopíruj ikonky cez CDN</strong> (napr. <code>flaticon.com</code>, <code>fontawesome.com</code>, <code>icons8.com</code>) — každý externý request spomaľuje načítanie stránky o niekoľko sekúnd (DNS lookup + SSL handshake).<br>"
+    "• Namiesto <code>&lt;img src=\"https://cdn-icons-png.flaticon.com/...\"&gt;</code> použi <strong>inline SVG</strong> — skopíruj SVG kód priamo do HTML.<br>"
+    "• Spotify, Facebook, Instagram a iné brandové ikony nájdeš ako SVG na <a href=\"https://simpleicons.org\" target=\"_blank\">simpleicons.org</a> (zadarmo, žiadny CDN)."
 )
 
 

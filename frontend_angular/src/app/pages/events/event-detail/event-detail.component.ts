@@ -68,7 +68,7 @@ import { environment } from '../../../../environments/environment';
                 <div>
                   <p class="text-sm text-muted-foreground mb-1">{{ 'events.date_time' | transloco }}</p>
                   <time [attr.datetime]="event()!.datetime" class="font-semibold">
-                    {{ event()!.datetime | date: 'full' }}
+                    {{ event()!.datetime | date: 'full' : '' : currentLang() }}
                   </time>
                 </div>
               </div>
@@ -90,7 +90,7 @@ import { environment } from '../../../../environments/environment';
           <!-- Meta -->
           <div class="flex items-center gap-4 text-muted-foreground mb-8 pb-8 border-b border-border">
             <time [attr.datetime]="event()!.created_at">
-              {{ event()!.created_at | date: 'longDate' }}
+              {{ event()!.created_at | date: 'longDate' : '' : currentLang() }}
             </time>
             @if (event()!.author) {
               <span>•</span>
