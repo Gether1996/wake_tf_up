@@ -1,6 +1,29 @@
+# =============================================================================
+# ⚠️  ANGULAR HTML REQUIREMENTS — READ BEFORE EDITING content_html
+# =============================================================================
+# The content_html field is rendered inside an Angular [innerHTML] binding.
+# Rules:
+#   - <script> tags ARE executed (DOM replacement workaround is in place)
+#   - Images: use src="/media/..." — auto-rewritten to full API URL on frontend
+#   - Do NOT use Angular template syntax: {{ }}, *ngIf, [binding], (event)
+#   - Inline styles, CDN links (fonts, icons, etc.) are fine
+#   - JS countdowns / getElementById() work — just make sure the id is unique
+# =============================================================================
+
 from django.contrib import admin
 from django.utils.html import format_html
+from django.db import models
+from django.forms import Textarea
 from .models import Event, EventImage
+
+HTML_ANGULAR_HELP = (
+    "<strong>⚠️ Angular HTML rules:</strong><br>"
+    "• <code>&lt;script&gt;</code> tags ARE supported — they are executed after render via DOM replacement.<br>"
+    "• Images with <code>src=\"/media/...\"</code> are automatically rewritten to the full API URL.<br>"
+    "• Do <strong>not</strong> use Angular template syntax (<code>{{ }}</code>, <code>*ngIf</code>, etc.) — it will break.<br>"
+    "• Inline styles and external CDN links (fonts, icons) are allowed.<br>"
+    "• Countdown timers and any JS that targets an element by <code>id</code> work fine."
+)
 
 
 @admin.register(Event)
@@ -16,7 +39,8 @@ class EventAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Content', {
-            'fields': ('title', 'author', 'excerpt', 'content_html')
+            'fields': ('title', 'author', 'excerpt', 'content_html'),
+            'description': HTML_ANGULAR_HELP,
         }),
         ('Event Details', {
             'fields': ('datetime', 'place')

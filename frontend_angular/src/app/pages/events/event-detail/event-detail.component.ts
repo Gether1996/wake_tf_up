@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, AfterViewChecked, ViewChild, ElementRef, inject, signal, computed, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -100,6 +100,7 @@ import { environment } from '../../../../environments/environment';
 
           <!-- Content -->
           <div 
+            #contentDiv
             class="prose prose-lg max-w-none
                    prose-headings:font-bold prose-headings:tracking-tight
                    prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-4
@@ -155,12 +156,16 @@ import { environment } from '../../../../environments/environment';
     }
   `]
 })
-export class EventDetailComponent implements OnInit {
+export class EventDetailComponent implements OnInit, AfterViewChecked {
   private eventsService = inject(EventsService);
   private route = inject(ActivatedRoute);
   private languageService = inject(LanguageService);
   private sanitizer = inject(DomSanitizer);
+  private platformId = inject(PLATFORM_ID);
   authService = inject(AuthService);
+
+  @ViewChild('contentDiv') contentDiv?: ElementRef;
+  private scriptsDone = false;
 
   currentLang = this.languageService.currentLang;
   eventsLink = computed(() => `/${this.currentLang()}/events`);
@@ -193,9 +198,29 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
+  ngAfterViewChecked() {
+    if (this.event() && this.contentDiv && !this.scriptsDone && isPlatformBrowser(this.platformId)) {
+      this.executeScripts(this.contentDiv.nativeElement);
+      this.scriptsDone = true;
+    }
+  }
+
+  private executeScripts(container: HTMLElement) {
+    const scripts = container.querySelectorAll('script');
+    scripts.forEach(oldScript => {
+      const newScript = document.createElement('script');
+      Array.from(oldScript.attributes).forEach(attr => {
+        newScript.setAttribute(attr.name, attr.value);
+      });
+      newScript.textContent = oldScript.textContent;
+      oldScript.parentNode?.replaceChild(newScript, oldScript);
+    });
+  }
+
   loadEvent(slug: string) {
     this.loading.set(true);
     this.error.set('');
+    this.scriptsDone = false;
 
     this.eventsService.getEvent(slug).subscribe({
       next: (event) => {
