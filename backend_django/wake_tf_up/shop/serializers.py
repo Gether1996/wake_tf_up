@@ -244,20 +244,12 @@ class ProductAdminSerializer(serializers.ModelSerializer):
 # ============ TICKET SERIALIZERS ============
 
 class TicketImageSerializer(serializers.ModelSerializer):
-    """Serializer for ticket images — returns absolute URLs so the browser can load from any origin"""
-    image = serializers.SerializerMethodField()
+    """Serializer for ticket images — returns relative URLs (nginx handles the domain)"""
+    image = RelativeImageField()
 
     class Meta:
         model = TicketImage
         fields = ('id', 'image', 'order')
-
-    def get_image(self, obj):
-        if not obj.image:
-            return None
-        request = self.context.get('request')
-        if request:
-            return request.build_absolute_uri(obj.image.url)
-        return obj.image.url
 
 
 class TicketListSerializer(TranslatableSerializerMixin, serializers.ModelSerializer):
@@ -290,9 +282,6 @@ class TicketListSerializer(TranslatableSerializerMixin, serializers.ModelSeriali
     def get_primary_image(self, obj):
         image = obj.images.first()
         if image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(image.image.url)
             return image.image.url
         return None
 
