@@ -168,7 +168,6 @@ import { environment } from '../../../environments/environment';
                   }
 
                   <!-- DPD Courier -->
-                  @if (!isTicketOnlyCart()) {
                   <label class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
                          [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'dpd_courier'"
                          [class.bg-muted]="checkoutForm.get('shippingMethod')?.value === 'dpd_courier'">
@@ -203,7 +202,6 @@ import { environment } from '../../../environments/environment';
                       }
                     </div>
                   </label>
-                  } <!-- end @if !isTicketOnlyCart -->
 
                   <!-- Digital Delivery (tickets only — hidden when cart also has products) -->
                   @if (isTicketOnlyCart()) {
@@ -1014,14 +1012,8 @@ export class CheckoutComponent implements OnInit {
       }
     });
 
-    // Auto-select digital delivery for ticket-only carts
+    // If cart has products, digital_delivery is not allowed — reset to dpd_courier
     effect(() => {
-      if (this.isTicketOnlyCart() && this.checkoutForm.get('shippingMethod')?.value !== 'digital_delivery') {
-        this.checkoutForm.patchValue({ shippingMethod: 'digital_delivery' }, { emitEvent: false });
-        this.selectedShippingMethod.set('digital_delivery');
-        this._updateAddressValidators('digital_delivery');
-      }
-      // If cart has products, digital_delivery is not allowed — reset to dpd_courier
       if (!this.isTicketOnlyCart() && this.checkoutForm.get('shippingMethod')?.value === 'digital_delivery') {
         this.checkoutForm.patchValue({ shippingMethod: 'dpd_courier' }, { emitEvent: false });
         this.selectedShippingMethod.set('dpd_courier');
