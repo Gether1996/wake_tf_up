@@ -1,17 +1,18 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { CatalogService } from '../../../core/api/catalog.service';
 import { CartService } from '../../../core/api/cart.service';
 import { LanguageService } from '../../../core/services/language.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Ticket } from '../../../core/api/api.models';
+import { CapitalizeFirstPipe } from '../../../shared/pipes/capitalize-first.pipe';
 
 @Component({
   selector: 'app-ticket-list',
-  imports: [CommonModule, RouterModule, TranslocoModule],
+  imports: [CommonModule, RouterModule, TranslocoModule, CapitalizeFirstPipe],
   template: `
     <div class="container mx-auto px-4 py-8">
       <div class="max-w-4xl mx-auto">
@@ -102,7 +103,7 @@ import { Ticket } from '../../../core/api/api.models';
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      <time>{{ ticket.event_date | date: 'mediumDate' }}</time>
+                      <time>{{ ticket.event_date | date: 'mediumDate' : '' : currentLang() | capitalizeFirst }}</time>
                     </div>
                     <span>•</span>
                   }
@@ -174,8 +175,10 @@ export class TicketListComponent implements OnInit {
   private catalogService = inject(CatalogService);
   private cartService = inject(CartService);
   private notificationService = inject(NotificationService);
+  private translocoService = inject(TranslocoService);
   authService = inject(AuthService);
   private languageService = inject(LanguageService);
+  currentLang = this.languageService.currentLang;
 
   tickets = signal<Ticket[]>([]);
   loading = signal(false);
@@ -200,6 +203,6 @@ export class TicketListComponent implements OnInit {
 
   addToCart(ticket: Ticket) {
     this.cartService.addTicketToCart(ticket, 1);
-    this.notificationService.success('ticket.added_to_cart');
+    this.notificationService.success(this.translocoService.translate('ticket.added_to_cart'));
   }
 }

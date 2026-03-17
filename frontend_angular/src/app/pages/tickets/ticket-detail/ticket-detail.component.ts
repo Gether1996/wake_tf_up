@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { CatalogService } from '../../../core/api/catalog.service';
 import { CartService } from '../../../core/api/cart.service';
 import { LanguageService } from '../../../core/services/language.service';
@@ -9,10 +9,11 @@ import { NotificationService } from '../../../core/services/notification.service
 import { AuthService } from '../../../core/auth/auth.service';
 import { Ticket } from '../../../core/api/api.models';
 import { ButtonComponent } from '../../../shared/button/button.component';
+import { CapitalizeFirstPipe } from '../../../shared/pipes/capitalize-first.pipe';
 
 @Component({
   selector: 'app-ticket-detail',
-  imports: [CommonModule, RouterModule, TranslocoModule, ButtonComponent],
+  imports: [CommonModule, RouterModule, TranslocoModule, ButtonComponent, CapitalizeFirstPipe],
   template: `
     <div class="container mx-auto px-4 py-8">
       @if (loading()) {
@@ -95,7 +96,7 @@ import { ButtonComponent } from '../../../shared/button/button.component';
                     </svg>
                     <div>
                       <p class="text-sm text-muted-foreground mb-1">{{ 'ticket.event_date' | transloco }}</p>
-                      <time class="font-semibold">{{ ticket()!.event_date | date: 'fullDate' }}</time>
+                      <time class="font-semibold">{{ ticket()!.event_date | date: 'fullDate' : '' : currentLang() | capitalizeFirst }}</time>
                     </div>
                   </div>
                 }
@@ -186,8 +187,10 @@ export class TicketDetailComponent implements OnInit {
   private catalogService = inject(CatalogService);
   private cartService = inject(CartService);
   private notificationService = inject(NotificationService);
+  private translocoService = inject(TranslocoService);
   private languageService = inject(LanguageService);
   authService = inject(AuthService);
+  currentLang = this.languageService.currentLang;
 
   ticket = signal<Ticket | null>(null);
   loading = signal(false);
@@ -237,6 +240,6 @@ export class TicketDetailComponent implements OnInit {
     const t = this.ticket();
     if (!t) return;
     this.cartService.addTicketToCart(t, this.quantity());
-    this.notificationService.success('ticket.added_to_cart');
+    this.notificationService.success(this.translocoService.translate('ticket.added_to_cart'));
   }
 }

@@ -7,10 +7,11 @@ import { ButtonComponent } from '../button/button.component';
 import { CartService } from '../../core/api/cart.service';
 import { LanguageService } from '../../core/services/language.service';
 import { SettingsService } from '../../core/api/settings.service';
+import { CapitalizeFirstPipe } from '../pipes/capitalize-first.pipe';
 
 @Component({
   selector: 'app-ticket-card',
-  imports: [CommonModule, RouterModule, TranslocoModule, ButtonComponent],
+  imports: [CommonModule, RouterModule, TranslocoModule, ButtonComponent, CapitalizeFirstPipe],
   template: `
     <article class="group relative bg-background border border-border overflow-hidden transition-all hover:border-foreground flex flex-col h-full">
       <!-- Ticket Image -->
@@ -52,7 +53,7 @@ import { SettingsService } from '../../core/api/settings.service';
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <time>{{ ticket().event_date | date: 'mediumDate' }}</time>
+                <time>{{ ticket().event_date | date: 'mediumDate' : '' : currentLang() | capitalizeFirst }}</time>
               </div>
             }
             @if (ticket().event_location) {
