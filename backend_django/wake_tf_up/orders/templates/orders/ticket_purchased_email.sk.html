@@ -1,69 +1,92 @@
-<!DOCTYPE html>
-<html>
+﻿<!DOCTYPE html>
+<html lang="sk">
 <head>
-    <meta charset="utf-8">
-    <title>Zakúpená vstupenka</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaša vstupenka – WAKE TF UP</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+        .header { background-color: #000000; color: #ffffff; padding: 40px 20px; text-align: center; }
+        .logo { font-size: 36px; font-weight: 900; letter-spacing: 3px; margin: 0; text-transform: uppercase; }
+        .tagline { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin: 10px 0 0 0; opacity: 0.7; }
+        .hero { background-color: #111111; color: #ffffff; padding: 32px 30px; }
+        .hero h1 { margin: 0 0 8px 0; font-size: 22px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+        .hero p { margin: 0; font-size: 14px; opacity: 0.8; }
+        .content { padding: 40px 30px; color: #000000; }
+        .section-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 20px 0; padding-bottom: 8px; border-bottom: 2px solid #000000; color: #000000; }
+        .ticket-card { border: 2px solid #000000; margin-bottom: 20px; }
+        .ticket-card-header { background-color: #000000; color: #ffffff; padding: 14px 20px; }
+        .ticket-card-header p { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
+        .ticket-card-header small { font-size: 12px; opacity: 0.7; font-weight: 400; }
+        .ticket-card-body { padding: 28px 20px; text-align: center; }
+        .ticket-code { font-family: 'Courier New', 'Lucida Console', monospace; font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #000000; margin: 0; line-height: 1; }
+        .ticket-code-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #999999; margin: 10px 0 0 0; }
+        .warning-block { background-color: #fafafa; border-left: 3px solid #000000; padding: 14px 18px; margin: 24px 0; font-size: 13px; color: #444444; }
+        .divider { height: 1px; background-color: #e5e5e5; margin: 32px 0; }
+        .link { color: #000000; font-weight: 600; }
+        .footer { background-color: #000000; color: #ffffff; padding: 30px 20px; text-align: center; font-size: 12px; }
+        .footer p { margin: 4px 0; opacity: 0.75; }
+        .footer-note { background-color: #f5f5f5; padding: 16px 30px; text-align: center; font-size: 11px; color: #999999; }
+        @media only screen and (max-width: 600px) { .content { padding: 28px 20px; } .hero { padding: 28px 20px; } .ticket-code { font-size: 28px; letter-spacing: 6px; } }
+    </style>
 </head>
-<body style="font-family: Arial, sans-serif; background-color: #f7f7f7; margin: 0; padding: 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f7f7f7; padding: 24px 0;">
-        <tr>
-            <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; padding: 32px; text-align: left;">
-                    <tr>
-                        <td style="padding-bottom: 24px; border-bottom: 1px solid #e6e6e6;">
-                            <h1 style="margin: 0; font-size: 24px; color: #111827; letter-spacing: 1px;">🎟 ZAKÚPENÁ VSTUPENKA</h1>
-                            <p style="margin: 8px 0 0 0; color: #6b7280;">
-                                Ďakujeme za zakúpenie! Nižšie nájdete váš unikátny kód vstupenky pre objednávku <strong>#{{ order.id }}</strong>.
-                            </p>
-                        </td>
-                    </tr>
+<body>
+<div class="container">
 
-                    <tr>
-                        <td style="padding: 24px 0;">
-                            <h2 style="margin: 0 0 16px 0; font-size: 18px; color: #111827;">Tu je váš unikátny kód</h2>
+    <div class="header">
+        <p class="logo">WAKE TF UP</p>
+        <p class="tagline">Reworked. Renewed. One of One.</p>
+    </div>
 
-                            {% for pt in purchased_tickets %}
-                            <div style="background-color: #f0fdf4; border: 2px solid #16a34a; border-radius: 8px; padding: 20px; margin-bottom: 16px; text-align: center;">
-                                <p style="margin: 0 0 6px 0; color: #374151; font-size: 14px;">
-                                    <strong>{{ pt.ticket.name }}</strong>
-                                    {% if pt.ticket.event_date %} &mdash; {{ pt.ticket.event_date|date:"d.m.Y H:i" }}{% endif %}
-                                    {% if pt.ticket.event_location %} &mdash; {{ pt.ticket.event_location }}{% endif %}
-                                </p>
-                                <p style="margin: 10px 0 0 0; font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #111827; font-family: 'Courier New', monospace;">
-                                    {{ pt.code }}
-                                </p>
-                            </div>
-                            {% endfor %}
+    <div class="hero">
+        <h1>Vaša vstupenka je pripravená</h1>
+        <p>Ďakujeme za nákup! Tu sú vaše jedinečné prístupové kódy pre objednávku <strong>#{{ order.id }}</strong>.</p>
+    </div>
 
-                            <p style="margin: 16px 0 0 0; color: #6b7280; font-size: 13px;">
-                                ⚠️ Tento kód je unikátny a platný iba raz. Prosíme, nevystavujte ho verejne.
-                            </p>
-                        </td>
-                    </tr>
+    <div class="content">
 
-                    <tr>
-                        <td style="padding: 0 0 24px 0;">
-                            <p style="margin: 0; color: #374151;">
-                                Ak máte akékoľvek otázky, neváhajte nás kontaktovať na
-                                <a href="mailto:{{ support_email }}" style="color: #2563eb;">{{ support_email }}</a>.
-                            </p>
-                            <p style="margin: 12px 0 0 0; color: #374151;">
-                                Ďakujeme, že ste s nami!<br>
-                                <strong>Tím WAKE TF UP</strong>
-                            </p>
-                        </td>
-                    </tr>
+        <p class="section-title">Vaše kódy vstupeniek</p>
 
-                    <tr>
-                        <td style="padding-top: 24px; border-top: 1px solid #e6e6e6;">
-                            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
-                                Tento email bol odoslaný automaticky. Prosíme, neodpovedajte naň priamo.
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+        {% for pt in purchased_tickets %}
+        <div class="ticket-card">
+            <div class="ticket-card-header">
+                <p>
+                    {{ pt.ticket.name }}
+                    {% if pt.ticket.event_date %}<br><small>{{ pt.ticket.event_date|date:"d.m.Y H:i" }}{% if pt.ticket.event_location %} &mdash; {{ pt.ticket.event_location }}{% endif %}</small>{% endif %}
+                </p>
+            </div>
+            <div class="ticket-card-body">
+                <p class="ticket-code">{{ pt.code }}</p>
+                <p class="ticket-code-label">Vstupný kód</p>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="warning-block">
+            <strong>Dôležité:</strong> Každý kód je jedinečný a platný len na jeden vstup. Nevystavujte svoj kód verejne.
+        </div>
+
+        <div class="divider"></div>
+
+        <p style="font-size:14px; color:#333333; margin:0 0 16px 0;">
+            Ak máte akékoľvek otázky, kontaktujte nás na <a href="mailto:{{ support_email }}" class="link">{{ support_email }}</a>.
+        </p>
+        <p style="font-size:14px; color:#333333; margin:0;">
+            Ďakujeme, že ste s nami!<br>
+            <strong>Tím WAKE TF UP</strong>
+        </p>
+    </div>
+
+    <div class="footer">
+        <p><strong>WAKE TF UP</strong></p>
+        <p>Udržateľná móda &bull; Limitované edície &bull; One of a Kind</p>
+        <p style="margin-top:14px;">&copy; 2026 WAKE TF UP. Všetky práva vyhradené.</p>
+    </div>
+    <div class="footer-note">
+        Tento email bol vygenerovaný automaticky. Prosím, neodpovedajte naň priamo.
+    </div>
+
+</div>
 </body>
 </html>

@@ -327,6 +327,13 @@ import { environment } from '../../../environments/environment';
                     </select>
                   </div>
 
+                  @if (isDigitalDelivery()) {
+                  <div class="md:col-span-2 mt-2 flex items-start gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3">
+                    <span class="text-lg leading-none mt-0.5">🎟️</span>
+                    <p class="text-sm text-blue-800 dark:text-blue-200">{{ 'checkout.digital_delivery_contact_note' | transloco }}</p>
+                  </div>
+                  }
+
                 </div>
               </div>
 
@@ -587,6 +594,16 @@ import { environment } from '../../../environments/environment';
                     <p><strong>{{ 'checkout.phone' | transloco }}:</strong> {{ checkoutForm.get('phone')?.value }}</p>
                   </div>
                 </div>
+
+                <!-- Digital Delivery Notice -->
+                @if (isDigitalDelivery()) {
+                <div class="mb-6 pb-6 border-b border-border">
+                  <div class="flex items-start gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-4">
+                    <span class="text-xl leading-none mt-0.5">🎟️</span>
+                    <p class="text-sm text-blue-800 dark:text-blue-200">{{ 'checkout.digital_delivery_contact_note' | transloco }}</p>
+                  </div>
+                </div>
+                }
 
                 <!-- Shipping Address -->
                 @if (selectedShippingMethod() !== 'packeta_box' || isDigitalDelivery()) {

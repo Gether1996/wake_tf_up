@@ -1,115 +1,140 @@
-<!DOCTYPE html>
-<html>
+﻿<!DOCTYPE html>
+<html lang="sk">
 <head>
-    <meta charset="utf-8">
-    <title>Potvrdenie platby</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platba prijatá – WAKE TF UP</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+        .header { background-color: #000000; color: #ffffff; padding: 40px 20px; text-align: center; }
+        .logo { font-size: 36px; font-weight: 900; letter-spacing: 3px; margin: 0; text-transform: uppercase; }
+        .tagline { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin: 10px 0 0 0; opacity: 0.7; }
+        .hero { background-color: #052e16; color: #ffffff; padding: 32px 30px; border-bottom: 3px solid #16a34a; }
+        .hero h1 { margin: 0 0 8px 0; font-size: 24px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+        .hero p { margin: 0; font-size: 14px; opacity: 0.85; }
+        .paid-badge { display: inline-block; background-color: #16a34a; color: #ffffff; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; padding: 6px 16px; font-weight: 700; margin: 16px 0 0 0; }
+        .content { padding: 40px 30px; color: #000000; }
+        .section-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 14px 0; padding-bottom: 8px; border-bottom: 2px solid #000000; color: #000000; }
+        .info-block { background-color: #f5f5f5; padding: 16px 20px; margin-bottom: 24px; font-size: 14px; color: #333333; line-height: 1.8; }
+        .divider { height: 1px; background-color: #e5e5e5; margin: 32px 0; }
+        .items-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .items-table th { text-align: left; padding: 10px 12px; background-color: #000000; color: #ffffff; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+        .items-table th:last-child { text-align: right; }
+        .items-table th:nth-child(2) { text-align: center; }
+        .items-table td { padding: 12px; border-bottom: 1px solid #e5e5e5; color: #333333; vertical-align: top; }
+        .items-table td:last-child { text-align: right; color: #000000; font-weight: 600; }
+        .items-table td:nth-child(2) { text-align: center; }
+        .totals-row td { background-color: #f5f5f5; padding: 10px 12px; font-size: 13px; color: #666666; }
+        .totals-row-final td { background-color: #052e16; color: #ffffff; padding: 14px 12px; font-weight: 700; font-size: 15px; letter-spacing: 1px; }
+        .badge { display: inline-block; background-color: #f97316; color: #ffffff; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 2px 6px; font-weight: 700; vertical-align: middle; margin-left: 6px; }
+        .link { color: #000000; font-weight: 600; }
+        .footer { background-color: #000000; color: #ffffff; padding: 30px 20px; text-align: center; font-size: 12px; }
+        .footer p { margin: 4px 0; opacity: 0.75; }
+        .footer-note { background-color: #f5f5f5; padding: 16px 30px; text-align: center; font-size: 11px; color: #999999; }
+        @media only screen and (max-width: 600px) { .content { padding: 28px 20px; } .hero { padding: 28px 20px; } }
+    </style>
 </head>
-<body style="font-family: Arial, sans-serif; background-color: #f7f7f7; margin: 0; padding: 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f7f7f7; padding: 24px 0;">
-        <tr>
-            <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; padding: 32px; text-align: left;">
-                    <tr>
-                        <td style="padding-bottom: 24px; border-bottom: 1px solid #e6e6e6;">
-                            <h1 style="margin: 0; font-size: 22px; color: #16a34a;">✓ Platba bola prijatá!</h1>
-                            <p style="margin: 8px 0 0 0; color: #6b7280;">Vaša platba za objednávku <strong>#{{ order.id }}</strong> bola úspešne spracovaná.</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 24px 0;">
-                            <div style="background-color: #dcfce7; border-left: 4px solid #16a34a; padding: 16px; margin-bottom: 24px;">
-                                <p style="margin: 0; color: #166534;">
-                                    <strong>Stav objednávky:</strong> Zaplatená<br>
-                                    <strong>Celková suma:</strong> {{ total_amount|floatformat:2 }} €
-                                </p>
-                            </div>
-                            
-                            <h2 style="margin: 0 0 12px 0; font-size: 18px; color: #111827;">Dodacie údaje</h2>
-                            <p style="margin: 0; color: #374151;">
-                                <strong>{{ order.shipping_name }}</strong><br>
-                                {{ order.shipping_address }}<br>
-                                {{ order.shipping_postal_code }} {{ order.shipping_city }}<br>
-                                {{ order.shipping_country }}<br>
-                                Tel.: {{ order.phone }}
-                            </p>
-                            <p style="margin: 16px 0 0 0; color: #374151;">
-                                Spôsob dopravy: <strong>{{ shipping_method_display }}</strong>
-                                {% if order.shipping_method == 'packeta_box' and packeta_point %}<br>
-                                    Packeta výdajné miesto: <strong>{{ packeta_point }}</strong><br>
-                                    {{ packeta_address }}
-                                {% endif %}
-                            </p>
-                            
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 24px 0;">
-                            <h2 style="margin: 0 0 12px 0; font-size: 18px; color: #111827;">Zhrnutie objednávky</h2>
-                            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
-                                <thead>
-                                    <tr style="background-color: #f3f4f6; color: #374151;">
-                                        <th align="left" style="padding: 12px; font-weight: normal;">Produkt</th>
-                                        <th align="center" style="padding: 12px; font-weight: normal;">Množstvo</th>
-                                        <th align="right" style="padding: 12px; font-weight: normal;">Cena</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in items %}
-                                        <tr style="border-bottom: 1px solid #e5e7eb;">
-                                            <td style="padding: 12px; color: #111827;">
-                                                {{ item.product.name }}
-                                                {% if item.is_pre_order %}<br><small style="color: #f97316;">Predobjednávka</small>{% endif %}
-                                            </td>
-                                            <td align="center" style="padding: 12px; color: #374151;">x{{ item.quantity }}</td>
-                                            <td align="right" style="padding: 12px; color: #111827;">{{ item.subtotal|floatformat:2 }} €</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="2" align="right" style="padding: 12px; color: #6b7280;">Medzisúčet</td>
-                                        <td align="right" style="padding: 12px; color: #111827;">{{ subtotal|floatformat:2 }} €</td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2" align="right" style="padding: 12px; color: #6b7280;">Doprava</td>
-                                        <td align="right" style="padding: 12px; color: #111827;">{% if shipping_cost == 0 %}<span style="color: #16a34a;">Zadarmo</span>{% else %}{{ shipping_cost|floatformat:2 }} €{% endif %}</td>
-                                    </tr>
-                                    {% if discount_amount and discount_amount > 0 %}
-                                    <tr>
-                                        <td colspan="2" align="right" style="padding: 12px; color: #6b7280;">Zľava</td>
-                                        <td align="right" style="padding: 12px; color: #16a34a;">-{{ discount_amount|floatformat:2 }} €</td>
-                                    </tr>
-                                    {% endif %}
-                                    <tr style="background-color: #dcfce7;">
-                                        <td colspan="2" align="right" style="padding: 12px; font-weight: bold; color: #111827;">Zaplatené</td>
-                                        <td align="right" style="padding: 12px; font-weight: bold; color: #16a34a;">{{ total_amount|floatformat:2 }} €</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 24px 0;">
-                            <h2 style="margin: 0 0 12px 0; font-size: 18px; color: #111827;">Ďalšie kroky</h2>
-                            <p style="margin: 0; color: #374151;">
-                                Teraz pripravíme Vašu objednávku na odoslanie. O odoslaní zásielky Vás budeme informovať emailom.
-                            </p>
-                            <p style="margin: 16px 0 0 0; color: #374151;">
-                                Stav Vašej objednávky môžete sledovať po prihlásení v sekcii <a href="{{ frontend_order_url }}" style="color: #2563eb;">Moje objednávky</a>.
-                            </p>
-                            <p style="margin: 16px 0 0 0; color: #374151;">
-                                Ak máte akékoľvek otázky, kontaktujte nás na <a href="mailto:{{ support_email }}" style="color: #2563eb;">{{ support_email }}</a>.
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding-top: 24px; border-top: 1px solid #e6e6e6; color: #9ca3af; font-size: 12px;">
-                            Tento email bol vygenerovaný automaticky. Prosím, neodpovedajte naň priamo.
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+<body>
+<div class="container">
+
+    <div class="header">
+        <p class="logo">WAKE TF UP</p>
+        <p class="tagline">Reworked. Renewed. One of One.</p>
+    </div>
+
+    <div class="hero">
+        <h1>&#10003; Platba bola prijatá!</h1>
+        <p>Vaša platba za objednávku <strong>#{{ order.id }}</strong> bola úspešne spracovaná.</p>
+        <div class="paid-badge">&#10003; Zaplatené &mdash; {{ total_amount|floatformat:2 }} &euro;</div>
+    </div>
+
+    <div class="content">
+
+        <p class="section-title">Dodacie údaje</p>
+        <div class="info-block">
+            <strong>{{ order.shipping_name }}</strong><br>
+            {{ order.shipping_address }}<br>
+            {{ order.shipping_postal_code }} {{ order.shipping_city }}<br>
+            {{ order.shipping_country }}<br>
+            Tel.: {{ order.phone }}<br><br>
+            Spôsob dopravy: <strong>{{ shipping_method_display }}</strong>{% if order.shipping_method == 'packeta_box' and packeta_point %}<br>
+            Packeta výdajné miesto: <strong>{{ packeta_point }}</strong><br>
+            {{ packeta_address }}{% endif %}
+        </div>
+
+        <div class="divider"></div>
+
+        <p class="section-title">Zhrnutie objednávky</p>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Položka</th>
+                    <th>Množstvo</th>
+                    <th>Cena</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        {% if item.product %}{{ item.product.name }}{% elif item.ticket %}{{ item.ticket.name }}{% endif %}
+                        {% if item.is_pre_order %}<span class="badge">Predobjednávka</span>{% endif %}
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.subtotal|floatformat:2 }} &euro;</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="totals-row">
+                    <td colspan="2">Medzisúčet</td>
+                    <td style="text-align:right;">{{ subtotal|floatformat:2 }} &euro;</td>
+                </tr>
+                <tr class="totals-row">
+                    <td colspan="2">Doprava</td>
+                    <td style="text-align:right;">{% if shipping_cost == 0 %}Zadarmo{% else %}{{ shipping_cost|floatformat:2 }} &euro;{% endif %}</td>
+                </tr>
+                {% if discount_amount and discount_amount > 0 %}
+                <tr class="totals-row">
+                    <td colspan="2">Zľava</td>
+                    <td style="text-align:right; color:#16a34a;">-{{ discount_amount|floatformat:2 }} &euro;</td>
+                </tr>
+                {% endif %}
+                <tr class="totals-row-final">
+                    <td colspan="2">Zaplatené</td>
+                    <td style="text-align:right;">{{ total_amount|floatformat:2 }} &euro;</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="divider"></div>
+
+        <p class="section-title">Ďalšie kroky</p>
+        <p style="font-size:14px; color:#333333; margin:0 0 16px 0;">
+            {% if order.shipping_method == 'digital_delivery' %}
+            Vaše digitálne vstupenky boli zaslané v samostatnom emaili. Skontrolujte svoju schránku (prípadne aj priečinok spam).
+            {% else %}
+            Teraz pripravíme Vašu objednávku na odoslanie. O odoslaní zásielky Vás budeme informovať emailom.
+            {% endif %}
+        </p>
+        <p style="font-size:14px; color:#333333; margin:0 0 16px 0;">
+            Stav objednávky sledujte v sekcii <a href="{{ frontend_order_url }}" class="link">Moje objednávky</a>.
+        </p>
+        <p style="font-size:14px; color:#333333; margin:0;">
+            Otázky? <a href="mailto:{{ support_email }}" class="link">{{ support_email }}</a>
+        </p>
+    </div>
+
+    <div class="footer">
+        <p><strong>WAKE TF UP</strong></p>
+        <p>Udržateľná móda &bull; Limitované edície &bull; One of a Kind</p>
+        <p style="margin-top:14px;">&copy; 2026 WAKE TF UP. Všetky práva vyhradené.</p>
+    </div>
+    <div class="footer-note">
+        Tento email bol vygenerovaný automaticky. Prosím, neodpovedajte naň priamo.
+    </div>
+
+</div>
 </body>
 </html>
