@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.contrib import messages
 from django.utils.html import format_html
+from django.urls import path
+from django.http import HttpResponseRedirect
+from django.utils import timezone
 from .models import Order, OrderItem, PurchasedTicket
 from .packeta_service import PacketaService, PacketaAPIError
 
@@ -226,7 +229,7 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(PurchasedTicket)
 class PurchasedTicketAdmin(admin.ModelAdmin):
-    list_display = ('code', 'ticket_name', 'order_link', 'user_email', 'is_used', 'used_at', 'created_at')
+    list_display = ('code', 'ticket_name', 'order_link', 'user_email', 'toggle_used_button', 'used_at', 'created_at')
     list_filter = ('is_used', 'ticket', 'created_at')
     search_fields = ('code', 'order__id', 'order__user__email', 'ticket__name')
     readonly_fields = ('code', 'order', 'order_item', 'ticket', 'created_at')
@@ -247,6 +250,29 @@ class PurchasedTicketAdmin(admin.ModelAdmin):
         }),
     )
 
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                '<int:pk>/toggle-used/',
+                self.admin_site.admin_view(self.toggle_used_view),
+                name='orders_purchasedticket_toggle_used',
+            ),
+        ]
+        return custom + urls
+
+    def toggle_used_view(self, request, pk):
+        from django.urls import reverse
+        ticket = PurchasedTicket.objects.get(pk=pk)
+        if ticket.is_used:
+            ticket.is_used = False
+            ticket.used_at = None
+        else:
+            ticket.is_used = True
+            ticket.used_at = timezone.now()
+        ticket.save(update_fields=['is_used', 'used_at'])
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('admin:orders_purchasedticket_changelist')))
+
     def ticket_name(self, obj):
         return obj.ticket.name
     ticket_name.short_description = 'Vstupenka'
@@ -255,8 +281,27 @@ class PurchasedTicketAdmin(admin.ModelAdmin):
     def order_link(self, obj):
         from django.urls import reverse
         url = reverse('admin:orders_order_change', args=[obj.order.id])
-        return format_html('<a href="#{id}">#{id}</a>', id=obj.order.id)
+        return format_html('<a href="{}">#{}</a>', url, obj.order.id)
     order_link.short_description = 'Objednávka'
+
+    def toggle_used_button(self, obj):
+        from django.urls import reverse
+        url = reverse('admin:orders_purchasedticket_toggle_used', args=[obj.pk])
+        if obj.is_used:
+            return format_html(
+                '<a href="{}" style="display:inline-block;padding:4px 12px;background:#dc2626;color:#fff;'
+                'font-size:12px;font-weight:600;text-decoration:none;border-radius:3px;white-space:nowrap;">'
+                '&#10003; Použitá &mdash; zrušiť</a>',
+                url
+            )
+        return format_html(
+            '<a href="{}" style="display:inline-block;padding:4px 12px;background:#16a34a;color:#fff;'
+            'font-size:12px;font-weight:600;text-decoration:none;border-radius:3px;white-space:nowrap;">'
+            'Označ ako použitú</a>',
+            url
+        )
+    toggle_used_button.short_description = 'Stav'
+    toggle_used_button.allow_tags = True
 
     def user_email(self, obj):
         return obj.order.user.email
@@ -269,7 +314,6 @@ class PurchasedTicketAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
     def mark_as_used(self, request, queryset):
-        from django.utils import timezone
         queryset.update(is_used=True, used_at=timezone.now())
         self.message_user(request, f'Označené ako použité: {queryset.count()}')
     mark_as_used.short_description = 'Označiť ako použité'
