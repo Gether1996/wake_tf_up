@@ -121,7 +121,15 @@ class OrderAdmin(admin.ModelAdmin):
     
     # Actions
     def mark_as_paid(self, request, queryset):
-        queryset.update(status='paid')
+        from orders.emails import send_payment_confirmation_email
+        count = 0
+        for order in queryset:
+            if order.status != 'paid':
+                order.status = 'paid'
+                order.save()  # Triggers post_save signal → generates ticket codes + sends ticket email
+                send_payment_confirmation_email(order)
+                count += 1
+        self.message_user(request, f"{count} order(s) marked as paid and emails sent.", level=messages.SUCCESS)
     mark_as_paid.short_description = "Mark selected orders as Paid"
     
     def mark_as_shipped(self, request, queryset):

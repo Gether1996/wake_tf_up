@@ -137,7 +137,7 @@ class GoPayService:
             "order_description": f"Objednávka #{order.id}",
             "items": [
                 {
-                    "name": item.product.name,
+                    "name": (item.product.name if item.product else item.ticket.name if item.ticket else "Item"),
                     "amount": int(item.price_at_purchase * 100),
                     "count": item.quantity,
                     "vat_rate": 20  # Standard VAT rate, adjust if needed

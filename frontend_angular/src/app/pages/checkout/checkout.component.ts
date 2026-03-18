@@ -270,7 +270,6 @@ import { environment } from '../../../environments/environment';
                       [class.border-danger]="checkoutForm.get('phone')?.invalid && checkoutForm.get('phone')?.touched">
                   </div>
 
-                  @if (!isDigitalDelivery()) {
                   <!-- Address -->
                   <div class="md:col-span-2">
                     <label class="block text-sm font-mono uppercase mb-2" for="address">
@@ -327,12 +326,7 @@ import { environment } from '../../../environments/environment';
                       <option value="DE">Germany</option>
                     </select>
                   </div>
-                  } <!-- end @if !isDigitalDelivery -->
-                  @else {
-                  <div class="md:col-span-2 bg-muted/50 border border-border p-4">
-                    <p class="text-sm text-muted-foreground">🎟️ {{ 'checkout.digital_delivery_contact_note' | transloco }}</p>
-                  </div>
-                  }
+
                 </div>
               </div>
 
@@ -595,7 +589,7 @@ import { environment } from '../../../environments/environment';
                 </div>
 
                 <!-- Shipping Address -->
-                @if (selectedShippingMethod() !== 'packeta_box') {
+                @if (selectedShippingMethod() !== 'packeta_box' || isDigitalDelivery()) {
                 <div class="mb-6 pb-6 border-b border-border">
                   <h3 class="font-mono uppercase font-bold text-sm mb-3">{{ 'checkout.shipping_address' | transloco }}</h3>
                   <div class="bg-muted p-4 text-sm space-y-1">
@@ -1060,17 +1054,10 @@ export class CheckoutComponent implements OnInit {
 
   private _updateAddressValidators(method: string) {
     const addressFields = ['address', 'city', 'postalCode', 'country'];
-    if (method === 'digital_delivery') {
-      addressFields.forEach(f => {
-        this.checkoutForm.get(f)?.clearValidators();
-        this.checkoutForm.get(f)?.updateValueAndValidity();
-      });
-    } else {
-      addressFields.forEach(f => {
-        this.checkoutForm.get(f)?.setValidators([Validators.required]);
-        this.checkoutForm.get(f)?.updateValueAndValidity();
-      });
-    }
+    addressFields.forEach(f => {
+      this.checkoutForm.get(f)?.setValidators([Validators.required]);
+      this.checkoutForm.get(f)?.updateValueAndValidity();
+    });
   }
 
   toggleCompanyPurchase() {
@@ -1178,10 +1165,8 @@ export class CheckoutComponent implements OnInit {
       // Validate contact and address fields
       const requiredFields = ['email', 'fullName', 'phone'];
 
-      // Address fields only required for physical delivery
-      if (!this.isDigitalDelivery()) {
-        requiredFields.push('address', 'city', 'postalCode', 'country');
-      }
+      // Address fields required for all delivery methods (needed for invoices)
+      requiredFields.push('address', 'city', 'postalCode', 'country');
       
       // Add company fields if company purchase is enabled
       if (this.isCompanyPurchase()) {
