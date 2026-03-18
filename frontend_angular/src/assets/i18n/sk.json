@@ -215,7 +215,7 @@
     "packeta_courier_desc": "Doručenie domov kuriérom Packeta",
     "digital_delivery": "Digitálne doručenie",
     "digital_delivery_desc": "Vstupenky dostanete e-mailom okamžite po potvrdení platby",
-    "digital_delivery_contact_note": "Vstupenky Vám budú zaslané e-mailom. Nie je potrebná doručovacia adresa.",
+    "digital_delivery_contact_note": "Vstupenky Vám budú zaslané e-mailom.",
     "dpd_courier": "DPD Kuriér",
     "dpd_courier_desc": "Rýchle doručenie na vašu adresu kuriérom DPD",
     "select_pickup_point": "Vybrať výdajné miesto",

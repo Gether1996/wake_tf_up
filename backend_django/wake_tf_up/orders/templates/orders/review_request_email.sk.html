@@ -3,133 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ohodnoťte Vašu objednávku</title>
+    <title>Ohodnoťte Vašu objednávku &ndash; WAKE TF UP</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        .header h1 {
-            color: #2c3e50;
-            margin: 0;
-            font-size: 24px;
-        }
-        .order-info {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 25px;
-        }
-        .order-info p {
-            margin: 5px 0;
-        }
-        .product-section {
-            margin-bottom: 30px;
-        }
-        .product-item {
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            padding: 20px;
-            margin-bottom: 15px;
-        }
-        .product-item h3 {
-            margin-top: 0;
-            color: #2c3e50;
-        }
-        .review-button {
-            display: inline-block;
-            background-color: #3498db;
-            color: white;
-            text-decoration: none;
-            padding: 12px 30px;
-            border-radius: 5px;
-            font-weight: bold;
-            margin-top: 10px;
-            transition: background-color 0.3s;
-        }
-        .review-button:hover {
-            background-color: #2980b9;
-        }
-        .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 12px;
-        }
-        .message {
-            margin-bottom: 25px;
-            line-height: 1.8;
-        }
+        body { margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+        .header { background-color: #000000; color: #ffffff; padding: 40px 20px; text-align: center; }
+        .logo { font-size: 36px; font-weight: 900; letter-spacing: 3px; margin: 0; text-transform: uppercase; }
+        .tagline { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin: 10px 0 0 0; opacity: 0.7; }
+        .hero { background-color: #111111; color: #ffffff; padding: 32px 30px; }
+        .hero h1 { margin: 0 0 8px 0; font-size: 22px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+        .hero p { margin: 0; font-size: 14px; opacity: 0.8; }
+        .content { padding: 40px 30px; color: #000000; }
+        .section-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 20px 0; padding-bottom: 8px; border-bottom: 2px solid #000000; color: #000000; }
+        .info-block { background-color: #f5f5f5; padding: 16px 20px; margin-bottom: 24px; font-size: 14px; color: #333333; line-height: 1.8; }
+        .product-card { border: 2px solid #000000; margin-bottom: 20px; }
+        .product-card-header { background-color: #000000; color: #ffffff; padding: 14px 20px; }
+        .product-card-header p { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
+        .product-card-body { padding: 20px; }
+        .product-card-body p { margin: 0 0 16px 0; font-size: 13px; color: #666666; }
+        .review-button { display: inline-block; padding: 12px 28px; background-color: #000000; color: #ffffff; text-decoration: none; text-transform: uppercase; font-weight: 700; letter-spacing: 2px; font-size: 13px; }
+        .warning-block { background-color: #fafafa; border-left: 3px solid #000000; padding: 14px 18px; margin: 24px 0; font-size: 13px; color: #444444; }
+        .divider { height: 1px; background-color: #e5e5e5; margin: 32px 0; }
+        .link { color: #000000; font-weight: 600; }
+        .footer { background-color: #000000; color: #ffffff; padding: 30px 20px; text-align: center; font-size: 12px; }
+        .footer p { margin: 4px 0; opacity: 0.75; }
+        .footer-note { background-color: #f5f5f5; padding: 16px 30px; text-align: center; font-size: 11px; color: #999999; }
+        @media only screen and (max-width: 600px) { .content { padding: 28px 20px; } .hero { padding: 28px 20px; } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎉 Vaša objednávka bola doručená!</h1>
-        </div>
+<div class="container">
 
-        <div class="message">
-            <p>Ahoj <strong>{{ user.first_name|default:user.email }}</strong>,</p>
-            <p>
-                Ďakujeme za Vašu objednávku! Dúfame, že ste s produktami spokojní. 
-                Veľmi by nám pomohlo, keby ste zanechali hodnotenie na produkty, ktoré ste si kúpili.
-            </p>
-            <p>
-                Vaše hodnotenie pomôže ostatným zákazníkom pri výbere a nám pri zlepšovaní našich služieb.
-            </p>
-        </div>
-
-        <div class="order-info">
-            <p><strong>Číslo objednávky:</strong> #{{ order.id }}</p>
-            <p><strong>Dátum doručenia:</strong> {{ order.updated_at|date:"d.m.Y H:i" }}</p>
-        </div>
-
-        <div class="product-section">
-            <h2 style="color: #2c3e50; margin-bottom: 20px;">Ohodnoťte Vaše produkty:</h2>
-            
-            {% for token in tokens %}
-            <div class="product-item">
-                <h3>{{ token.product.name }}</h3>
-                <p style="color: #7f8c8d; margin-bottom: 15px;">
-                    Kliknutím na tlačidlo nižšie zanecháte hodnotenie pre tento produkt.
-                </p>
-                <a href="{{ base_url }}/sk/review/submit?token={{ token.token }}" class="review-button">
-                    ⭐ Ohodnotiť produkt
-                </a>
-            </div>
-            {% endfor %}
-        </div>
-
-        <div class="footer">
-            <p>
-                Tento link je platný 30 dní od doručenia objednávky.<br>
-                Pre každý produkt môžete zanechať len jedno hodnotenie.
-            </p>
-            <p style="margin-top: 15px;">
-                Ak máte akékoľvek otázky, neváhajte nás kontaktovať.<br>
-                Wake TF Up Team
-            </p>
-        </div>
+    <div class="header">
+        <p class="logo">WAKE TF UP</p>
+        <p class="tagline">Reworked. Renewed. One of One.</p>
     </div>
+
+    <div class="hero">
+        <h1>Vaša objednávka bola doručená!</h1>
+        <p>Ahoj <strong>{{ user.first_name|default:user.email }}</strong> &mdash; dúre, že ste s nákupom spokojní.</p>
+    </div>
+
+    <div class="content">
+
+        <p style="font-size:14px; color:#333333; margin:0 0 24px 0;">
+            Ďakujeme za Vašu objednávku! Veľmi by nám pomohlo, keby ste zanechali hodnotenie na produkty, ktoré ste si kúpili. Vaše hodnotenie pomôže ostatným zákazníkom pri výbere a nám pri zlepšovaní našich služieb.
+        </p>
+
+        <div class="info-block">
+            <strong>Číslo objednávky:</strong> #{{ order.id }}<br>
+            <strong>Dátum doručenia:</strong> {{ order.updated_at|date:"d.m.Y" }}
+        </div>
+
+        <p class="section-title">Ohodnoťte Vaše produkty</p>
+
+        {% for token in tokens %}
+        <div class="product-card">
+            <div class="product-card-header">
+                <p>{{ token.product.name }}</p>
+            </div>
+            <div class="product-card-body">
+                <p>Kliknutím na tlačidlo nižšie zanecháte hodnotenie pre tento produkt.</p>
+                <a href="{{ base_url }}/sk/review/submit?token={{ token.token }}" class="review-button">&#9733; Ohodnotiť produkt</a>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="warning-block">
+            Linky na hodnotenia sú platné <strong>30 dní</strong> od doručenia. Pre každý produkt môžete zanechať len jedno hodnotenie.
+        </div>
+
+        <div class="divider"></div>
+
+        <p style="font-size:14px; color:#333333; margin:0;">
+            Ak máte akékoľvek otázky, neváhajte nás kontaktovať.<br>
+            <strong>Tím WAKE TF UP</strong>
+        </p>
+    </div>
+
+    <div class="footer">
+        <p><strong>WAKE TF UP</strong></p>
+        <p>Udržateľná móda &bull; Limitované edície &bull; One of a Kind</p>
+        <p style="margin-top:14px;">&copy; 2026 WAKE TF UP. Všetky práva vyhradené.</p>
+    </div>
+    <div class="footer-note">
+        Tento email bol vygenerovaný automaticky. Prosím, neodpovedajte naň priamo.
+    </div>
+
+</div>
 </body>
 </html>

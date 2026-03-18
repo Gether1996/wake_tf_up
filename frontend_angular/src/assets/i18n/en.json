@@ -215,7 +215,7 @@
     "packeta_courier_desc": "Home delivery via Packeta courier",
     "digital_delivery": "Digital Delivery",
     "digital_delivery_desc": "Your tickets will be emailed immediately after payment confirmation",
-    "digital_delivery_contact_note": "Tickets will be sent to your email. No delivery address required.",
+    "digital_delivery_contact_note": "Tickets will be sent to your email.",
     "dpd_courier": "DPD Courier",
     "dpd_courier_desc": "Fast delivery to your address via DPD",
     "select_pickup_point": "Select Pickup Point",
