@@ -2,7 +2,8 @@ import { Injectable, signal, computed, effect, untracked, PLATFORM_ID, inject } 
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { CartItem, Product, Ticket } from '../api/api.models';
-import { NotificationService } from '../services/notification.service';import { LanguageService } from '../services/language.service';
+import { NotificationService } from '../services/notification.service';
+import { LanguageService } from '../services/language.service';
 import { SettingsService } from './settings.service';
 import { environment } from '../../../environments/environment';
 import { forkJoin, of } from 'rxjs';
@@ -245,34 +246,24 @@ export class CartService {
     const currentItems = this.cartItems();
     if (currentItems.length === 0) return;
 
-    console.log('[CartService] Refreshing cart products...', currentItems.map(i => i.product.slug));
-
     // Fetch all products in cart
     const productRequests = currentItems.map(item =>
       this.http.get<Product>(`${this.apiUrl}/${item.product.slug}/`).pipe(
-        catchError(err => {
-          console.error(`[CartService] Failed to fetch product ${item.product.slug}:`, err.status, err.message);
-          return of(null);
-        })
+        catchError(() => of(null))
       )
     );
 
     forkJoin(productRequests).subscribe(updatedProducts => {
-      console.log('[CartService] Received updated products:', updatedProducts);
-      
       const refreshedItems = currentItems
         .map((item, index) => {
           const updatedProduct = updatedProducts[index];
           if (!updatedProduct) {
             // Product no longer exists - will be filtered out below
-            console.warn(`[CartService] Product ${item.product.name} (${item.product.slug}) returned null - removing`);
             this.notificationService.warning(
               `${item.product.name} is no longer available and was removed from cart`
             );
             return null;
           }
-          
-          console.log(`[CartService] Updated product ${updatedProduct.slug}: published=${updatedProduct.is_published}`);
           
           // Update product data but keep the quantity
           return {
@@ -284,7 +275,6 @@ export class CartService {
         .filter(item => {
           // Remove items that are explicitly unpublished
           if (item.product.is_published === false) {
-            console.warn(`[CartService] Product ${item.product.name} is unpublished - removing`);
             this.notificationService.warning(
               `Removed ${item.product.name} from cart - no longer available`
             );
@@ -293,7 +283,6 @@ export class CartService {
           return true;
         });
 
-      console.log('[CartService] Final refreshed items:', refreshedItems.length);
       this.cartItems.set(refreshedItems);
       this.validateCartStock();
     });

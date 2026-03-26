@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -237,6 +239,10 @@ class ResendVerificationEmailView(APIView):
                         status=status.HTTP_429_TOO_MANY_REQUESTS
                     )
             
+            # Rotate the verification token so old links are invalidated
+            user.email_verification_token = uuid.uuid4()
+            user.save(update_fields=['email_verification_token'])
+            
             # Send verification email
             success = send_verification_email(user, language)
             
@@ -332,29 +338,37 @@ class ResetPasswordView(APIView):
         
         try:
             user = User.objects.get(password_reset_token=token)
-            
-            # Check if token is not too old (24 hours)
-            if user.password_reset_sent_at:
-                from datetime import timedelta
-                token_age = datetime.now() - user.password_reset_sent_at
-                if token_age > timedelta(hours=24):
-                    return Response(
-                        {'error': 'Reset link has expired. Please request a new one.'},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-            
-            # Set new password
-            user.set_password(password)
-            user.password_reset_token = uuid.uuid4()  # Invalidate token
-            user.save()
-            
-            return Response(
-                {'message': 'Password reset successfully'},
-                status=status.HTTP_200_OK
-            )
-        
         except User.DoesNotExist:
             return Response(
                 {'error': 'Invalid or expired token'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        # Check if token is not too old (24 hours)
+        if user.password_reset_sent_at:
+            from datetime import timedelta
+            token_age = datetime.now() - user.password_reset_sent_at
+            if token_age > timedelta(hours=24):
+                return Response(
+                    {'error': 'Reset link has expired. Please request a new one.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        # Validate password against AUTH_PASSWORD_VALIDATORS
+        try:
+            validate_password(password, user)
+        except DjangoValidationError as e:
+            return Response(
+                {'error': ' '.join(e.messages)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Set new password
+        user.set_password(password)
+        user.password_reset_token = uuid.uuid4()  # Invalidate token
+        user.save()
+        
+        return Response(
+            {'message': 'Password reset successfully'},
+            status=status.HTTP_200_OK
+        )

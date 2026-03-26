@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
@@ -12,6 +12,9 @@ import { LanguageService } from '../../core/services/language.service';
 import { SettingsService } from '../../core/api/settings.service';
 import { ButtonComponent } from '../../shared/button/button.component';
 import { environment } from '../../../environments/environment';
+import { PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-checkout',
@@ -781,18 +784,18 @@ import { environment } from '../../../environments/environment';
                   <div class="flex gap-2">
                     <input
                       type="text"
-                      [(ngModel)]="discountCode"
-                      (ngModelChange)="saveCheckoutData()"
+                      [ngModel]="discountCode()"
+                      (ngModelChange)="discountCode.set($event); saveCheckoutData()"
                       [disabled]="validatingDiscount()"
                       class="flex-1 px-3 py-2 text-sm border border-border bg-background focus:border-foreground focus:outline-none transition-colors"
                       [class.border-danger]="discountError()"
-                      [placeholder]="(currentLang() === 'sk' ? 'Zadajte kód' : 'Enter code') + ''">
+                      [placeholder]="'checkout.enter_discount_code' | transloco">
                     <app-button
                       [size]="'sm'"
                       [disabled]="validatingDiscount() || !discountCode().trim()"
                       [loading]="validatingDiscount()"
                       (clicked)="validateDiscountCode()">
-                      {{ currentLang() === 'sk' ? 'Použiť' : 'Apply' }}
+                      {{ 'checkout.apply_code' | transloco }}
                     </app-button>
                   </div>
                   @if (discountError()) {
@@ -907,6 +910,8 @@ export class CheckoutComponent implements OnInit {
     }
   private fb: FormBuilder = inject(FormBuilder);
   private router = inject(Router);
+  private platformId = inject(PLATFORM_ID);
+  private destroyRef = inject(DestroyRef);
   cartService = inject(CartService);
   private orderService = inject(OrderService);
   private paymentService = inject(PaymentService);
@@ -1028,7 +1033,7 @@ export class CheckoutComponent implements OnInit {
       if (!this.isTicketOnlyCart() && this.checkoutForm.get('shippingMethod')?.value === 'digital_delivery') {
         this.checkoutForm.patchValue({ shippingMethod: 'dpd_courier' }, { emitEvent: false });
         this.selectedShippingMethod.set('dpd_courier');
-        this._updateAddressValidators('dpd_courier');
+        this._updateAddressValidators();
       }
     });
   }
@@ -1040,11 +1045,13 @@ export class CheckoutComponent implements OnInit {
       return;
     }
     
-    // Load saved checkout data from localStorage
+    // Load saved checkout data from sessionStorage
     this.loadCheckoutData();
-    
+
     // Subscribe to shipping method changes
-    this.checkoutForm.get('shippingMethod')?.valueChanges.subscribe((value: string | null) => {
+    this.checkoutForm.get('shippingMethod')?.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((value: string | null) => {
       if (!value) {
         return;
       }
@@ -1059,17 +1066,19 @@ export class CheckoutComponent implements OnInit {
         this.selectedPaymentMethod.set('gopay');
       }
       // Toggle address validators for digital delivery
-      this._updateAddressValidators(method);
+      this._updateAddressValidators();
       this.saveCheckoutData();
     });
 
     // Subscribe to form changes to auto-save
-    this.checkoutForm.valueChanges.subscribe(() => {
+    this.checkoutForm.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
       this.saveCheckoutData();
     });
   }
 
-  private _updateAddressValidators(method: string) {
+  private _updateAddressValidators() {
     const addressFields = ['address', 'city', 'postalCode', 'country'];
     addressFields.forEach(f => {
       this.checkoutForm.get(f)?.setValidators([Validators.required]);
@@ -1098,14 +1107,12 @@ export class CheckoutComponent implements OnInit {
   }
 
   openPacketaWidget() {
-    // @ts-ignore - Packeta widget is loaded via external script
     if (typeof Packeta !== 'undefined') {
       // Load API key from backend
       this.settingsService.getPacketaApiKey().subscribe({
         next: (response) => {
-          const apiKey = response.api_key || '9dbc4fa2f90c9113';
-          // @ts-ignore
-          Packeta.Widget.pick(apiKey, (point: any) => {
+          const apiKey = response.api_key || environment.packetaApiKey;
+          Packeta.Widget.pick(apiKey, (point) => {
             if (point) {
               this.selectedPacketaPoint.set({
                 id: point.id,
@@ -1122,9 +1129,8 @@ export class CheckoutComponent implements OnInit {
         error: (err) => {
           console.error('Failed to load Packeta API key:', err);
           // Fallback to default test key
-          const apiKey = '9dbc4fa2f90c9113';
-          // @ts-ignore
-          Packeta.Widget.pick(apiKey, (point: any) => {
+          const apiKey = environment.packetaApiKey;
+          Packeta.Widget.pick(apiKey, (point) => {
             if (point) {
               this.selectedPacketaPoint.set({
                 id: point.id,
@@ -1170,14 +1176,12 @@ export class CheckoutComponent implements OnInit {
     if (this.currentStep() === 1) {
       // Validate shipping method and Packeta point if needed
       if (this.selectedShippingMethod() === 'packeta_box' && !this.selectedPacketaPoint()) {
-        this.error.set(this.currentLang() === 'sk' 
-          ? 'Prosím vyberte výdajné miesto Packeta' 
-          : 'Please select a Packeta pickup point');
+        this.error.set(this.translocoService.translate('checkout.packeta_point_required'));
         return;
       }
       this.error.set('');
       this.currentStep.set(2);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.scrollToTop();
     } else if (this.currentStep() === 2) {
       // Validate contact and address fields
       const requiredFields = ['email', 'fullName', 'phone'];
@@ -1201,21 +1205,19 @@ export class CheckoutComponent implements OnInit {
       });
 
       if (!isValid) {
-        this.error.set(this.currentLang() === 'sk' 
-          ? 'Prosím vyplňte všetky povinné polia správne' 
-          : 'Please fill in all required fields correctly');
+        this.error.set(this.translocoService.translate('checkout.required_fields_invalid'));
         return;
       }
 
       this.error.set('');
       this.currentStep.set(3);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.scrollToTop();
     } else if (this.currentStep() === 3) {
       // Step 3: Payment method (always GoPay for now)
       this.error.set('');
       this.currentStep.set(4);
       this.saveCheckoutData();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.scrollToTop();
     }
   }
 
@@ -1223,7 +1225,7 @@ export class CheckoutComponent implements OnInit {
     if (this.currentStep() > 1) {
       this.currentStep.set(this.currentStep() - 1);
       this.saveCheckoutData();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.scrollToTop();
     }
   }
 
@@ -1234,11 +1236,18 @@ export class CheckoutComponent implements OnInit {
       this.currentStep.set(step);
       this.error.set('');
       this.saveCheckoutData();
+      this.scrollToTop();
+    }
+  }
+
+  private scrollToTop() {
+    if (isPlatformBrowser(this.platformId)) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
   saveCheckoutData() {
+    if (!isPlatformBrowser(this.platformId)) return;
     const checkoutData = {
       formValues: this.checkoutForm.value,
       currentStep: this.currentStep(),
@@ -1255,6 +1264,7 @@ export class CheckoutComponent implements OnInit {
   }
 
   loadCheckoutData() {
+    if (!isPlatformBrowser(this.platformId)) return;
     const saved = sessionStorage.getItem('checkout_data');
     if (saved) {
       try {
@@ -1334,7 +1344,9 @@ export class CheckoutComponent implements OnInit {
   }
 
   clearCheckoutData() {
-    sessionStorage.removeItem('checkout_data');
+    if (isPlatformBrowser(this.platformId)) {
+      sessionStorage.removeItem('checkout_data');
+    }
   }
 
   getShippingMethodName(): string {
@@ -1427,22 +1439,7 @@ export class CheckoutComponent implements OnInit {
 
     // Validate Packeta point selection
     if (this.checkoutForm.value.shippingMethod === 'packeta_box' && !this.selectedPacketaPoint()) {
-      this.error.set(this.currentLang() === 'sk' 
-        ? 'Prosím vyberte výdajné miesto Packeta' 
-        : 'Please select a Packeta pickup point');
-      return;
-    }
-
-    const hasToken = !!this.authService.getAccessToken();
-    if (!hasToken) {
-      this.error.set(this.currentLang() === 'sk'
-        ? 'Pre dokončenie objednávky sa prosím prihláste.'
-        : 'Please sign in to complete your order.');
-
-      const lang = this.currentLang();
-      this.router.navigate(['/', lang, 'auth', 'login'], {
-        queryParams: { returnUrl: `/${lang}/checkout` }
-      });
+      this.error.set(this.translocoService.translate('checkout.packeta_point_required'));
       return;
     }
 
@@ -1454,6 +1451,7 @@ export class CheckoutComponent implements OnInit {
     const orderData: CreateOrderRequest = {
       shipping_method: formValue.shippingMethod,
       payment_method: this.selectedPaymentMethod(),
+      email: formValue.email || '',
       shipping_name: formValue.fullName,
       shipping_address: formValue.address,
       shipping_city: formValue.city,
@@ -1512,22 +1510,24 @@ export class CheckoutComponent implements OnInit {
                 // Clear cart and redirect to GoPay
                 this.cartService.clearCart();
                 // Redirect to GoPay payment page
-                window.location.href = paymentResponse.payment_url;
+                if (isPlatformBrowser(this.platformId)) {
+                  window.location.href = paymentResponse.payment_url;
+                }
               } else {
-                this.error.set('Failed to initialize payment. Please try again.');
+                this.error.set(this.translocoService.translate('checkout.payment_init_failed'));
                 this.submitting.set(false);
               }
             },
             error: (err) => {
               console.error('Payment creation error:', err);
-              this.error.set(err.error?.error || 'Failed to initialize payment. Please try again.');
+              this.error.set(err.error?.error || this.translocoService.translate('checkout.payment_init_failed'));
               this.submitting.set(false);
             }
           });
         }
       },
       error: (err) => {
-        this.error.set(err.error?.message || 'Failed to place order. Please try again.');
+        this.error.set(err.error?.error || err.error?.message || this.translocoService.translate('checkout.order_failed'));
         this.submitting.set(false);
       }
     });

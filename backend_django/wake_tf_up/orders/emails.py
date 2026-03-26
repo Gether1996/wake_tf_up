@@ -18,11 +18,12 @@ def send_order_confirmation_email(order, language=None):
         order: Order instance
         language: Language code ('sk' or 'en'). If None, will try to detect from user preferences.
     """
-    if order is None or not order.user or not order.user.email:
-        logger.warning("Cannot send order confirmation email without user email")
+    recipient_email = order.email or (order.user.email if order.user else None)
+    if order is None or not recipient_email:
+        logger.warning("Cannot send order confirmation email without email (order #%s)", getattr(order, 'id', '?'))
         return
 
-    logger.info("Starting order confirmation email for order %s to %s", order.id, order.user.email)
+    logger.info("Starting order confirmation email for order %s to %s", order.id, recipient_email)
 
     items = order.items.select_related("product").all()
     subtotal = Decimal("0.00")
@@ -37,7 +38,7 @@ def send_order_confirmation_email(order, language=None):
     sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", support_email)
     
     # Get language from parameter or user preferences
-    language_code = language if language else get_email_language(user=order.user)
+    language_code = language if language else (get_email_language(user=order.user) if order.user else 'sk')
 
     logger.debug("Order email config - support_email: %s, base_url: %s, language param: %s, final language: %s", support_email, base_url, language, language_code)
 
@@ -61,10 +62,10 @@ def send_order_confirmation_email(order, language=None):
     }
 
     try:
-        logger.info("Attempting to send order confirmation email to %s from %s", order.user.email, sender_email)
+        logger.info("Attempting to send order confirmation email to %s from %s", recipient_email, sender_email)
         
         # Send to customer and orders email (if configured)
-        recipient_list = [order.user.email]
+        recipient_list = [recipient_email]
         if orders_email:
             recipient_list.append(orders_email)
             logger.info("Also sending order confirmation to orders email: %s", orders_email)
@@ -90,11 +91,12 @@ def send_payment_confirmation_email(order, language=None):
         order: Order instance
         language: Language code ('sk' or 'en'). If None, will use order.language or detect from user.
     """
-    if order is None or not order.user or not order.user.email:
-        logger.warning("Cannot send payment confirmation email without user email")
+    recipient_email = order.email or (order.user.email if order.user else None)
+    if order is None or not recipient_email:
+        logger.warning("Cannot send payment confirmation email without email (order #%s)", getattr(order, 'id', '?'))
         return
 
-    logger.info("Starting payment confirmation email for order %s to %s", order.id, order.user.email)
+    logger.info("Starting payment confirmation email for order %s to %s", order.id, recipient_email)
 
     items = order.items.select_related("product").all()
     subtotal = Decimal("0.00")
@@ -107,7 +109,7 @@ def send_payment_confirmation_email(order, language=None):
     sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", support_email)
     
     # Get language: 1) from parameter, 2) from order.language, 3) from user preferences
-    language_code = language if language else (order.language if hasattr(order, 'language') else get_email_language(user=order.user))
+    language_code = language if language else (order.language if hasattr(order, 'language') and order.language else (get_email_language(user=order.user) if order.user else 'sk'))
 
     logger.debug("Payment email config - support_email: %s, base_url: %s, language param: %s, final language: %s", support_email, base_url, language, language_code)
 
@@ -130,13 +132,13 @@ def send_payment_confirmation_email(order, language=None):
     }
 
     try:
-        logger.info("Attempting to send payment confirmation email to %s from %s", order.user.email, sender_email)
+        logger.info("Attempting to send payment confirmation email to %s from %s", recipient_email, sender_email)
         send_localized_email(
             subject_sk=f"Platba prijatá - Objednávka #{order.id}",
             subject_en=f"Payment Received - Order #{order.id}",
             template_path="orders/payment_confirmation_email.html",
             context=context,
-            recipient_list=[order.user.email],
+            recipient_list=[recipient_email],
             language=language_code,
             from_email=sender_email
         )
@@ -153,20 +155,21 @@ def send_ticket_purchased_email(order, purchased_tickets, language=None):
         purchased_tickets: List of PurchasedTicket instances belonging to this order
         language: Language code ('sk' or 'en'). Defaults to order.language.
     """
-    if order is None or not order.user or not order.user.email:
-        logger.warning("Cannot send ticket purchased email without user email")
+    recipient_email = order.email or (order.user.email if order.user else None)
+    if order is None or not recipient_email:
+        logger.warning("Cannot send ticket purchased email without email (order #%s)", getattr(order, 'id', '?'))
         return
 
     if not purchased_tickets:
         return
 
-    logger.info("Sending ticket purchased email for order %s to %s", order.id, order.user.email)
+    logger.info("Sending ticket purchased email for order %s to %s", order.id, recipient_email)
 
     base_url = getattr(settings, "FRONTEND_URL", "http://www.wake-tf-up.eu").rstrip("/")
     settings_obj = MainSettings.objects.first()
     support_email = settings_obj.contact_email if settings_obj else settings.DEFAULT_CONTACT_EMAIL
     sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", support_email)
-    language_code = language if language else (order.language if hasattr(order, 'language') else get_email_language(user=order.user))
+    language_code = language if language else (order.language if hasattr(order, 'language') and order.language else (get_email_language(user=order.user) if order.user else 'sk'))
 
     context = {
         "order": order,
@@ -182,7 +185,7 @@ def send_ticket_purchased_email(order, purchased_tickets, language=None):
             subject_en=f"Purchased Ticket – Order #{order.id}",
             template_path="orders/ticket_purchased_email.html",
             context=context,
-            recipient_list=[order.user.email],
+            recipient_list=[recipient_email],
             language=language_code,
             from_email=sender_email,
         )

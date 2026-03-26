@@ -6,15 +6,19 @@ from .serializers import MainSettingsSerializer
 
 
 class IsAdminUser(permissions.BasePermission):
-    """Custom permission to only allow admin users to update settings"""
+    """Custom permission: GET is public (except packeta_key), mutations require superuser."""
     message = "Only admin users can modify settings."
-    
+
     def has_permission(self, request, view):
-        # Allow GET requests for everyone (including anonymous users)
+        action = getattr(view, 'action', None)
+        # Packeta key is sensitive — always require superuser
+        if action == 'packeta_key':
+            return bool(request.user and request.user.is_authenticated and request.user.is_superuser)
+        # Allow GET requests for public settings
         if request.method == 'GET':
             return True
-        # Only allow authenticated admin users for mutations
-        return request.user and request.user.is_authenticated and request.user.is_staff
+        # Mutations require superuser
+        return bool(request.user and request.user.is_authenticated and request.user.is_superuser)
 
 
 class MainSettingsViewSet(viewsets.ModelViewSet):
@@ -29,10 +33,13 @@ class MainSettingsViewSet(viewsets.ModelViewSet):
     
     def get_authenticators(self):
         """
-        Skip authentication for GET requests to allow public access.
-        This prevents 401 errors when JWT token expires.
+        Skip authentication for GET requests (public settings).
+        Packeta key endpoint keeps authentication to protect sensitive data.
         """
         if self.request.method == 'GET':
+            # Keep auth for packeta_key to allow permission check
+            if self.request.path.rstrip('/').endswith('packeta-key'):
+                return super().get_authenticators()
             return []
         return super().get_authenticators()
     
@@ -69,11 +76,14 @@ class MainSettingsViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def shipping(self, request):
-        """Get only shipping-related settings"""
+        """Get shipping-related settings"""
         settings = MainSettings.get_settings()
         return Response({
             'free_shipping_threshold': settings.free_shipping_threshold,
-            'standard_shipping_cost': settings.standard_shipping_cost,
+            'pickup_cost': settings.pickup_cost,
+            'dpd_courier_cost': settings.dpd_courier_cost,
+            'packeta_box_cost': settings.packeta_box_cost,
+            'packeta_courier_cost': settings.packeta_courier_cost,
         })
     
     @action(detail=False, methods=['get'])

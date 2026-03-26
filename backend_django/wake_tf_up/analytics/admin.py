@@ -32,8 +32,8 @@ class ProductEventStatAdmin(admin.ModelAdmin):
     
     def days_tracked(self, obj):
         """Show how many days this event has been tracked"""
-        from django.utils import timezone
-        delta = timezone.now() - obj.first_recorded_at
+        from datetime import datetime
+        delta = datetime.now() - obj.first_recorded_at
         return f"{delta.days} days"
     days_tracked.short_description = 'Tracked For'
 

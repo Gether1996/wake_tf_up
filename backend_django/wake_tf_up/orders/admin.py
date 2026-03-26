@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.utils.html import format_html
 from django.urls import path
 from django.http import HttpResponseRedirect
-from django.utils import timezone
+from datetime import datetime
 from .models import Order, OrderItem, PurchasedTicket
 from .packeta_service import PacketaService, PacketaAPIError
 
@@ -28,8 +28,8 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('order_number', 'user_email', 'shipping_name', 'payment_method', 'shipping_method', 'status', 'discount_display', 'total_amount_display', 'is_pre_order', 'delivered_status', 'created_at')
     list_filter = ('status', 'payment_method', 'shipping_method', 'created_at', 'updated_at')
-    search_fields = ('id', 'user__email', 'shipping_name', 'shipping_city', 'phone', 'packeta_point_name')
-    readonly_fields = ('user', 'status', 'shipping_method', 'total_amount', 'discount_amount', 'discount_code', 'created_at', 'updated_at', 'delivered_at', 'review_request_sent_at', 'is_pre_order',
+    search_fields = ('id', 'email', 'user__email', 'shipping_name', 'shipping_city', 'phone', 'packeta_point_name')
+    readonly_fields = ('user', 'email', 'status', 'shipping_method', 'total_amount', 'discount_amount', 'discount_code', 'created_at', 'updated_at', 'delivered_at', 'review_request_sent_at', 'is_pre_order',
                       'shipping_name', 'shipping_address', 'shipping_city', 'shipping_postal_code', 'shipping_country', 'phone',
                       'packeta_point_id', 'packeta_point_name', 'packeta_point_address', 'packeta_packet_id', 
                       'tracking_number', 'carrier_tracking_url', 'is_company_purchase', 'billing_company', 
@@ -82,9 +82,9 @@ class OrderAdmin(admin.ModelAdmin):
     order_number.admin_order_field = 'id'
     
     def user_email(self, obj):
-        return obj.user.email
-    user_email.short_description = 'User'
-    user_email.admin_order_field = 'user__email'
+        return obj.email or (obj.user.email if obj.user else '—')
+    user_email.short_description = 'Email'
+    user_email.admin_order_field = 'email'
     
     def total_amount_display(self, obj):
         return f"€{obj.total_amount}"
@@ -110,10 +110,9 @@ class OrderAdmin(admin.ModelAdmin):
         if obj.review_request_sent_at:
             return f'✓ Review sent ({obj.review_request_sent_at.strftime("%Y-%m-%d")})'
         elif obj.delivered_at:
-            from django.utils import timezone
             from settings.models import MainSettings
             settings_obj = MainSettings.get_settings()
-            days_since = (timezone.now() - obj.delivered_at).days
+            days_since = (datetime.now() - obj.delivered_at).days
             days_until_email = settings_obj.review_email_days_after_delivery - days_since
             if days_until_email > 0:
                 return f'⏳ Review in {days_until_email} days'
@@ -269,7 +268,7 @@ class PurchasedTicketAdmin(admin.ModelAdmin):
             ticket.used_at = None
         else:
             ticket.is_used = True
-            ticket.used_at = timezone.now()
+            ticket.used_at = datetime.now()
         ticket.save(update_fields=['is_used', 'used_at'])
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('admin:orders_purchasedticket_changelist')))
 
@@ -304,7 +303,7 @@ class PurchasedTicketAdmin(admin.ModelAdmin):
     toggle_used_button.allow_tags = True
 
     def user_email(self, obj):
-        return obj.order.user.email
+        return obj.order.email or (obj.order.user.email if obj.order.user else '—')
     user_email.short_description = 'Email'
 
     def has_add_permission(self, request):
@@ -314,7 +313,7 @@ class PurchasedTicketAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
     def mark_as_used(self, request, queryset):
-        queryset.update(is_used=True, used_at=timezone.now())
+        queryset.update(is_used=True, used_at=datetime.now())
         self.message_user(request, f'Označené ako použité: {queryset.count()}')
     mark_as_used.short_description = 'Označiť ako použité'
 

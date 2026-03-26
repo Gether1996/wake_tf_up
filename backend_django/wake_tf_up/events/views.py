@@ -1,12 +1,7 @@
 from rest_framework import generics, permissions, viewsets, filters
+from core.permissions import IsSuperuser
 from .models import Event, EventImage
 from .serializers import EventListSerializer, EventDetailSerializer, EventImageSerializer
-
-
-class IsSuperuser(permissions.BasePermission):
-    """Custom permission to only allow superusers."""
-    def has_permission(self, request, view):
-        return request.user and request.user.is_superuser
 
 
 class EventListView(generics.ListAPIView):

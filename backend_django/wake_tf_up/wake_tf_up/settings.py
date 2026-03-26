@@ -224,7 +224,7 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:9006,https://wake-tf-up.eu,https://www.wake-tf-up.eu').split(',')
 
 # Packeta API Configuration
-PACKETA_API_KEY = os.getenv('PACKETA_API_KEY', '9dbc4fa2f90c9113')  # Widget API key for frontend
+PACKETA_API_KEY = os.getenv('PACKETA_API_KEY')  # Widget API key for frontend
 PACKETA_API_PASSWORD = os.getenv('PACKETA_API_PASSWORD', '')
 PACKETA_SENDER_ID = os.getenv('PACKETA_SENDER_ID', '')
 PACKETA_REAL_WORLD_USAGE = os.getenv('PACKETA_REAL_WORLD_USAGE', 'False') == 'True'

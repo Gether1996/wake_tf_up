@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { Product, Category, Color, Ticket } from './api.models';
+import { Product, Category, Color, Ticket, PaginatedResponse } from './api.models';
 import { LanguageService } from '../services/language.service';
 
 export interface ProductFilters {
@@ -17,13 +17,6 @@ export interface ProductFilters {
   is_preorder?: string;
   ordering?: string;
   page?: number;
-}
-
-export interface PaginatedResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
 }
 
 @Injectable({

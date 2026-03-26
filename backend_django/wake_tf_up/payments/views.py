@@ -37,20 +37,23 @@ class CreatePaymentView(generics.CreateAPIView):
         "transaction": {...}
     }
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = CreatePaymentSerializer
-    
+
     def create(self, request, *args, **kwargs):
-        logger.info(f"[Payment API] Create payment request from user {request.user.id} ({request.user.email})")
-        
+        logger.info(f"[Payment API] Create payment request from user {getattr(request.user, 'id', 'guest')}")
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         order_id = serializer.validated_data['order_id']
         logger.info(f"[Payment API] Order ID: {order_id}")
-        
-        # Get order and verify ownership
-        order = get_object_or_404(Order, id=order_id, user=request.user)
+
+        # Verify ownership: if logged in, order must belong to user; if guest, just fetch by id
+        if request.user.is_authenticated:
+            order = get_object_or_404(Order, id=order_id, user=request.user)
+        else:
+            order = get_object_or_404(Order, id=order_id)
         logger.debug(f"[Payment API] Order found: #{order.id} | Total: {order.total_amount} EUR | Status: {order.status}")
         
         # Check if order is already paid
@@ -61,8 +64,8 @@ class CreatePaymentView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Get language from request (same as order creation)
-        language = request.data.get('language') or getattr(request, 'LANGUAGE_CODE', 'sk')
+        # Get language from request data, or fall back to order.language (set during order creation)
+        language = request.data.get('language') or order.language or 'sk'
         logger.info(f"[Payment API] Language detected: {language}")
         
         if getattr(settings, 'GOPAY_DISABLE_PAYMENTS', False):
@@ -231,9 +234,13 @@ def payment_return_view(request):
             
             if state == 'PAID':
                 was_already_paid = transaction.order.status == 'paid'
-                transaction.status = 'completed'
-                transaction.order.status = 'paid'
-                transaction.order.save()
+                from django.db import transaction as db_transaction
+                with db_transaction.atomic():
+                    transaction.status = 'completed'
+                    transaction.order.status = 'paid'
+                    transaction.order.save(update_fields=['status'])
+                    transaction.provider_response = result.get('data')
+                    transaction.save(update_fields=['status', 'provider_response'])
                 
                 # Send payment confirmation email
                 if not was_already_paid:
@@ -246,9 +253,11 @@ def payment_return_view(request):
                         logger.error(f"[Payment Return] ✗ Failed to send payment confirmation email: {email_exc}", exc_info=True)
             elif state in ['CANCELED', 'TIMEOUTED']:
                 transaction.status = 'failed'
-            
-            transaction.provider_response = result.get('data')
-            transaction.save()
+                transaction.provider_response = result.get('data')
+                transaction.save(update_fields=['status', 'provider_response'])
+            else:
+                transaction.provider_response = result.get('data')
+                transaction.save(update_fields=['provider_response'])
             
             # Redirect to frontend with status and language (use order.language, not query param)
             order_language = getattr(transaction.order, 'language', 'sk')
@@ -284,7 +293,13 @@ def payment_notification_view(request):
         )
     
     logger.info(f"[GoPay Webhook] Notification received for GoPay ID: {gopay_id} (method: {request.method})")
-    
+
+    # Verify this payment ID exists in our system before hitting GoPay API
+    # This prevents DoS via flooding with fake IDs
+    if not PaymentTransaction.objects.filter(provider_transaction_id=str(gopay_id)).exists():
+        logger.warning(f"[GoPay Webhook] Unknown payment ID rejected: {gopay_id}")
+        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
     # Process notification
     gopay = GoPayService()
     result = gopay.process_notification(gopay_id)
@@ -317,16 +332,14 @@ class PaymentStatusView(generics.RetrieveAPIView):
     Check payment status by order ID.
     GET /api/v1/payments/status/{order_id}/
     """
-    permission_classes = [permissions.IsAuthenticated]
-    
+    permission_classes = [permissions.AllowAny]
+
     def retrieve(self, request, order_id):
-        # Get order and verify ownership
-        order = get_object_or_404(Order, id=order_id, user=request.user)
-        
-        # Get latest transaction
-        transaction = PaymentTransaction.objects.filter(order=order).order_by('-created_at').first()
-        
-        if not transaction:
+        # Verify ownership: authenticated users must own the order; guests fetch by id
+        if request.user.is_authenticated:
+            order = get_object_or_404(Order, id=order_id, user=request.user)
+        else:
+            order = get_object_or_404(Order, id=order_id)
             return Response(
                 {'error': 'No payment transaction found for this order'},
                 status=status.HTTP_404_NOT_FOUND
@@ -343,9 +356,13 @@ class PaymentStatusView(generics.RetrieveAPIView):
                 # Update transaction
                 if state == 'PAID':
                     was_already_paid = transaction.order.status == 'paid'
-                    transaction.status = 'completed'
-                    transaction.order.status = 'paid'
-                    transaction.order.save()
+                    from django.db import transaction as db_transaction
+                    with db_transaction.atomic():
+                        transaction.status = 'completed'
+                        transaction.order.status = 'paid'
+                        transaction.order.save(update_fields=['status'])
+                        transaction.provider_response = result.get('data')
+                        transaction.save(update_fields=['status', 'provider_response'])
                     
                     # Send payment confirmation email
                     if not was_already_paid:
@@ -358,9 +375,11 @@ class PaymentStatusView(generics.RetrieveAPIView):
                             logger.error(f"[Payment Status] ✗ Failed to send payment confirmation email: {email_exc}", exc_info=True)
                 elif state in ['CANCELED', 'TIMEOUTED']:
                     transaction.status = 'failed'
-                
-                transaction.provider_response = result.get('data')
-                transaction.save()
+                    transaction.provider_response = result.get('data')
+                    transaction.save(update_fields=['status', 'provider_response'])
+                else:
+                    transaction.provider_response = result.get('data')
+                    transaction.save(update_fields=['provider_response'])
         
         return Response({
             'success': True,

@@ -10,7 +10,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ./backend_django/.env
+      - ./backend_django/dev.env
     networks:
       - wake_tf_up_network
     restart: unless-stopped

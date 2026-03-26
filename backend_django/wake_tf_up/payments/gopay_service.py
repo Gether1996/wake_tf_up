@@ -312,9 +312,13 @@ class GoPayService:
                 # Check if order was already paid (to avoid duplicate emails)
                 was_already_paid = transaction.order.status == 'paid'
                 
-                transaction.status = 'completed'
-                transaction.order.status = 'paid'
-                transaction.order.save()
+                from django.db import transaction as db_transaction
+                with db_transaction.atomic():
+                    transaction.status = 'completed'
+                    transaction.order.status = 'paid'
+                    transaction.order.save(update_fields=['status'])
+                    transaction.provider_response = status_result.get('data')
+                    transaction.save(update_fields=['status', 'provider_response'])
                 
                 # Send payment confirmation email only if status changed from unpaid to paid
                 if not was_already_paid:
@@ -333,14 +337,19 @@ class GoPayService:
                 transaction.status = 'failed'
             elif state == 'REFUNDED':
                 logger.info(f"[GoPay Webhook] Payment REFUNDED - updating order status")
-                transaction.status = 'refunded'
-                transaction.order.status = 'refunded'
-                transaction.order.save()
+                from django.db import transaction as db_transaction
+                with db_transaction.atomic():
+                    transaction.status = 'refunded'
+                    transaction.order.status = 'refunded'
+                    transaction.order.save(update_fields=['status'])
+                    transaction.provider_response = status_result.get('data')
+                    transaction.save(update_fields=['status', 'provider_response'])
             else:
                 logger.debug(f"[GoPay Webhook] State '{state}' - no status change")
             
-            transaction.provider_response = status_result.get('data')
-            transaction.save()
+            if state not in ['PAID', 'REFUNDED']:  # These already saved atomically above
+                transaction.provider_response = status_result.get('data')
+                transaction.save()
             logger.info(f"[GoPay Webhook] ✓ Transaction updated: status={transaction.status}")
             
             return {

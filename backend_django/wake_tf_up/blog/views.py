@@ -1,12 +1,7 @@
 from rest_framework import generics, permissions, viewsets, filters
+from core.permissions import IsSuperuser
 from .models import BlogPost, BlogImage
 from .serializers import BlogPostListSerializer, BlogPostDetailSerializer, BlogImageSerializer
-
-
-class IsSuperuser(permissions.BasePermission):
-    """Custom permission to only allow superusers."""
-    def has_permission(self, request, view):
-        return request.user and request.user.is_superuser
 
 
 class BlogPostListView(generics.ListAPIView):

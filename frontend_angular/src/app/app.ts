@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, DestroyRef } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from './layout/header/header.component';
@@ -9,6 +9,7 @@ import { CookieConsentComponent } from './shared/cookie-consent/cookie-consent.c
 import { NewsletterPopupComponent } from './shared/newsletter-popup/newsletter-popup.component';
 import { ThemeService } from './core/services/theme.service';
 import { filter } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-root',
@@ -19,6 +20,7 @@ import { filter } from 'rxjs/operators';
 export class App {
   private themeService = inject(ThemeService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
   
   showLayout = signal(true);
   
@@ -28,7 +30,8 @@ export class App {
     
     // Monitor route changes - hide layout only on coming-soon page
     this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
+      filter(event => event instanceof NavigationEnd),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe((event: NavigationEnd) => {
       this.showLayout.set(!event.urlAfterRedirects.includes('coming-soon'));
     });

@@ -3,4 +3,5 @@ export const environment = {
   apiUrl: '/api/v1',
   apiBaseUrl: '',
   defaultContactEmail: 'info@wake-tf-up.eu',
+  packetaApiKey: '9dbc4fa2f90c9113',
 };

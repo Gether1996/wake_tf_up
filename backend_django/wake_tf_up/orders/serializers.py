@@ -31,7 +31,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating orders"""
-    items = OrderItemSerializer(many=True)
+    items = OrderItemSerializer(many=True, min_length=1)
     discount_code_str = serializers.CharField(write_only=True, required=False, allow_blank=True)
     payment_method = serializers.ChoiceField(
         choices=[('gopay', 'GoPay'), ('cash_on_pickup', 'Cash on Pickup')],
@@ -43,10 +43,12 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     shipping_postal_code = serializers.CharField(required=False, allow_blank=True, default='')
     shipping_country     = serializers.CharField(required=False, allow_blank=True, default='SK')
     
+    email = serializers.EmailField(required=False, allow_blank=True, default='')
+
     class Meta:
         model = Order
         fields = (
-            'shipping_method', 'shipping_name', 'shipping_address', 'shipping_city',
+            'shipping_method', 'shipping_name', 'email', 'shipping_address', 'shipping_city',
             'shipping_postal_code', 'shipping_country', 'phone',
             'packeta_point_id', 'packeta_point_name', 'packeta_point_address',
             'is_company_purchase', 'billing_company', 'billing_ico', 'billing_dic', 'billing_ic_dph',
@@ -56,10 +58,15 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         from .models import StockReservationService
         from rest_framework.exceptions import ValidationError as DRFValidationError
-        
+
         items_data = validated_data.pop('items')
         discount_code_str = validated_data.pop('discount_code_str', None)
-        user = self.context['request'].user
+        request = self.context['request']
+        user = request.user if request.user.is_authenticated else None
+
+        # Auto-fill email from authenticated user if not supplied by frontend
+        if not validated_data.get('email') and user and user.email:
+            validated_data['email'] = user.email
         
         # Use the stock reservation service
         order = StockReservationService.create_order_with_items(
@@ -113,12 +120,12 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = (
-            'id', 'status', 'shipping_method', 'shipping_name', 'shipping_address',
+            'id', 'status', 'shipping_method', 'shipping_name', 'email', 'shipping_address',
             'shipping_city', 'shipping_postal_code', 'shipping_country',
             'phone', 'packeta_point_id', 'packeta_point_name', 'packeta_point_address',
             'tracking_number', 'carrier_tracking_url',
             'is_company_purchase', 'billing_company', 'billing_ico', 
             'billing_dic', 'billing_ic_dph', 'shipping_cost', 'total_amount', 'discount_amount',
             'discount_code_display', 'payment_method', 'is_pre_order', 'items',
-            'created_at', 'updated_at'
+            'language', 'delivered_at', 'created_at', 'updated_at'
         )

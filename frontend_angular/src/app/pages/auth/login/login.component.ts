@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { AuthService } from '../../../core/auth/auth.service';
 import { LanguageService } from '../../../core/services/language.service';
 import { ButtonComponent } from '../../../shared/button/button.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-login',
@@ -172,12 +173,14 @@ export class LoginComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
   private languageService = inject(LanguageService);
+  private destroyRef = inject(DestroyRef);
 
   currentLang = this.languageService.currentLang;
   registerLink = computed(() => `/${this.currentLang()}/auth/register`);
 
   loading = signal(false);
   error = signal('');
+  private returnUrl: string | null = null;
   showVerifiedMessage = signal(false);
   showEmailNotVerified = signal(false);
   unverifiedEmail = signal('');
@@ -199,11 +202,12 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Check if user was redirected from email verification
-    this.route.queryParamMap.subscribe(params => {
+    // Check if user was redirected from email verification or checkout
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       if (params.get('verified') === 'true') {
         this.showVerifiedMessage.set(true);
       }
+      this.returnUrl = params.get('returnUrl');
     });
   }
 
@@ -221,11 +225,13 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
         const lang = this.languageService.currentLang();
-        this.router.navigate([`/${lang}/profile`]);
+        if (this.returnUrl) {
+          this.router.navigateByUrl(this.returnUrl);
+        } else {
+          this.router.navigate([`/${lang}/profile`]);
+        }
       },
       error: (err) => {
-        console.log('Login error:', err); // Debug
-        
         // Check for specific error types
         const errorDetail = err.error?.detail;
         const errorMessage = err.error?.message;

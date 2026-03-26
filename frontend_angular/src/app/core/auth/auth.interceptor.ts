@@ -25,10 +25,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           !isRefreshRequest &&
           !req.url.includes('/auth/login') &&
           authService.getAccessToken()) {
-        console.log('[Interceptor] 401 error, attempting token refresh');
         return authService.refreshToken().pipe(
           switchMap(() => {
-            console.log('[Interceptor] Token refreshed, retrying request');
             // Retry original request with new token
             const newToken = authService.getAccessToken();
             const clonedReq = req.clone({
@@ -39,7 +37,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return next(clonedReq);
           }),
           catchError((refreshError) => {
-            console.error('[Interceptor] Token refresh failed:', refreshError);
             // Don't call logout here - just return error
             // Let the component handle it
             return throwError(() => refreshError);

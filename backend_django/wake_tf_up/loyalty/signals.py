@@ -16,10 +16,6 @@ def check_loyalty_eligibility(sender, instance, created, **kwargs):
         # Check if user qualifies for loyalty code
         code = LoyaltyService.check_and_generate_loyalty_code(instance.user)
         
-        # If a new code was generated (check if just created), send email
-        if code:
-            # Check if this is a newly created code
-            from datetime import timedelta
-            time_diff = abs((code.created_at - instance.updated_at).total_seconds())
-            if time_diff < 5:  # If created within last 5 seconds
-                send_loyalty_code_email(instance.user, code)
+        # Only send email if this is a freshly generated code (not an existing one)
+        if code and getattr(code, '_newly_created', False):
+            send_loyalty_code_email(instance.user, code)

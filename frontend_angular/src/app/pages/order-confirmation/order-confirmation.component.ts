@@ -1,11 +1,13 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, signal, PLATFORM_ID, DestroyRef } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { PaymentService } from '../../core/api/payment.service';
 import { OrderService } from '../../core/api/order.service';
 import { LanguageService } from '../../core/services/language.service';
 import { ButtonComponent } from '../../shared/button/button.component';
+import { NotificationService } from '../../core/services/notification.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-order-confirmation',
@@ -145,6 +147,9 @@ export class OrderConfirmationComponent implements OnInit {
   private paymentService = inject(PaymentService);
   private orderService = inject(OrderService);
   private languageService = inject(LanguageService);
+  private notificationService = inject(NotificationService);
+  private platformId = inject(PLATFORM_ID);
+  private destroyRef = inject(DestroyRef);
 
   currentLang = this.languageService.currentLang;
 
@@ -154,7 +159,7 @@ export class OrderConfirmationComponent implements OnInit {
 
   ngOnInit() {
     // Get order_id and status from query params
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       const orderId = params['order_id'];
       const status = params['status'];
       const paymentMethod = params['payment_method'];
@@ -214,16 +219,17 @@ export class OrderConfirmationComponent implements OnInit {
       this.paymentService.createPayment({ order_id: this.orderId()! }).subscribe({
         next: (response) => {
           if (response.success && response.payment_url) {
-            window.location.href = response.payment_url;
+            if (isPlatformBrowser(this.platformId)) {
+              window.location.href = response.payment_url;
+            }
           } else {
             this.loading.set(false);
-            alert('Failed to retry payment. Please contact support.');
+            this.notificationService.error('Failed to retry payment. Please contact support.');
           }
         },
         error: (err) => {
-          console.error('Error retrying payment:', err);
           this.loading.set(false);
-          alert('Failed to retry payment. Please contact support.');
+          this.notificationService.error('Failed to retry payment. Please contact support.');
         }
       });
     }

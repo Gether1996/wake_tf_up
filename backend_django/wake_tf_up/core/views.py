@@ -2,19 +2,29 @@
 Core views for general functionality like contact form.
 """
 import logging
+import re
 from django.conf import settings
 from django.core.mail import send_mail
 from rest_framework import status, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 
 from settings.models import MainSettings
 
 logger = logging.getLogger(__name__)
 
+EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+
+class ContactRateThrottle(AnonRateThrottle):
+    """Limit contact form submissions to 5 per hour per IP."""
+    rate = '5/hour'
+
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
+@throttle_classes([ContactRateThrottle])
 def send_contact_email(request):
     """
     Send contact form email to the admin.
@@ -34,6 +44,12 @@ def send_contact_email(request):
     if not name or not email or not message:
         return Response(
             {'error': 'All fields are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    if not EMAIL_RE.match(email):
+        return Response(
+            {'error': 'Invalid email address'},
             status=status.HTTP_400_BAD_REQUEST
         )
     

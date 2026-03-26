@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
-import random
+from django.contrib.auth import get_user_model
+from django.db import transaction
+import secrets
 import string
 
 
@@ -83,9 +85,9 @@ class DiscountCode(models.Model):
     
     @staticmethod
     def generate_code(prefix='LOYAL', length=8):
-        """Generate a random discount code"""
+        """Generate a cryptographically secure random discount code"""
         chars = string.ascii_uppercase + string.digits
-        random_part = ''.join(random.choices(chars, k=length))
+        random_part = ''.join(secrets.choice(chars) for _ in range(length))
         return f"{prefix}{random_part}"
 
 
@@ -121,32 +123,38 @@ class LoyaltyService:
         if paid_orders_count < 3:
             return None
         
-        # Check if already has an active loyalty code
-        existing_code = DiscountCode.objects.filter(
-            user=user,
-            code_type='loyalty',
-            is_active=True,
-            is_used=False
-        ).first()
-        
-        if existing_code:
-            return existing_code
-        
-        # Generate new loyalty code
-        code = DiscountCode.generate_code()
-        discount_code = DiscountCode.objects.create(
-            code=code,
-            user=user,
-            discount_percentage=10.00,  # 10% loyalty discount
-            code_type='loyalty',
-            is_active=True,
-            minimum_order_value=0.00,
-            max_uses=1,
-            valid_from=datetime.now(),
-            valid_until=datetime.now() + timedelta(days=90)  # Valid for 90 days
-        )
-        
-        return discount_code
+        # Check if already has an active loyalty code (with lock to prevent race conditions)
+        with transaction.atomic():
+            # Lock the user row so only one transaction at a time can
+            # generate a loyalty code for this user (prevents duplicates)
+            _User = get_user_model()
+            _User.objects.select_for_update().filter(pk=user.pk).first()
+
+            existing_code = DiscountCode.objects.filter(
+                user=user,
+                code_type='loyalty',
+                is_active=True,
+                is_used=False
+            ).first()
+            
+            if existing_code:
+                return existing_code
+            
+            # Generate new loyalty code
+            code = DiscountCode.generate_code()
+            discount_code = DiscountCode.objects.create(
+                code=code,
+                user=user,
+                discount_percentage=10.00,  # 10% loyalty discount
+                code_type='loyalty',
+                is_active=True,
+                minimum_order_value=0.00,
+                max_uses=1,
+                valid_from=datetime.now(),
+                valid_until=datetime.now() + timedelta(days=90)  # Valid for 90 days
+            )
+            discount_code._newly_created = True
+            return discount_code
     
     @staticmethod
     def apply_discount_code(code_str, order_total, user=None):
@@ -161,7 +169,7 @@ class LoyaltyService:
         Returns:
             dict: {'valid': bool, 'discount_amount': Decimal, 'message': str, 'is_free_shipping': bool}
         """
-        from datetime import datetime
+        from datetime import datetime, timedelta
         from decimal import Decimal
         
         try:

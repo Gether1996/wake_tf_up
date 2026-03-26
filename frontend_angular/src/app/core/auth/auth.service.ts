@@ -129,19 +129,14 @@ export class AuthService {
   }
 
   private loadCurrentUser(): void {
-    const token = this.getAccessToken();
-    console.log('[AuthService] Loading current user, has token:', !!token);
-    
     this.http.get<User>(`${environment.apiUrl}/auth/profile/`)
       .subscribe({
         next: (user) => {
-          console.log('[AuthService] User loaded successfully:', user.email);
           this.currentUser.set(user);
           this.isAuthenticatedSubject.next(true);
           this.clearProfileRetry();
         },
         error: (err) => {
-          console.error('[AuthService] Failed to load user:', err.status, err.message);
           if (err.status === 401 || err.status === 403) {
             this.clearTokens();
             this.currentUser.set(null);

@@ -1,4 +1,6 @@
 from rest_framework import generics, filters, viewsets, permissions
+from django.db.models import Sum, Q, Value
+from django.db.models.functions import Coalesce
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Product, Category, Color, Ticket
 from .serializers import (
@@ -15,10 +17,7 @@ from .serializers import (
 )
 
 
-class IsSuperuser(permissions.BasePermission):
-    """Custom permission to only allow superusers."""
-    def has_permission(self, request, view):
-        return request.user and request.user.is_superuser
+from core.permissions import IsSuperuser
 
 
 class ProductListView(generics.ListAPIView):
@@ -42,7 +41,18 @@ class ProductListView(generics.ListAPIView):
             queryset = Product.objects.all().select_related('category', 'color')
         else:
             queryset = Product.objects.filter(is_published=True).select_related('category', 'color')
-        
+
+        # Annotate reserved quantity to avoid N+1 queries for available_stock
+        queryset = queryset.annotate(
+            _reserved_qty=Coalesce(
+                Sum(
+                    'order_items__quantity',
+                    filter=Q(order_items__order__status__in=['created', 'paid', 'shipped'])
+                ),
+                Value(0)
+            )
+        )
+
         # Filter by category
         category = self.request.query_params.get('category')
         if category:

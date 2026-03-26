@@ -63,7 +63,7 @@ class PacketaService:
                 "number": str(order.id),  # Your internal order number
                 "name": first_name,
                 "surname": surname,
-                "email": order.user.email,
+                "email": order.email or (order.user.email if order.user else ''),
                 "phone": order.phone,
                 "addressId": order.packeta_point_id if order.shipping_method == 'packeta_box' else None,
                 "value": float(order.total_amount),

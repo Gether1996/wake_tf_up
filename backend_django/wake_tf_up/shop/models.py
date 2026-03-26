@@ -147,6 +147,9 @@ class Product(models.Model):
     @property
     def available_stock(self):
         """Calculate available stock (total - sold - reserved)"""
+        # Use pre-annotated value if queryset was annotated (avoids N+1 in list views)
+        if hasattr(self, '_reserved_qty'):
+            return max(0, self.total_stock - self._reserved_qty)
         from orders.models import OrderItem, Order
         # Get all reserved items from non-cancelled/non-refunded orders
         reserved = OrderItem.objects.filter(
@@ -155,7 +158,7 @@ class Product(models.Model):
         ).aggregate(
             total=models.Sum('quantity')
         )['total'] or 0
-        
+
         return max(0, self.total_stock - reserved)
     
     @property

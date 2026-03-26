@@ -5,7 +5,7 @@ This should be run periodically (e.g., daily cron job).
 import logging
 from datetime import timedelta
 from django.core.management.base import BaseCommand
-from django.utils import timezone
+from datetime import datetime
 from django.conf import settings
 from orders.models import Order
 from reviews.models import ReviewToken
@@ -35,7 +35,7 @@ class Command(BaseCommand):
         self.stdout.write(f'Checking for orders delivered {days_after_delivery} days ago...')
         
         # Calculate the target datetime
-        target_date = timezone.now() - timedelta(days=days_after_delivery)
+        target_date = datetime.now() - timedelta(days=days_after_delivery)
         
         # Find orders that:
         # 1. Are delivered
@@ -79,7 +79,7 @@ class Command(BaseCommand):
                             self.style.WARNING(f'No tokens created for Order #{order.id} (no items?)')
                         )
                         # Mark as sent anyway to avoid retrying
-                        order.review_request_sent_at = timezone.now()
+                        order.review_request_sent_at = datetime.now()
                         order.save(update_fields=['review_request_sent_at'])
                         continue
                 else:
@@ -109,8 +109,7 @@ class Command(BaseCommand):
                     language=language_code
                 )
                 
-                # Mark as sent
-                order.review_request_sent_at = timezone.now()
+                # Mark as sent\n                order.review_request_sent_at = datetime.now()
                 order.save(update_fields=['review_request_sent_at'])
                 
                 sent_count += 1

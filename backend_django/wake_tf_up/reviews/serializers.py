@@ -22,10 +22,9 @@ class ProductBasicSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'slug', 'price', 'discount_price', 'image_url')
     
     def get_image_url(self, obj):
-        if obj.images.filter(is_main=True).exists():
-            return obj.images.filter(is_main=True).first().image.url
-        elif obj.images.exists():
-            return obj.images.first().image.url
+        first_image = obj.images.order_by('order').first()
+        if first_image:
+            return first_image.image.url
         return None
 
 

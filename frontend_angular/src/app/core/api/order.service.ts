@@ -11,6 +11,7 @@ export interface CreateOrderRequest {
     ticket_id?: number;
     quantity: number;
   }>;
+  email?: string;
   shipping_method: 'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier';
   shipping_name: string;
   shipping_address: string;
@@ -43,7 +44,6 @@ export class OrderService {
   ) {}
 
   createOrder(orderData: CreateOrderRequest): Observable<Order> {
-    console.log('[OrderService] Sending order data:', JSON.stringify(orderData, null, 2));
     return this.api.post<Order>('orders/create/', orderData);
   }
 
@@ -67,7 +67,6 @@ export class OrderService {
     const items = [...productItems, ...ticketItems];
 
     const currentLanguage = this.languageService.currentLang();
-    console.log('[OrderService] Creating order with language:', currentLanguage);
 
     return this.createOrder({
       items,

@@ -1,10 +1,11 @@
+from django.db import IntegrityError
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from django.utils import timezone
+from datetime import datetime
 from core.email_utils import get_email_language, send_localized_email
 from .models import Order
 import logging
@@ -22,7 +23,7 @@ def track_delivered_status(sender, instance, **kwargs):
             old_instance = Order.objects.get(pk=instance.pk)
             # If status changed from non-delivered to delivered
             if old_instance.status != 'delivered' and instance.status == 'delivered':
-                instance.delivered_at = timezone.now()
+                instance.delivered_at = datetime.now()
         except Order.DoesNotExist:
             pass
 
@@ -57,12 +58,22 @@ def generate_ticket_codes_on_payment(sender, instance, created, **kwargs):
     for item in ticket_items:
         for _ in range(item.quantity):
             code = generate_ticket_code()
-            pt = PurchasedTicket.objects.create(
-                order=instance,
-                ticket=item.ticket,
-                order_item=item,
-                code=code,
-            )
+            try:
+                pt = PurchasedTicket.objects.create(
+                    order=instance,
+                    ticket=item.ticket,
+                    order_item=item,
+                    code=code,
+                )
+            except IntegrityError:
+                # Extremely unlikely collision — regenerate and retry once
+                code = generate_ticket_code()
+                pt = PurchasedTicket.objects.create(
+                    order=instance,
+                    ticket=item.ticket,
+                    order_item=item,
+                    code=code,
+                )
             purchased_tickets.append(pt)
 
     if purchased_tickets:

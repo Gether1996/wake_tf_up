@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { CartService } from '../../core/api/cart.service';
 import { SettingsService } from '../../core/api/settings.service';
 import { LanguageService } from '../../core/services/language.service';
@@ -267,7 +267,7 @@ import { ButtonComponent } from '../../shared/button/button.component';
               </div>
 
               <div class="flex justify-between text-lg font-bold mb-6">
-                <span>{{ 'cart.subtotal' | transloco }}</span>
+                <span>{{ 'cart.total' | transloco }}</span>
                 <span>{{ cartService.subtotal() | currency: 'EUR' }}</span>
               </div>
 
@@ -304,6 +304,7 @@ export class CartComponent implements OnInit {
   settingsService = inject(SettingsService);
   private languageService = inject(LanguageService);
   private dialogService = inject(DialogService);
+  private translocoService = inject(TranslocoService);
   private router = inject(Router);
   
   currentLang = this.languageService.currentLang;
@@ -358,10 +359,10 @@ export class CartComponent implements OnInit {
 
   async removeTicketItem(ticketId: number) {
     const confirmed = await this.dialogService.confirm({
-      title: 'Remove Item',
-      message: 'Are you sure you want to remove this ticket from your cart?',
-      confirmText: 'Remove',
-      cancelText: 'Cancel',
+      title: this.translocoService.translate('cart.remove_item_title'),
+      message: this.translocoService.translate('cart.remove_ticket_confirm'),
+      confirmText: this.translocoService.translate('cart.remove'),
+      cancelText: this.translocoService.translate('common.cancel'),
       type: 'danger'
     });
     if (!confirmed) return;
@@ -387,10 +388,10 @@ export class CartComponent implements OnInit {
 
   async removeItem(productId: number) {
     const confirmed = await this.dialogService.confirm({
-      title: 'Remove Item',
-      message: 'Are you sure you want to remove this item from your cart?',
-      confirmText: 'Remove',
-      cancelText: 'Cancel',
+      title: this.translocoService.translate('cart.remove_item_title'),
+      message: this.translocoService.translate('cart.remove_item_confirm'),
+      confirmText: this.translocoService.translate('cart.remove'),
+      cancelText: this.translocoService.translate('common.cancel'),
       type: 'danger'
     });
 

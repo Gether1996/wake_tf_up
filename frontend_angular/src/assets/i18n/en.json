@@ -181,7 +181,10 @@
     "free_shipping_info": "Free shipping on orders over {{ amount }}",
     "free_shipping_unlocked": "You've unlocked free shipping!",
     "free_shipping_remaining": "Add {{ amount }} more for free shipping",
-    "max_quantity": "Maximum quantity reached"
+    "max_quantity": "Maximum quantity reached",
+    "remove_item_title": "Remove Item",
+    "remove_item_confirm": "Are you sure you want to remove this item from your cart?",
+    "remove_ticket_confirm": "Are you sure you want to remove this ticket from your cart?"
   },
   "checkout": {
     "title": "Checkout",
@@ -265,7 +268,12 @@
     "accept_terms_1": "I agree to the",
     "terms_of_service": "Terms of Service",
     "accept_terms_2": "and Privacy Policy",
-    "terms_required": "You must agree to the Terms of Service"
+    "terms_required": "You must agree to the Terms of Service",
+    "payment_init_failed": "Failed to initialize payment. Please try again.",
+    "order_failed": "Failed to place order. Please try again.",
+    "packeta_point_required": "Please select a Packeta pickup point",
+    "required_fields_invalid": "Please fill in all required fields correctly",
+    "login_required": "Please sign in to complete your order."
   },
   "auth": {
     "_login": "Login",

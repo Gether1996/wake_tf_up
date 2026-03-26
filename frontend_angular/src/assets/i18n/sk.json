@@ -183,7 +183,10 @@
     "free_shipping_info": "Doprava zdarma pri objednávkach nad {{ amount }}",
     "free_shipping_unlocked": "Máte dopravu zadarmo!",
     "free_shipping_remaining": "Pridajte ešte {{ amount }} pre dopravu zadarmo",
-    "max_quantity": "Maximálne množstvo dosiahnuté"
+    "max_quantity": "Maximálne množstvo dosiahnuté",
+    "remove_item_title": "Odstrániť položku",
+    "remove_item_confirm": "Ste si istí, že chcete odstrániť túto položku z košíka?",
+    "remove_ticket_confirm": "Ste si istí, že chcete odstrániť tento lístok z košíka?"
   },
   "checkout": {
     "title": "Pokladňa",
@@ -265,7 +268,12 @@
     "accept_terms_1": "Súhlasím s",
     "terms_of_service": "obchodnými podmienkami",
     "accept_terms_2": "a pravidlami ochrany osobných údajov",
-    "terms_required": "Musíte súhlasiť s obchodnými podmienkami"
+    "terms_required": "Musíte súhlasiť s obchodnými podmienkami",
+    "payment_init_failed": "Nepodarilo sa inicializovať platbu. Skúste to znova.",
+    "order_failed": "Nepodarilo sa odoslať objednávku. Skúste to znova.",
+    "packeta_point_required": "Prosím vyberte výdajné miesto Packeta",
+    "required_fields_invalid": "Prosím vyplňte všetky povinné polia správne",
+    "login_required": "Pre dokončenie objednávky sa prosím prihláste."
   },
   "auth": {
     "_login": "Prihlásenie",

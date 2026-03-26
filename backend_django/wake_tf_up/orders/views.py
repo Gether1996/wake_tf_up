@@ -13,10 +13,7 @@ from .emails import send_order_confirmation_email
 logger = logging.getLogger(__name__)
 
 
-class IsSuperuser(permissions.BasePermission):
-    """Custom permission to only allow superusers."""
-    def has_permission(self, request, view):
-        return request.user and request.user.is_superuser
+from core.permissions import IsSuperuser
 
 
 class OrderCreateView(generics.CreateAPIView):
@@ -25,11 +22,15 @@ class OrderCreateView(generics.CreateAPIView):
     POST /api/v1/orders/
     """
     serializer_class = OrderCreateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     
     def create(self, request, *args, **kwargs):
+        logger.info("Order create attempt - user: %s, data keys: %s",
+                    getattr(request.user, 'id', 'guest'), list(request.data.keys()))
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            logger.error("Order serializer validation failed: %s", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             order = serializer.save()
@@ -48,8 +49,14 @@ class OrderCreateView(generics.CreateAPIView):
                 status=status.HTTP_201_CREATED
             )
         except Exception as e:
+            logger.error("Order creation failed: %s", e, exc_info=True)
+            from django.core.exceptions import ValidationError as DjangoValidationError
+            if isinstance(e, DjangoValidationError):
+                msg = e.messages[0] if hasattr(e, 'messages') and e.messages else str(e)
+            else:
+                msg = str(e)
             return Response(
-                {'error': str(e)},
+                {'error': msg},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -63,7 +70,10 @@ class OrderListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).prefetch_related('items')
+        return Order.objects.filter(user=self.request.user).prefetch_related(
+            'items__product',
+            'items__ticket',
+        )
 
 
 class OrderDetailView(generics.RetrieveAPIView):
@@ -127,7 +137,7 @@ class OrderAdminViewSet(viewsets.ModelViewSet):
             )
         
         order.status = new_status
-        order.save()
+        order.save(update_fields=['status'])
         
         return Response(
             OrderDetailSerializer(order).data,

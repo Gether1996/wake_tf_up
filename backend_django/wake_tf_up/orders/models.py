@@ -32,8 +32,10 @@ class Order(models.Model):
     
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='orders'
+        on_delete=models.SET_NULL,
+        related_name='orders',
+        null=True,
+        blank=True,
     )
     status = models.CharField(
         max_length=20,
@@ -87,6 +89,13 @@ class Order(models.Model):
         help_text="Packeta internal packet ID"
     )
     
+    # Contact
+    email = models.EmailField(
+        blank=True,
+        default='',
+        help_text="Customer email (stored directly on order, works for guest orders too)"
+    )
+
     # Address (basic skeleton)
     shipping_name = models.CharField(max_length=200)
     shipping_address = models.TextField()
@@ -160,7 +169,8 @@ class Order(models.Model):
         ]
     
     def __str__(self):
-        return f"Order #{self.id} - {self.user.email} - {self.status}"
+        user_info = self.user.email if self.user else 'guest'
+        return f"Order #{self.id} - {user_info} - {self.status}"
     
     def clean(self):
         """Validate Packeta point selection for packeta_box shipping method"""
@@ -176,6 +186,7 @@ class Order(models.Model):
         """Check if order contains any pre-order items"""
         return self.items.filter(is_pre_order=True).exists()
     
+    @transaction.atomic
     def apply_discount(self, discount_code_obj):
         """
         Apply a discount code to this order.
@@ -189,12 +200,15 @@ class Order(models.Model):
         Raises:
             ValidationError: If a discount code is already applied
         """
-        from loyalty.models import LoyaltyService
+        from loyalty.models import LoyaltyService, DiscountCode
         from decimal import Decimal
         
         # Prevent combining discount codes
         if self.discount_code is not None:
             raise ValidationError("Discount code already applied. Only one discount code per order is allowed.")
+        
+        # Re-fetch with row-level lock to prevent race conditions on max_uses
+        discount_code_obj = DiscountCode.objects.select_for_update().get(pk=discount_code_obj.pk)
         
         # Calculate subtotal from items
         subtotal = sum(item.price_at_purchase * item.quantity for item in self.items.all())
@@ -352,14 +366,33 @@ class OrderItem(models.Model):
             if self.quantity > available:
                 self.is_pre_order = True
 
+        if self.ticket and not self.pk:  # Validate ticket stock for new ticket items
+            if self.ticket.total_quantity > 0:  # 0 = unlimited
+                sold = OrderItem.objects.filter(
+                    ticket=self.ticket,
+                    order__status__in=['created', 'paid', 'shipped', 'delivered']
+                ).aggregate(total=models.Sum('quantity'))['total'] or 0
+                available = self.ticket.total_quantity - sold
+                if self.quantity > available:
+                    raise ValidationError(
+                        f"Not enough tickets for {self.ticket.name}. "
+                        f"Available: {available}, Requested: {self.quantity}"
+                    )
+
     def save(self, *args, **kwargs):
         # Store current price if not set
-        if not self.price_at_purchase:
-            if self.product and self.product.price:
+        if self.price_at_purchase is None:
+            if self.product and self.product.price is not None:
                 # Use discount price if available, otherwise regular price
-                self.price_at_purchase = self.product.discount_price or self.product.price
-            elif self.ticket and self.ticket.price:
-                self.price_at_purchase = self.ticket.discount_price or self.ticket.price
+                if self.product.discount_price is not None:
+                    self.price_at_purchase = self.product.discount_price
+                else:
+                    self.price_at_purchase = self.product.price
+            elif self.ticket and self.ticket.price is not None:
+                if self.ticket.discount_price is not None:
+                    self.price_at_purchase = self.ticket.discount_price
+                else:
+                    self.price_at_purchase = self.ticket.price
             else:
                 raise ValidationError("Product or ticket must have a price set")
         
@@ -424,16 +457,22 @@ class StockReservationService:
         for item_data in items_data:
             ticket_id = item_data.get('ticket_id')
             if ticket_id:
-                ticket = Ticket.objects.get(id=ticket_id)
+                try:
+                    ticket = Ticket.objects.select_for_update().get(id=ticket_id)
+                except Ticket.DoesNotExist:
+                    raise ValidationError(f"Ticket with id {ticket_id} does not exist.")
                 order_item = OrderItem(
                     order=order,
                     ticket=ticket,
                     quantity=item_data['quantity']
                 )
             else:
-                product = Product.objects.select_for_update().get(
-                    id=item_data['product_id']
-                )
+                try:
+                    product = Product.objects.select_for_update().get(
+                        id=item_data['product_id']
+                    )
+                except Product.DoesNotExist:
+                    raise ValidationError(f"Product with id {item_data['product_id']} does not exist.")
                 order_item = OrderItem(
                     order=order,
                     product=product,

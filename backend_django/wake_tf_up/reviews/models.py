@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 import secrets
 from shop.models import Product
 
@@ -144,6 +144,10 @@ class ReviewToken(models.Model):
         """
         from orders.models import OrderItem
         
+        # Guest orders have no user — skip review tokens
+        if not order.user:
+            return []
+
         tokens = []
         expires_at = datetime.now() + timedelta(days=expiration_days)
         
@@ -151,6 +155,9 @@ class ReviewToken(models.Model):
         order_items = OrderItem.objects.filter(order=order).select_related('product')
         
         for item in order_items:
+            # Skip ticket items — reviews are only for physical products
+            if item.product is None:
+                continue
             # Check if token already exists for this order+product
             token_obj, created = cls.objects.get_or_create(
                 order=order,
