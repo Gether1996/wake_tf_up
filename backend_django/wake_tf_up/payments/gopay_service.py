@@ -119,7 +119,7 @@ class GoPayService:
                 "contact": {
                     "first_name": order.shipping_name.split()[0] if order.shipping_name else "Customer",
                     "last_name": " ".join(order.shipping_name.split()[1:]) if len(order.shipping_name.split()) > 1 else "",
-                    "email": order.user.email,
+                    "email": order.email or (order.user.email if order.user else ""),
                     "phone_number": order.phone,
                     "city": order.shipping_city,
                     "street": order.shipping_address,
