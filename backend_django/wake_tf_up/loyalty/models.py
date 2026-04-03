@@ -356,7 +356,7 @@ class QRCode(models.Model):
     def generate_code(prefix='QR', length=8):
         """Generate a random QR code identifier"""
         chars = string.ascii_uppercase + string.digits
-        random_part = ''.join(random.choices(chars, k=length))
+        random_part = ''.join(secrets.choice(chars) for _ in range(length))
         return f"{prefix}{random_part}"
     
     def increment_scan_count(self):

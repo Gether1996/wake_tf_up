@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
@@ -197,6 +197,17 @@ export class TicketDetailComponent implements OnInit {
   error = signal<string | null>(null);
   quantity = signal(1);
   activeImageIndex = signal(0);
+  private currentSlug = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      this.languageService.currentLang(); // track language changes
+      const slug = this.currentSlug();
+      if (slug) {
+        this.loadTicket(slug);
+      }
+    });
+  }
 
   activeImage = computed(() => {
     const t = this.ticket();
@@ -207,10 +218,12 @@ export class TicketDetailComponent implements OnInit {
   ticketsLink = computed(() => `/${this.languageService.currentLang()}/tickets`);
 
   ngOnInit() {
-    const slug = this.route.snapshot.paramMap.get('slug');
-    if (slug) {
-      this.loadTicket(slug);
-    }
+    this.route.params.subscribe(params => {
+      const slug = params['slug'];
+      if (slug) {
+        this.currentSlug.set(slug);
+      }
+    });
   }
 
   loadTicket(slug: string) {
