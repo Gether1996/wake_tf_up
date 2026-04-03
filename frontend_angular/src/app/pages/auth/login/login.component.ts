@@ -289,13 +289,11 @@ export class LoginComponent implements OnInit {
   sendResetEmail() {
     if (!this.resetEmail || this.sendingResetEmail()) return;
 
-    console.log('Sending password reset email to:', this.resetEmail);
     this.sendingResetEmail.set(true);
     this.resetEmailError.set('');
 
     this.authService.requestPasswordReset(this.resetEmail).subscribe({
-      next: (response) => {
-        console.log('Password reset email sent successfully:', response);
+      next: () => {
         this.resetEmailSent.set(true);
         this.sendingResetEmail.set(false);
       },

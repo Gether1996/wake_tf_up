@@ -427,10 +427,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       .pipe(
         retry({
           count: 3,
-          delay: (error, retryCount) => {
-            console.log(`Retrying product (attempt ${retryCount})...`);
-            return timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000));
-          }
+          delay: (error, retryCount) => timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000))
         })
       )
       .subscribe({

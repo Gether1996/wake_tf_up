@@ -3,7 +3,6 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
 import { PaymentService } from '../../core/api/payment.service';
-import { OrderService } from '../../core/api/order.service';
 import { LanguageService } from '../../core/services/language.service';
 import { ButtonComponent } from '../../shared/button/button.component';
 import { NotificationService } from '../../core/services/notification.service';
@@ -46,7 +45,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
             </p>
 
             <div class="flex gap-4 justify-center">
-              <app-button [routerLink]="['/', currentLang(), 'orders']">
+              <app-button [routerLink]="orderLink()" [queryParams]="orderQueryParams()">
                 {{ 'order_confirmation.view_orders' | transloco }}
               </app-button>
               <app-button [routerLink]="['/', currentLang(), 'shop']" [variant]="'secondary'">
@@ -79,7 +78,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
             </p>
 
             <div class="flex gap-4 justify-center">
-              <app-button [routerLink]="['/', currentLang(), 'orders']">
+              <app-button [routerLink]="orderLink()" [queryParams]="orderQueryParams()">
                 {{ 'order_confirmation.view_orders' | transloco }}
               </app-button>
               <app-button [routerLink]="['/', currentLang(), 'shop']" [variant]="'secondary'">
@@ -104,7 +103,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
               <app-button (clicked)="retryPayment()">
                 {{ 'order_confirmation.retry_payment' | transloco }}
               </app-button>
-              <app-button [routerLink]="['/', currentLang(), 'orders']" [variant]="'secondary'">
+              <app-button [routerLink]="orderLink()" [queryParams]="orderQueryParams()" [variant]="'secondary'">
                 {{ 'order_confirmation.view_orders' | transloco }}
               </app-button>
             </div>
@@ -123,7 +122,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
             </p>
 
             <div class="flex gap-4 justify-center">
-              <app-button [routerLink]="['/', currentLang(), 'orders']">
+              <app-button [routerLink]="orderLink()" [queryParams]="orderQueryParams()">
                 {{ 'order_confirmation.view_orders' | transloco }}
               </app-button>
               <app-button [routerLink]="['/', currentLang(), 'contact']" [variant]="'secondary'">
@@ -145,7 +144,6 @@ export class OrderConfirmationComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private paymentService = inject(PaymentService);
-  private orderService = inject(OrderService);
   private languageService = inject(LanguageService);
   private notificationService = inject(NotificationService);
   private platformId = inject(PLATFORM_ID);
@@ -156,6 +154,7 @@ export class OrderConfirmationComponent implements OnInit {
   loading = signal(true);
   paymentStatus = signal<string>('');
   orderId = signal<number | null>(null);
+  accessToken = signal<string | null>(null);
 
   ngOnInit() {
     // Get order_id and status from query params
@@ -163,6 +162,7 @@ export class OrderConfirmationComponent implements OnInit {
       const orderId = params['order_id'];
       const status = params['status'];
       const paymentMethod = params['payment_method'];
+      const accessToken = params['access_token'] || null;
 
       if (!orderId) {
         // No order ID, redirect to home
@@ -171,6 +171,7 @@ export class OrderConfirmationComponent implements OnInit {
       }
 
       this.orderId.set(parseInt(orderId));
+      this.accessToken.set(accessToken);
 
       // Cash on pickup - show pending state
       if (paymentMethod === 'cash_on_pickup') {
@@ -184,13 +185,13 @@ export class OrderConfirmationComponent implements OnInit {
         this.loading.set(false);
       } else {
         // Check payment status via API
-        this.checkPaymentStatus(parseInt(orderId));
+        this.checkPaymentStatus(parseInt(orderId), accessToken);
       }
     });
   }
 
-  checkPaymentStatus(orderId: number) {
-    this.paymentService.checkPaymentStatus(orderId).subscribe({
+  checkPaymentStatus(orderId: number, accessToken?: string | null) {
+    this.paymentService.checkPaymentStatus(orderId, accessToken || undefined).subscribe({
       next: (response) => {
         if (response.success && response.transaction) {
           if (response.transaction.status === 'completed') {
@@ -216,7 +217,10 @@ export class OrderConfirmationComponent implements OnInit {
   retryPayment() {
     if (this.orderId()) {
       this.loading.set(true);
-      this.paymentService.createPayment({ order_id: this.orderId()! }).subscribe({
+      this.paymentService.createPayment({
+        order_id: this.orderId()!,
+        ...(this.accessToken() ? { access_token: this.accessToken()! } : {})
+      }).subscribe({
         next: (response) => {
           if (response.success && response.payment_url) {
             if (isPlatformBrowser(this.platformId)) {
@@ -233,5 +237,16 @@ export class OrderConfirmationComponent implements OnInit {
         }
       });
     }
+  }
+
+  orderLink(): (string | number)[] {
+    if (this.orderId()) {
+      return ['/', this.currentLang(), 'orders', this.orderId()!];
+    }
+    return ['/', this.currentLang(), 'orders'];
+  }
+
+  orderQueryParams() {
+    return this.accessToken() ? { access_token: this.accessToken()! } : null;
   }
 }

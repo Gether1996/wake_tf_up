@@ -1,4 +1,5 @@
 import logging
+from django.http import Http404
 from rest_framework import generics, permissions, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -9,6 +10,7 @@ from .serializers import (
     OrderDetailSerializer
 )
 from .emails import send_order_confirmation_email
+from .access import has_valid_guest_order_access
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +47,7 @@ class OrderCreateView(generics.CreateAPIView):
             except Exception as email_error:
                 logger.error("Failed to send order confirmation email for order %s: %s", order.id, email_error)
             return Response(
-                OrderDetailSerializer(order).data,
+                OrderDetailSerializer(order, context=self.get_serializer_context()).data,
                 status=status.HTTP_201_CREATED
             )
         except Exception as e:
@@ -82,13 +84,30 @@ class OrderDetailView(generics.RetrieveAPIView):
     GET /api/v1/orders/{id}/
     """
     serializer_class = OrderDetailSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
+    permission_classes = [permissions.AllowAny]
+
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).prefetch_related(
+        return Order.objects.prefetch_related(
             'items__product__category',
             'items__product__color'
         )
+
+    def get_object(self):
+        order = generics.get_object_or_404(self.get_queryset(), pk=self.kwargs['pk'])
+
+        if self.request.user.is_authenticated:
+            if order.user_id != self.request.user.id:
+                raise Http404
+            return order
+
+        if order.user_id is not None:
+            raise Http404
+
+        access_token = self.request.query_params.get('access_token')
+        if not has_valid_guest_order_access(order, access_token):
+            raise Http404
+
+        return order
 
 
 # ============ ADMIN ENDPOINTS ============

@@ -1,4 +1,3 @@
-import hashlib
 import hmac
 import logging
 from datetime import timedelta
@@ -14,22 +13,16 @@ from django.utils.html import strip_tags
 from rest_framework import generics, permissions, status, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from urllib.parse import quote_plus
 
 from core.permissions import IsSuperuser
 from settings.models import MainSettings
 from core.email_utils import get_email_language, send_localized_email
+from .email_utils import build_unsubscribe_url, generate_unsubscribe_token, get_frontend_base_url
 from .models import Subscriber, NewsletterPopupStat, NewsletterTemplate, DiscountCodeTemplate, NewsletterImage, EventsTemplate, BlogsTemplate
 from .serializers import SubscriberSerializer, NewsletterImageSerializer, NewsletterPopupStatSerializer
 
 
 logger = logging.getLogger(__name__)
-
-
-def _unsubscribe_token(email: str) -> str:
-    """Generate a stable HMAC token for unsubscribe links."""
-    key = settings.SECRET_KEY.encode()
-    return hmac.new(key, email.encode(), hashlib.sha256).hexdigest()[:32]
 
 
 def send_subscription_confirmation_email(email: str, request=None):
@@ -43,7 +36,7 @@ def send_subscription_confirmation_email(email: str, request=None):
     settings_obj = MainSettings.get_settings()
     support_email = settings_obj.contact_email or getattr(settings, 'DEFAULT_CONTACT_EMAIL', settings.DEFAULT_FROM_EMAIL)
     from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', support_email)
-    base_url = getattr(settings, 'FRONTEND_URL', 'https://wake-tf-up.eu').rstrip('/')
+    base_url = get_frontend_base_url()
     # Get language from request if available, otherwise default to 'sk'
     language_code = get_email_language(request=request)
 
@@ -53,7 +46,7 @@ def send_subscription_confirmation_email(email: str, request=None):
         'site_name': settings_obj.site_name,
         'support_email': support_email,
         'shop_url': f"{base_url}/{language_code}/shop",
-        'unsubscribe_url': f"{base_url}/{language_code}/newsletter/unsubscribe?email={quote_plus(email)}&token={_unsubscribe_token(email)}",
+        'unsubscribe_url': build_unsubscribe_url(email, language_code, base_url),
         'instagram_url': settings_obj.instagram_url,
         'facebook_url': settings_obj.facebook_url,
         'twitter_url': settings_obj.twitter_url,
@@ -148,7 +141,7 @@ class UnsubscribeView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        expected_token = _unsubscribe_token(email)
+        expected_token = generate_unsubscribe_token(email)
         if not token or not hmac.compare_digest(token, expected_token):
             return Response(
                 {'error': 'Invalid or missing unsubscribe token'},
@@ -239,10 +232,10 @@ def newsletter_template_preview(request, pk):
     # Replace placeholders with sample values
     html_content = template.content_html
     # Auto-generate unsubscribe URL from settings
-    base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
+    base_url = get_frontend_base_url()
     # Get language from request
     language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
-    unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email=example@example.com"
+    unsubscribe_link = build_unsubscribe_url('example@example.com', language_code, base_url)
     html_content = html_content.replace('{{unsubscribe_url}}', unsubscribe_link)
     # Replace site URL placeholder
     html_content = html_content.replace('{{site_url}}', base_url)
@@ -309,10 +302,10 @@ def discount_template_preview(request, pk):
     # Replace placeholders with actual or sample values
     html_content = template.content_html
     # Auto-generate unsubscribe URL from settings
-    base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
+    base_url = get_frontend_base_url()
     # Get language from request
     language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
-    unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email=example@example.com"
+    unsubscribe_link = build_unsubscribe_url('example@example.com', language_code, base_url)
     html_content = html_content.replace('{{unsubscribe_url}}', unsubscribe_link)
     # Replace site URL placeholder
     html_content = html_content.replace('{{site_url}}', base_url)
@@ -392,9 +385,9 @@ def events_template_preview(request, pk):
     from django.http import HttpResponse
     from django.shortcuts import get_object_or_404
     template = get_object_or_404(EventsTemplate, pk=pk)
-    base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
+    base_url = get_frontend_base_url()
     language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
-    unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email=example@example.com"
+    unsubscribe_link = build_unsubscribe_url('example@example.com', language_code, base_url)
     html_content = template.content_html
     html_content = html_content.replace('{{unsubscribe_url}}', unsubscribe_link)
     html_content = html_content.replace('{{site_url}}', base_url)
@@ -413,9 +406,9 @@ def blogs_template_preview(request, pk):
     from django.http import HttpResponse
     from django.shortcuts import get_object_or_404
     template = get_object_or_404(BlogsTemplate, pk=pk)
-    base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
+    base_url = get_frontend_base_url()
     language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
-    unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email=example@example.com"
+    unsubscribe_link = build_unsubscribe_url('example@example.com', language_code, base_url)
     html_content = template.content_html
     html_content = html_content.replace('{{unsubscribe_url}}', unsubscribe_link)
     html_content = html_content.replace('{{site_url}}', base_url)

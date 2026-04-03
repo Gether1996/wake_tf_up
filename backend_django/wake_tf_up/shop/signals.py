@@ -3,10 +3,13 @@ from django.dispatch import receiver
 from django.core.files.base import ContentFile
 from .models import ProductVideo
 import cv2
-import tempfile
 import os
 from PIL import Image
 import io
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=ProductVideo)
@@ -38,7 +41,7 @@ def generate_video_thumbnail(sender, instance, created, **kwargs):
         video.release()
         
         if not success:
-            print(f"Failed to extract frame from video: {instance.video.name}")
+            logger.warning("Failed to extract frame from video %s", instance.video.name)
             return
         
         # Convert BGR (OpenCV) to RGB (PIL)
@@ -72,10 +75,10 @@ def generate_video_thumbnail(sender, instance, created, **kwargs):
             thumbnail=instance.thumbnail
         )
         
-        print(f"Generated thumbnail for video: {instance.video.name}")
+        logger.info("Generated thumbnail for video %s", instance.video.name)
         
     except Exception as e:
-        print(f"Error generating thumbnail for {instance.video.name}: {str(e)}")
+        logger.error("Error generating thumbnail for %s: %s", instance.video.name, e, exc_info=True)
     
     finally:
         # Clean up flag

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
@@ -10,6 +10,8 @@ import { NotificationService } from '../../core/services/notification.service';
 import { PaymentService } from '../../core/api/payment.service';
 import { ButtonComponent } from '../../shared/button/button.component';
 import { environment } from '../../../environments/environment';
+import { combineLatest } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-order-detail',
@@ -253,6 +255,7 @@ import { environment } from '../../../environments/environment';
 export class OrderDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
   private orderService = inject(OrderService);
   private languageService = inject(LanguageService);
   private notificationService = inject(NotificationService);
@@ -265,29 +268,40 @@ export class OrderDetailComponent implements OnInit {
   loading = signal(true);
   error = signal('');
   paying = signal(false);
+  accessToken = signal<string | null>(null);
   private orderId: number | null = null;
 
   ngOnInit() {
-    this.route.paramMap.subscribe(params => {
-      const idParam = params.get('id');
-      const id = idParam ? Number(idParam) : NaN;
-      if (!Number.isFinite(id)) {
-        this.error.set(this.translocoService.translate('orders.empty_state'));
-        this.loading.set(false);
-        return;
-      }
-      this.orderId = id;
-      this.fetchOrder();
-    });
+    combineLatest([this.route.paramMap, this.route.queryParamMap])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(([params, queryParams]) => {
+        const idParam = params.get('id');
+        const id = idParam ? Number(idParam) : NaN;
+        if (!Number.isFinite(id)) {
+          this.error.set(this.translocoService.translate('orders.empty_state'));
+          this.loading.set(false);
+          return;
+        }
+        this.orderId = id;
+        this.accessToken.set(queryParams.get('access_token'));
+        this.fetchOrder();
+      });
   }
 
   goBack() {
+    if (this.isGuestOrderAccess()) {
+      this.router.navigate(['/', this.currentLang(), 'shop']);
+      return;
+    }
     this.router.navigate(['/', this.currentLang(), 'orders']);
   }
 
   payNow(orderId: number) {
     this.paying.set(true);
-    this.paymentService.createPayment({ order_id: orderId }).subscribe({
+    this.paymentService.createPayment({
+      order_id: orderId,
+      ...(this.accessToken() ? { access_token: this.accessToken()! } : {})
+    }).subscribe({
       next: (response) => {
         if (response.success && response.payment_url) {
           window.location.href = response.payment_url;
@@ -309,9 +323,12 @@ export class OrderDetailComponent implements OnInit {
     if (!this.orderId) return;
     this.loading.set(true);
     this.error.set('');
-    this.orderService.getOrder(this.orderId).subscribe({
+    this.orderService.getOrder(this.orderId, this.accessToken() || undefined).subscribe({
       next: (order) => {
         this.order.set(order);
+        if (!this.accessToken() && order.guest_access_token) {
+          this.accessToken.set(order.guest_access_token);
+        }
         this.loading.set(false);
       },
       error: (err) => {
@@ -321,6 +338,10 @@ export class OrderDetailComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  isGuestOrderAccess(): boolean {
+    return !!this.accessToken();
   }
 
   getStatusClass(status: string): string {

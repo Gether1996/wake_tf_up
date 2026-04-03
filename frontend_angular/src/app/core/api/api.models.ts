@@ -119,6 +119,8 @@ export interface Order {
   created_at: string;
   updated_at: string;
   items: OrderItem[];
+  guest_access_token?: string | null;
+  frontend_order_url?: string | null;
   items_count?: number; // Computed field from backend
   is_pre_order?: boolean; // Computed field from backend
 }

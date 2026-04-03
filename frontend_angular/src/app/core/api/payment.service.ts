@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface CreatePaymentRequest {
   order_id: number;
+  access_token?: string;
 }
 
 export interface PaymentResponse {
@@ -48,7 +49,10 @@ export class PaymentService {
   /**
    * Check payment status by order ID
    */
-  checkPaymentStatus(orderId: number): Observable<PaymentStatusResponse> {
-    return this.http.get<PaymentStatusResponse>(`${this.apiUrl}/status/${orderId}/`);
+  checkPaymentStatus(orderId: number, accessToken?: string): Observable<PaymentStatusResponse> {
+    const params = accessToken
+      ? new HttpParams().set('access_token', accessToken)
+      : undefined;
+    return this.http.get<PaymentStatusResponse>(`${this.apiUrl}/status/${orderId}/`, { params });
   }
 }

@@ -266,10 +266,7 @@ export class HomeComponent implements OnInit {
       .pipe(
         retry({
           count: 3,
-          delay: (error, retryCount) => {
-            console.log(`Retrying featured products (attempt ${retryCount})...`);
-            return timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000));
-          }
+          delay: (error, retryCount) => timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000))
         })
       )
       .subscribe({
@@ -291,10 +288,7 @@ export class HomeComponent implements OnInit {
       .pipe(
         retry({
           count: 3,
-          delay: (error, retryCount) => {
-            console.log(`Retrying reviews (attempt ${retryCount})...`);
-            return timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000));
-          }
+          delay: (error, retryCount) => timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000))
         })
       )
       .subscribe({
@@ -322,10 +316,7 @@ export class HomeComponent implements OnInit {
       .pipe(
         retry({
           count: 3,
-          delay: (error, retryCount) => {
-            console.log(`Retrying limited drops (attempt ${retryCount})...`);
-            return timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000));
-          }
+          delay: (error, retryCount) => timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000))
         })
       )
       .subscribe({

@@ -4,6 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import redirect
+from django.conf import settings
+from urllib.parse import urlparse
 from .models import DiscountCode, LoyaltyService, QRCode
 from .serializers import (
     DiscountCodeSerializer,
@@ -12,6 +14,30 @@ from .serializers import (
     QRCodeSerializer
 )
 from decimal import Decimal
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
+def is_allowed_qr_target(target_url):
+    try:
+        parsed_url = urlparse(target_url)
+    except ValueError:
+        return False
+
+    if parsed_url.scheme not in {'http', 'https'} or not parsed_url.hostname:
+        return False
+
+    allowed_hosts = {
+        host for host in getattr(settings, 'ALLOWED_HOSTS', [])
+        if host and host != '*'
+    }
+    frontend_host = urlparse(getattr(settings, 'FRONTEND_URL', '')).hostname
+    if frontend_host:
+        allowed_hosts.add(frontend_host)
+
+    return parsed_url.hostname in allowed_hosts
 
 
 class UserDiscountCodesView(generics.ListAPIView):
@@ -111,6 +137,11 @@ class QRCodeScanView(APIView):
         try:
             qr_code = QRCode.objects.get(code=code, is_active=True)
             qr_code.increment_scan_count()
+            if not is_allowed_qr_target(qr_code.target_url):
+                logger.warning("Blocked QR redirect for code %s to %s", qr_code.code, qr_code.target_url)
+                return Response({
+                    'error': 'QR code target URL is not allowed'
+                }, status=status.HTTP_400_BAD_REQUEST)
             return redirect(qr_code.target_url)
         except QRCode.DoesNotExist:
             return Response({

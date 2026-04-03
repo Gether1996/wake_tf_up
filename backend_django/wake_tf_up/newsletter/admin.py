@@ -4,6 +4,7 @@ from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django import forms
 from .models import Subscriber, NewsletterPopupStat, NewsletterTemplate, DiscountCodeTemplate, NewsletterImage, EventsTemplate, BlogsTemplate
+from .email_utils import build_unsubscribe_url, get_frontend_base_url
 from datetime import datetime
 import re
 from django.template import Template, Context
@@ -53,6 +54,26 @@ def clean_text_for_email(text):
         # If still fails, remove all non-ASCII-compatible chars
         cleaned = cleaned.encode('utf-8', errors='ignore').decode('utf-8')
     return cleaned
+
+
+def get_request_language_code(request):
+    return getattr(request, 'LANGUAGE_CODE', 'sk')
+
+
+def get_active_subscribers_queryset(request, queryset, selected_only=False):
+    active_queryset = queryset.filter(is_active=True)
+    skipped_count = queryset.count() - active_queryset.count()
+    return active_queryset, skipped_count
+
+
+def get_newsletter_context(subscriber_email, base_url, language_code, **extra_context):
+    context = {
+        'unsubscribe_url': build_unsubscribe_url(subscriber_email, language_code, base_url),
+        'site_url': base_url,
+        'email': subscriber_email,
+    }
+    context.update(extra_context)
+    return context
 
 
 @admin.register(Subscriber)
@@ -110,12 +131,23 @@ class SubscriberAdmin(admin.ModelAdmin):
             )
             return
         
+        queryset, skipped_count = get_active_subscribers_queryset(request, queryset, selected_only=True)
+        if skipped_count:
+            self.message_user(
+                request,
+                f"Z vybranych subscriberov bolo preskocenych neaktivnych odberatelov: {skipped_count}",
+                level=messages.WARNING
+            )
+        if not queryset.exists():
+            self.message_user(request, "Medzi oznacenymi subscribermi nie je ziadny aktivny odberatel.", level=messages.ERROR)
+            return
+
         sent_count = 0
         failed_count = 0
         
         # Get base URL and language code from request
-        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
-        language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+        base_url = get_frontend_base_url()
+        language_code = get_request_language_code(request)
         
         # Debug: Check subject in database
         import logging
@@ -142,10 +174,14 @@ Odhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscrib
                 
                 # Replace placeholders in HTML using Django template
                 html_content = template.content_html
-                unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}"
+                unsubscribe_link = build_unsubscribe_url(subscriber.email, language_code, base_url)
+                plain_text = plain_text.replace(
+                    f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}",
+                    unsubscribe_link,
+                )
                 
                 # Render template variables and clean HTML
-                html_content = Template(html_content).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
+                html_content = Template(html_content).render(Context(get_newsletter_context(subscriber.email, base_url, language_code)))
                 html_content = clean_text_for_email(html_content)
                 subject = template.subject
                 
@@ -202,12 +238,23 @@ Odhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscrib
             )
             return
         
+        queryset, skipped_count = get_active_subscribers_queryset(request, queryset, selected_only=True)
+        if skipped_count:
+            self.message_user(
+                request,
+                f"Z vybranych subscriberov bolo preskocenych neaktivnych odberatelov: {skipped_count}",
+                level=messages.WARNING
+            )
+        if not queryset.exists():
+            self.message_user(request, "Medzi oznacenymi subscribermi nie je ziadny aktivny odberatel.", level=messages.ERROR)
+            return
+
         sent_count = 0
         failed_count = 0
         
         # Get base URL and language code from request
-        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.sk'
-        language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+        base_url = get_frontend_base_url()
+        language_code = get_request_language_code(request)
         
         for subscriber in queryset:
             try:
@@ -229,10 +276,21 @@ Odhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscrib
                 
                 # Replace placeholders in HTML using Django template
                 html_content = template.content_html
-                unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}"
+                unsubscribe_link = build_unsubscribe_url(subscriber.email, language_code, base_url)
+                plain_text = plain_text.replace(
+                    f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}",
+                    unsubscribe_link,
+                )
                 
                 # Render template variables and clean HTML
-                html_content = Template(html_content).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email, 'discount_code': template.discount_code or '', 'discount_percentage': str(template.discount_percentage or ''), 'valid_until': template.valid_until.strftime('%d.%m.%Y') if template.valid_until else ''}))
+                html_content = Template(html_content).render(Context(get_newsletter_context(
+                    subscriber.email,
+                    base_url,
+                    language_code,
+                    discount_code=template.discount_code or '',
+                    discount_percentage=str(template.discount_percentage or ''),
+                    valid_until=template.valid_until.strftime('%d.%m.%Y') if template.valid_until else '',
+                )))
                 html_content = clean_text_for_email(html_content)
                 subject = template.subject
                 
@@ -280,16 +338,31 @@ Odhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscrib
             self.message_user(request, "Eventy šablóna nemá žiadny HTML obsah.", level=messages.ERROR)
             return
 
+        queryset, skipped_count = get_active_subscribers_queryset(request, queryset, selected_only=True)
+        if skipped_count:
+            self.message_user(
+                request,
+                f"Z vybranych subscriberov bolo preskocenych neaktivnych odberatelov: {skipped_count}",
+                level=messages.WARNING
+            )
+        if not queryset.exists():
+            self.message_user(request, "Medzi oznacenymi subscribermi nie je ziadny aktivny odberatel.", level=messages.ERROR)
+            return
+
         sent_count = 0
         failed_count = 0
-        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
-        language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+        base_url = get_frontend_base_url()
+        language_code = get_request_language_code(request)
 
         for subscriber in queryset:
             try:
                 plain_text = f"Ahoj,\n\nPozrite si nadchádzajúce eventy na:\n{base_url}/{language_code}/events\n\nOdhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}".strip()
-                unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}"
-                html_content = Template(template.content_html).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
+                unsubscribe_link = build_unsubscribe_url(subscriber.email, language_code, base_url)
+                plain_text = plain_text.replace(
+                    f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}",
+                    unsubscribe_link,
+                )
+                html_content = Template(template.content_html).render(Context(get_newsletter_context(subscriber.email, base_url, language_code)))
                 html_content = clean_text_for_email(html_content)
                 email = EmailMultiAlternatives(
                     subject=template.subject,
@@ -325,16 +398,31 @@ Odhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscrib
             self.message_user(request, "Blogy šablóna nemá žiadny HTML obsah.", level=messages.ERROR)
             return
 
+        queryset, skipped_count = get_active_subscribers_queryset(request, queryset, selected_only=True)
+        if skipped_count:
+            self.message_user(
+                request,
+                f"Z vybranych subscriberov bolo preskocenych neaktivnych odberatelov: {skipped_count}",
+                level=messages.WARNING
+            )
+        if not queryset.exists():
+            self.message_user(request, "Medzi oznacenymi subscribermi nie je ziadny aktivny odberatel.", level=messages.ERROR)
+            return
+
         sent_count = 0
         failed_count = 0
-        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
-        language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+        base_url = get_frontend_base_url()
+        language_code = get_request_language_code(request)
 
         for subscriber in queryset:
             try:
                 plain_text = f"Ahoj,\n\nPozrite si nové blogy na:\n{base_url}/{language_code}/blog\n\nOdhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}".strip()
-                unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}"
-                html_content = Template(template.content_html).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
+                unsubscribe_link = build_unsubscribe_url(subscriber.email, language_code, base_url)
+                plain_text = plain_text.replace(
+                    f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}",
+                    unsubscribe_link,
+                )
+                html_content = Template(template.content_html).render(Context(get_newsletter_context(subscriber.email, base_url, language_code)))
                 html_content = clean_text_for_email(html_content)
                 email = EmailMultiAlternatives(
                     subject=template.subject,
@@ -489,8 +577,8 @@ class NewsletterTemplateAdmin(SingletonModelAdmin):
         failed_count = 0
         
         # Get base URL and language code from request
-        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
-        language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+        base_url = get_frontend_base_url()
+        language_code = get_request_language_code(request)
         
         for subscriber in subscribers:
             try:
@@ -511,10 +599,14 @@ Odhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscrib
                 
                 # Replace placeholders in HTML
                 html_content = template.content_html
-                unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}"
+                unsubscribe_link = build_unsubscribe_url(subscriber.email, language_code, base_url)
+                plain_text = plain_text.replace(
+                    f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}",
+                    unsubscribe_link,
+                )
                 
                 # Clean HTML content and subject from problematic Unicode characters
-                html_content = Template(html_content).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
+                html_content = Template(html_content).render(Context(get_newsletter_context(subscriber.email, base_url, language_code)))
                 html_content = clean_text_for_email(html_content)
                 subject = template.subject                
                 # Create email exactly like accounts/views.py does it
@@ -650,8 +742,8 @@ class DiscountCodeTemplateAdmin(SingletonModelAdmin):
         failed_count = 0
         
         # Get base URL and language code from request
-        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.sk'
-        language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+        base_url = get_frontend_base_url()
+        language_code = get_request_language_code(request)
         
         for subscriber in subscribers:
             try:
@@ -673,10 +765,21 @@ Odhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscrib
                 
                 # Replace placeholders in HTML using Django template
                 html_content = template.content_html
-                unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}"
+                unsubscribe_link = build_unsubscribe_url(subscriber.email, language_code, base_url)
+                plain_text = plain_text.replace(
+                    f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}",
+                    unsubscribe_link,
+                )
                 
                 # Render template variables and clean HTML
-                html_content = Template(html_content).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email, 'discount_code': template.discount_code or '', 'discount_percentage': str(template.discount_percentage or ''), 'valid_until': template.valid_until.strftime('%d.%m.%Y') if template.valid_until else ''}))
+                html_content = Template(html_content).render(Context(get_newsletter_context(
+                    subscriber.email,
+                    base_url,
+                    language_code,
+                    discount_code=template.discount_code or '',
+                    discount_percentage=str(template.discount_percentage or ''),
+                    valid_until=template.valid_until.strftime('%d.%m.%Y') if template.valid_until else '',
+                )))
                 html_content = clean_text_for_email(html_content)
                 subject = template.subject
                 
@@ -841,14 +944,18 @@ class EventsTemplateAdmin(SingletonModelAdmin):
         subscribers = Subscriber.objects.filter(is_active=True)
         sent_count = 0
         failed_count = 0
-        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
-        language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+        base_url = get_frontend_base_url()
+        language_code = get_request_language_code(request)
 
         for subscriber in subscribers:
             try:
                 plain_text = f"Ahoj,\n\nPozrite si nadchádzajúce eventy na:\n{base_url}/{language_code}/events\n\nOdhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}".strip()
-                unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}"
-                html_content = Template(template.content_html).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
+                unsubscribe_link = build_unsubscribe_url(subscriber.email, language_code, base_url)
+                plain_text = plain_text.replace(
+                    f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}",
+                    unsubscribe_link,
+                )
+                html_content = Template(template.content_html).render(Context(get_newsletter_context(subscriber.email, base_url, language_code)))
                 html_content = clean_text_for_email(html_content)
                 email = EmailMultiAlternatives(subject=template.subject, body=plain_text, from_email=settings.DEFAULT_FROM_EMAIL, to=[subscriber.email])
                 email.attach_alternative(html_content, "text/html")
@@ -916,14 +1023,18 @@ class BlogsTemplateAdmin(SingletonModelAdmin):
         subscribers = Subscriber.objects.filter(is_active=True)
         sent_count = 0
         failed_count = 0
-        base_url = settings.FRONTEND_URL or 'https://wake-tf-up.eu'
-        language_code = getattr(request, 'LANGUAGE_CODE', 'sk')
+        base_url = get_frontend_base_url()
+        language_code = get_request_language_code(request)
 
         for subscriber in subscribers:
             try:
                 plain_text = f"Ahoj,\n\nPozrite si nové blogy na:\n{base_url}/{language_code}/blog\n\nOdhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}".strip()
-                unsubscribe_link = f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}"
-                html_content = Template(template.content_html).render(Context({'unsubscribe_url': unsubscribe_link, 'site_url': base_url, 'email': subscriber.email}))
+                unsubscribe_link = build_unsubscribe_url(subscriber.email, language_code, base_url)
+                plain_text = plain_text.replace(
+                    f"{base_url}/{language_code}/newsletter/unsubscribe?email={subscriber.email}",
+                    unsubscribe_link,
+                )
+                html_content = Template(template.content_html).render(Context(get_newsletter_context(subscriber.email, base_url, language_code)))
                 html_content = clean_text_for_email(html_content)
                 email = EmailMultiAlternatives(subject=template.subject, body=plain_text, from_email=settings.DEFAULT_FROM_EMAIL, to=[subscriber.email])
                 email.attach_alternative(html_content, "text/html")

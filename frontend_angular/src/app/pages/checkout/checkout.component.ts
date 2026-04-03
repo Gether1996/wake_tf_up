@@ -1499,12 +1499,16 @@ export class CheckoutComponent implements OnInit {
             queryParams: { 
               order_id: order.id, 
               payment_method: 'cash_on_pickup',
-              status: 'pending'
+              status: 'pending',
+              ...(order.guest_access_token ? { access_token: order.guest_access_token } : {})
             }
           });
         } else {
           // GoPay payment - create payment and redirect
-          this.paymentService.createPayment({ order_id: order.id }).subscribe({
+          this.paymentService.createPayment({
+            order_id: order.id,
+            ...(order.guest_access_token ? { access_token: order.guest_access_token } : {})
+          }).subscribe({
             next: (paymentResponse) => {
               if (paymentResponse.success && paymentResponse.payment_url) {
                 // Clear cart and redirect to GoPay

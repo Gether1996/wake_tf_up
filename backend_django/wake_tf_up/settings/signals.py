@@ -1,6 +1,11 @@
+import logging
+
+from django.apps import apps
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
-from django.apps import apps
+
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_migrate)
@@ -13,4 +18,4 @@ def create_default_settings(sender, **kwargs):
         MainSettings = apps.get_model('settings', 'MainSettings')
         if not MainSettings.objects.exists():
             MainSettings.objects.create()
-            print("✓ Created default MainSettings instance")
+            logger.info("Created default MainSettings instance")

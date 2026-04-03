@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from settings.models import MainSettings
 from core.email_utils import get_email_language, send_localized_email
+from .access import build_frontend_order_url
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ def send_order_confirmation_email(order, language=None):
         "is_cash_payment": order.payment_method == "cash_on_pickup",
         "packeta_point": order.packeta_point_name,
         "packeta_address": order.packeta_point_address,
-        "frontend_order_url": f"{base_url}/{language_code}/orders/{order.id}",
+        "frontend_order_url": build_frontend_order_url(order, language_code=language_code, base_url=base_url),
         "frontend_base_url": base_url,
         "support_email": support_email,
         "company_purchase": order.is_company_purchase,
@@ -125,7 +126,7 @@ def send_payment_confirmation_email(order, language=None):
         "payment_method_display": order.get_payment_method_display(),
         "packeta_point": order.packeta_point_name,
         "packeta_address": order.packeta_point_address,
-        "frontend_order_url": f"{base_url}/{language_code}/orders/{order.id}",
+        "frontend_order_url": build_frontend_order_url(order, language_code=language_code, base_url=base_url),
         "frontend_base_url": base_url,
         "support_email": support_email,
         "company_purchase": order.is_company_purchase,

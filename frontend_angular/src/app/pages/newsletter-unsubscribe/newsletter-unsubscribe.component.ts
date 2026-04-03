@@ -84,17 +84,16 @@ export class NewsletterUnsubscribeComponent implements OnInit {
   currentLang = this.languageService.currentLang;
 
   ngOnInit() {
-    // Get email from query parameter
     this.route.queryParams.subscribe(params => {
       const email = params['email'];
+      const token = params['token'];
       
       if (!email) {
         this.error.set('newsletter_unsubscribe.email_missing');
         return;
       }
       
-      // Call unsubscribe API
-      this.api.get(`newsletter/unsubscribe/?email=${email}`).subscribe({
+      this.api.get('newsletter/unsubscribe/', { email, token }).subscribe({
         next: (response: any) => {
           this.unsubscribed.set(true);
         },

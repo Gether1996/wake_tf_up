@@ -17,6 +17,7 @@ class PaymentTransactionSerializer(serializers.ModelSerializer):
 class CreatePaymentSerializer(serializers.Serializer):
     """Serializer for creating a payment"""
     order_id = serializers.IntegerField(required=True)
+    access_token = serializers.CharField(required=False, allow_blank=True)
 
 
 class PaymentStatusSerializer(serializers.Serializer):

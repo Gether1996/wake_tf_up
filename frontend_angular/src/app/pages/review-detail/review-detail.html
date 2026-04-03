@@ -83,7 +83,7 @@
         </div>
 
         <!-- View Product Button -->
-        <a [routerLink]="['/', currentLang(), 'shop', review()!.product.slug]" class="mt-auto">
+        <a [routerLink]="['/', currentLang(), 'product', review()!.product.slug]" class="mt-auto">
           <app-button [variant]="'primary'" [fullWidth]="true" [size]="'lg'">
             {{ 'review.view_product' | transloco }}
           </app-button>

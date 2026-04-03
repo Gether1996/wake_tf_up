@@ -12,6 +12,7 @@ from django.conf import settings
 from settings.models import MainSettings
 from core.email_utils import send_localized_email
 import uuid
+import logging
 from .serializers import (
     UserRegistrationSerializer,
     UserProfileSerializer,
@@ -19,6 +20,7 @@ from .serializers import (
 )
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 def send_verification_email(user, language='sk'):
@@ -49,7 +51,7 @@ def send_verification_email(user, language='sk'):
         
         return True
     except Exception as e:
-        print(f"Failed to send verification email: {e}")
+        logger.error("Failed to send verification email to %s: %s", user.email, e, exc_info=True)
         return False
 
 
@@ -79,7 +81,7 @@ def send_email_confirmed_notification(user, language='sk'):
         
         return True
     except Exception as e:
-        print(f"Failed to send email confirmation notification: {e}")
+        logger.error("Failed to send email confirmation notification to %s: %s", user.email, e, exc_info=True)
         return False
 
 
@@ -111,7 +113,7 @@ def send_password_reset_email(user, language='sk'):
         
         return True
     except Exception as e:
-        print(f"Failed to send password reset email: {e}")
+        logger.error("Failed to send password reset email to %s: %s", user.email, e, exc_info=True)
         return False
 
 

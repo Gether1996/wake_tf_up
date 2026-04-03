@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Order, OrderItem
+from .access import build_frontend_order_url, get_guest_order_access_token
 from shop.serializers import ProductListSerializer, TicketListSerializer
 
 
@@ -116,6 +117,8 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     is_pre_order = serializers.ReadOnlyField()
     discount_code_display = serializers.CharField(source='discount_code.code', read_only=True)
+    guest_access_token = serializers.SerializerMethodField()
+    frontend_order_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Order
@@ -127,5 +130,12 @@ class OrderDetailSerializer(serializers.ModelSerializer):
             'is_company_purchase', 'billing_company', 'billing_ico', 
             'billing_dic', 'billing_ic_dph', 'shipping_cost', 'total_amount', 'discount_amount',
             'discount_code_display', 'payment_method', 'is_pre_order', 'items',
-            'language', 'delivered_at', 'created_at', 'updated_at'
+            'language', 'guest_access_token', 'frontend_order_url',
+            'delivered_at', 'created_at', 'updated_at'
         )
+
+    def get_guest_access_token(self, obj):
+        return get_guest_order_access_token(obj)
+
+    def get_frontend_order_url(self, obj):
+        return build_frontend_order_url(obj)

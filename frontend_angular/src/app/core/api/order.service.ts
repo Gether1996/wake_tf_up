@@ -51,8 +51,9 @@ export class OrderService {
     return this.api.get<PaginatedResponse<Order>>('orders/', params);
   }
 
-  getOrder(id: number): Observable<Order> {
-    return this.api.get<Order>(`orders/${id}/`);
+  getOrder(id: number, accessToken?: string): Observable<Order> {
+    const params = accessToken ? { access_token: accessToken } : undefined;
+    return this.api.get<Order>(`orders/${id}/`, params);
   }
 
   createOrderFromCart(shippingData: Omit<CreateOrderRequest, 'items'>): Observable<Order> {

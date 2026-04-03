@@ -7,6 +7,13 @@ export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  const guestOrderAccessToken =
+    route.routeConfig?.path === 'orders/:id'
+      ? route.queryParamMap.get('access_token')
+      : null;
+
+  if (guestOrderAccessToken) return true;
+
   const hasUser = authService.isAuthenticated();
   const hasToken = !!authService.getAccessToken();
 

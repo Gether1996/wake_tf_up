@@ -1,11 +1,13 @@
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from django.http import Http404
 from django.shortcuts import get_object_or_404
-from django.urls import reverse
+from urllib.parse import urlencode
 from django.conf import settings
 from orders.models import Order
 from orders.emails import send_payment_confirmation_email
+from orders.access import get_guest_order_query_params, has_valid_guest_order_access
 from .models import PaymentTransaction
 from .serializers import (
     PaymentTransactionSerializer,
@@ -14,9 +16,24 @@ from .serializers import (
 )
 from .gopay_service import GoPayService
 import logging
-from core.email_utils import get_email_language
 
 logger = logging.getLogger(__name__)
+
+
+def get_order_for_payment_request(request, order_id, access_token=None):
+    """
+    Resolve an order for payment-related endpoints.
+
+    Authenticated users can only access their own orders.
+    Guests can only access guest orders.
+    """
+    if request.user.is_authenticated:
+        return get_object_or_404(Order, id=order_id, user=request.user)
+
+    order = get_object_or_404(Order, id=order_id, user__isnull=True)
+    if not has_valid_guest_order_access(order, access_token):
+        raise Http404
+    return order
 
 
 class CreatePaymentView(generics.CreateAPIView):
@@ -47,13 +64,10 @@ class CreatePaymentView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
 
         order_id = serializer.validated_data['order_id']
+        access_token = serializer.validated_data.get('access_token')
         logger.info(f"[Payment API] Order ID: {order_id}")
 
-        # Verify ownership: if logged in, order must belong to user; if guest, just fetch by id
-        if request.user.is_authenticated:
-            order = get_object_or_404(Order, id=order_id, user=request.user)
-        else:
-            order = get_object_or_404(Order, id=order_id)
+        order = get_order_for_payment_request(request, order_id, access_token=access_token)
         logger.debug(f"[Payment API] Order found: #{order.id} | Total: {order.total_amount} EUR | Status: {order.status}")
         
         # Check if order is already paid
@@ -184,7 +198,14 @@ class CreatePaymentView(generics.CreateAPIView):
             }
         )
         
-        confirmation_url = f"{settings.FRONTEND_URL.rstrip('/')}/{language}/order-confirmation?order_id={order.id}&status=paid&testPayment=1"
+        confirmation_params = {
+            'order_id': order.id,
+            'status': 'paid',
+            'testPayment': 1,
+            **get_guest_order_query_params(order),
+        }
+        confirmation_query = urlencode(confirmation_params)
+        confirmation_url = f"{settings.FRONTEND_URL.rstrip('/')}/{language}/order-confirmation?{confirmation_query}"
         
         return Response({
             'success': True,
@@ -261,8 +282,13 @@ def payment_return_view(request):
             
             # Redirect to frontend with status and language (use order.language, not query param)
             order_language = getattr(transaction.order, 'language', 'sk')
+            confirmation_params = {
+                'order_id': transaction.order.id,
+                'status': state.lower(),
+                **get_guest_order_query_params(transaction.order),
+            }
             return HttpResponseRedirect(
-                f"{frontend_url}/{order_language}/order-confirmation?order_id={transaction.order.id}&status={state.lower()}"
+                f"{frontend_url}/{order_language}/order-confirmation?{urlencode(confirmation_params)}"
             )
             
         except PaymentTransaction.DoesNotExist:
@@ -335,11 +361,10 @@ class PaymentStatusView(generics.RetrieveAPIView):
     permission_classes = [permissions.AllowAny]
 
     def retrieve(self, request, order_id):
-        # Verify ownership: authenticated users must own the order; guests fetch by id
-        if request.user.is_authenticated:
-            order = get_object_or_404(Order, id=order_id, user=request.user)
-        else:
-            order = get_object_or_404(Order, id=order_id)
+        access_token = request.query_params.get('access_token')
+        order = get_order_for_payment_request(request, order_id, access_token=access_token)
+        transaction = order.transactions.order_by('-created_at').first()
+        if not transaction:
             return Response(
                 {'error': 'No payment transaction found for this order'},
                 status=status.HTTP_404_NOT_FOUND
