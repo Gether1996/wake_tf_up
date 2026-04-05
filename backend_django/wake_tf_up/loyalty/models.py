@@ -112,6 +112,9 @@ class LoyaltyService:
         """
         from orders.models import Order
         from datetime import datetime, timedelta
+
+        if not user or not getattr(user, 'pk', None):
+            return None
         
         # Count paid orders
         paid_orders_count = Order.objects.filter(

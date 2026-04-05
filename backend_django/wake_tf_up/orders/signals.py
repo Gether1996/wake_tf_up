@@ -1,4 +1,5 @@
 from django.db import IntegrityError
+from django.db import transaction as db_transaction
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
@@ -78,9 +79,13 @@ def generate_ticket_codes_on_payment(sender, instance, created, **kwargs):
 
     if purchased_tickets:
         from .emails import send_ticket_purchased_email
-        try:
-            send_ticket_purchased_email(instance, purchased_tickets)
-        except Exception as exc:
-            logger.error(
-                "Failed to send ticket email for order #%s: %s", instance.id, exc, exc_info=True
-            )
+
+        def _send_ticket_email():
+            try:
+                send_ticket_purchased_email(instance, purchased_tickets)
+            except Exception as exc:
+                logger.error(
+                    "Failed to send ticket email for order #%s: %s", instance.id, exc, exc_info=True
+                )
+
+        db_transaction.on_commit(_send_ticket_email)

@@ -232,6 +232,11 @@ PACKETA_REAL_WORLD_USAGE = os.getenv('PACKETA_REAL_WORLD_USAGE', 'False') == 'Tr
 # Frontend URL for email verification links
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://www.wake-tf-up.eu')
 
+# Logging
+LOG_DIR = os.getenv('LOG_DIR', str(BASE_DIR.parent / 'logs'))
+os.makedirs(LOG_DIR, exist_ok=True)
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+
 # Email Configuration
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
 EMAIL_HOST = os.getenv('EMAIL_HOST')
@@ -255,3 +260,62 @@ if _gopay_disable_env is None:
     GOPAY_DISABLE_PAYMENTS = GOPAY_ENVIRONMENT != 'production'
 else:
     GOPAY_DISABLE_PAYMENTS = _gopay_disable_env == 'True'
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s | %(levelname)s | %(name)s | %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'daily_file': {
+            'class': 'core.logging_handlers.DailyNamedFileHandler',
+            'formatter': 'verbose',
+            'directory': LOG_DIR,
+            'encoding': 'utf-8',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'daily_file'],
+        'level': LOG_LEVEL,
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'daily_file'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console', 'daily_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'orders': {
+            'handlers': ['console', 'daily_file'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+        'payments': {
+            'handlers': ['console', 'daily_file'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+        'loyalty': {
+            'handlers': ['console', 'daily_file'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+        'newsletter': {
+            'handlers': ['console', 'daily_file'],
+            'level': LOG_LEVEL,
+            'propagate': False,
+        },
+    },
+}

@@ -1,11 +1,16 @@
 from django.contrib import admin
 from django.contrib import messages
+from django.db import transaction
 from django.utils.html import format_html
 from django.urls import path
 from django.http import HttpResponseRedirect
 from datetime import datetime
+import logging
 from .models import Order, OrderItem, PurchasedTicket
 from .packeta_service import PacketaService, PacketaAPIError
+
+
+logger = logging.getLogger(__name__)
 
 
 class OrderItemInline(admin.TabularInline):
@@ -127,9 +132,10 @@ class OrderAdmin(admin.ModelAdmin):
         count = 0
         for order in queryset:
             if order.status != 'paid':
+                logger.info("Admin user %s marked order #%s as paid from admin action", request.user.pk, order.id)
                 order.status = 'paid'
                 order.save()  # Triggers post_save signal → generates ticket codes + sends ticket email
-                send_payment_confirmation_email(order)
+                transaction.on_commit(lambda order=order: send_payment_confirmation_email(order))
                 count += 1
         self.message_user(request, f"{count} order(s) marked as paid and emails sent.", level=messages.SUCCESS)
     mark_as_paid.short_description = "Mark selected orders as Paid"

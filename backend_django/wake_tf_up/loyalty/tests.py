@@ -1,5 +1,6 @@
 from django.test import TestCase, override_settings
 
+from orders.models import Order
 from .models import QRCode
 
 
@@ -31,3 +32,33 @@ class QRCodeRedirectTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()['error'], 'QR code target URL is not allowed')
+
+
+class LoyaltyGuestOrderSafetyTests(TestCase):
+    def create_guest_order(self, status='created'):
+        return Order.objects.create(
+            status=status,
+            shipping_method='digital_delivery',
+            payment_method='gopay',
+            shipping_name='Guest Buyer',
+            email='guest@example.com',
+            shipping_address='Digital delivery',
+            shipping_city='Bratislava',
+            shipping_postal_code='81101',
+            shipping_country='SK',
+            phone='+421900000000',
+            shipping_cost='0.00',
+            total_amount='8.50',
+            language='sk',
+        )
+
+    def test_third_guest_paid_order_does_not_crash_loyalty_signal(self):
+        self.create_guest_order(status='paid')
+        self.create_guest_order(status='paid')
+        order = self.create_guest_order(status='created')
+
+        order.status = 'paid'
+        order.save()
+
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'paid')

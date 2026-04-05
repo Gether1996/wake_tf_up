@@ -9,6 +9,7 @@ from orders.models import Order
 from orders.emails import send_payment_confirmation_email
 from orders.access import get_guest_order_query_params, has_valid_guest_order_access
 from .models import PaymentTransaction
+from .reconciliation import apply_gopay_status_to_transaction
 from .serializers import (
     PaymentTransactionSerializer,
     CreatePaymentSerializer,
@@ -102,10 +103,11 @@ class CreatePaymentView(generics.CreateAPIView):
                 state = status_result.get('state')
                 if state == 'PAID':
                     logger.info(f"[Payment API] Existing payment is already PAID")
-                    existing_payment.status = 'completed'
-                    existing_payment.order.status = 'paid'
-                    existing_payment.order.save()
-                    existing_payment.save()
+                    apply_gopay_status_to_transaction(
+                        existing_payment,
+                        status_result,
+                        source='Payment API Existing Payment',
+                    )
                     return Response(
                         {'error': 'Order is already paid'},
                         status=status.HTTP_400_BAD_REQUEST

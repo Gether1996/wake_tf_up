@@ -1,6 +1,10 @@
 from django.contrib import admin
 from django.utils.html import format_html
+import logging
 from .models import PaymentTransaction
+
+
+logger = logging.getLogger(__name__)
 
 
 @admin.register(PaymentTransaction)
@@ -48,9 +52,19 @@ class PaymentTransactionAdmin(admin.ModelAdmin):
     
     # Actions
     def mark_as_completed(self, request, queryset):
+        logger.info(
+            "Admin user %s marked payment transactions as completed: %s",
+            request.user.pk,
+            list(queryset.values_list('id', flat=True)),
+        )
         queryset.update(status='completed')
     mark_as_completed.short_description = "Mark selected payments as Completed"
     
     def mark_as_failed(self, request, queryset):
+        logger.info(
+            "Admin user %s marked payment transactions as failed: %s",
+            request.user.pk,
+            list(queryset.values_list('id', flat=True)),
+        )
         queryset.update(status='failed')
     mark_as_failed.short_description = "Mark selected payments as Failed"

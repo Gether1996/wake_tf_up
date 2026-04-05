@@ -6,6 +6,7 @@ services:
     volumes:
       - ./backend_django/wake_tf_up/media:/app/wake_tf_up/media
       - ./backend_django/wake_tf_up/staticfiles:/app/wake_tf_up/staticfiles
+      - ./backend_django/logs:/app/logs
     expose:
       - "8000"
     env_file:
