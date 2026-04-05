@@ -1,15 +1,13 @@
+import logging
+from datetime import datetime
+
 from django.db import IntegrityError
 from django.db import transaction as db_transaction
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from django.core.mail import send_mail
-from django.conf import settings
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
-from datetime import datetime
-from core.email_utils import get_email_language, send_localized_email
+
 from .models import Order
-import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -17,75 +15,86 @@ logger = logging.getLogger(__name__)
 @receiver(pre_save, sender=Order)
 def track_delivered_status(sender, instance, **kwargs):
     """
-    Track when order status changes to 'delivered' and set delivered_at timestamp.
+    Track when order status changes to `delivered` and set delivered_at timestamp.
     """
-    if instance.pk:  # Only for existing orders
-        try:
-            old_instance = Order.objects.get(pk=instance.pk)
-            # If status changed from non-delivered to delivered
-            if old_instance.status != 'delivered' and instance.status == 'delivered':
-                instance.delivered_at = datetime.now()
-        except Order.DoesNotExist:
-            pass
+    if not instance.pk:
+        return
+
+    try:
+        old_instance = Order.objects.get(pk=instance.pk)
+        if old_instance.status != 'delivered' and instance.status == 'delivered':
+            instance.delivered_at = datetime.now()
+    except Order.DoesNotExist:
+        pass
 
 
 @receiver(post_save, sender=Order)
 def send_review_request_email(sender, instance, created, **kwargs):
     """
-    This signal is kept for backwards compatibility but review emails
-    are now sent via management command after configured delay.
-    The command 'send_review_requests' should be run periodically (e.g., daily cron job).
+    Kept for backwards compatibility.
+    Review emails are sent via management command after the configured delay.
     """
-    pass
+    return None
 
 
 @receiver(post_save, sender=Order)
 def generate_ticket_codes_on_payment(sender, instance, created, **kwargs):
-    """Generate unique ticket codes and send ticket email when an order is paid."""
+    """Generate unique ticket codes and send ticket email when an order becomes paid."""
     if created or instance.status != 'paid':
         return
 
-    from .models import PurchasedTicket, OrderItem, generate_ticket_code
+    from .emails import send_ticket_purchased_email
+    from .models import OrderItem, PurchasedTicket, generate_ticket_code
 
-    # Only generate once per order
     if PurchasedTicket.objects.filter(order=instance).exists():
+        logger.info("Skipping ticket generation for order #%s because tickets already exist", instance.id)
         return
 
     ticket_items = OrderItem.objects.filter(order=instance, ticket__isnull=False)
     if not ticket_items.exists():
+        logger.info("Order #%s has no ticket items, skipping ticket generation", instance.id)
         return
 
+    logger.info("Generating ticket codes for order #%s", instance.id)
     purchased_tickets = []
     for item in ticket_items:
         for _ in range(item.quantity):
             code = generate_ticket_code()
             try:
-                pt = PurchasedTicket.objects.create(
+                purchased_ticket = PurchasedTicket.objects.create(
                     order=instance,
                     ticket=item.ticket,
                     order_item=item,
                     code=code,
                 )
             except IntegrityError:
-                # Extremely unlikely collision — regenerate and retry once
-                code = generate_ticket_code()
-                pt = PurchasedTicket.objects.create(
+                logger.warning(
+                    "Ticket code collision for order #%s / order_item #%s, retrying once",
+                    instance.id,
+                    item.id,
+                )
+                purchased_ticket = PurchasedTicket.objects.create(
                     order=instance,
                     ticket=item.ticket,
                     order_item=item,
-                    code=code,
+                    code=generate_ticket_code(),
                 )
-            purchased_tickets.append(pt)
+            purchased_tickets.append(purchased_ticket)
 
-    if purchased_tickets:
-        from .emails import send_ticket_purchased_email
+    def _send_ticket_email():
+        try:
+            logger.info(
+                "Sending ticket email for order #%s with %s generated tickets",
+                instance.id,
+                len(purchased_tickets),
+            )
+            send_ticket_purchased_email(instance, purchased_tickets)
+        except Exception as exc:
+            logger.error(
+                "Failed to send ticket email for order #%s: %s",
+                instance.id,
+                exc,
+                exc_info=True,
+            )
 
-        def _send_ticket_email():
-            try:
-                send_ticket_purchased_email(instance, purchased_tickets)
-            except Exception as exc:
-                logger.error(
-                    "Failed to send ticket email for order #%s: %s", instance.id, exc, exc_info=True
-                )
-
-        db_transaction.on_commit(_send_ticket_email)
+    db_transaction.on_commit(_send_ticket_email)

@@ -18,54 +18,108 @@ def apply_gopay_status_to_transaction(transaction, status_result, source='GoPay'
     """
     state = status_result.get('state')
     provider_response = status_result.get('data')
+    logger.info(
+        "[%s] Applying GoPay state=%s to transaction #%s (provider_id=%s, tx_status=%s, order_id=%s, order_status=%s)",
+        source,
+        state,
+        transaction.id,
+        transaction.provider_transaction_id,
+        transaction.status,
+        transaction.order_id,
+        transaction.order.status,
+    )
 
     if state == 'PAID':
         was_already_paid = transaction.order.status == 'paid'
+        if was_already_paid and transaction.status == 'completed':
+            if transaction.provider_response != provider_response:
+                transaction.provider_response = provider_response
+                transaction.save(update_fields=['provider_response'])
+            logger.info(
+                "[%s] Transaction #%s already finalized as completed for paid order #%s",
+                source,
+                transaction.id,
+                transaction.order_id,
+            )
+            return state
+
         with db_transaction.atomic():
             transaction.status = 'completed'
-            transaction.order.status = 'paid'
-            transaction.order.save(update_fields=['status'])
             transaction.provider_response = provider_response
             transaction.save(update_fields=['status', 'provider_response'])
+            if not was_already_paid:
+                transaction.order.status = 'paid'
+                transaction.order.save(update_fields=['status'])
 
-        if not was_already_paid:
-            try:
-                from orders.emails import send_payment_confirmation_email
+            if not was_already_paid:
+                order = transaction.order
 
-                logger.info(
-                    "[%s] Sending payment confirmation email for order #%s in %s",
-                    source,
-                    transaction.order.id,
-                    transaction.order.language,
-                )
-                send_payment_confirmation_email(transaction.order)
-            except Exception as email_exc:
-                logger.error(
-                    "[%s] Failed to send payment confirmation email for order #%s: %s",
-                    source,
-                    transaction.order.id,
-                    email_exc,
-                    exc_info=True,
-                )
+                def _send_confirmation_email():
+                    try:
+                        from orders.emails import send_payment_confirmation_email
+
+                        logger.info(
+                            "[%s] Sending payment confirmation email for order #%s in %s",
+                            source,
+                            order.id,
+                            order.language,
+                        )
+                        send_payment_confirmation_email(order)
+                    except Exception as email_exc:
+                        logger.error(
+                            "[%s] Failed to send payment confirmation email for order #%s: %s",
+                            source,
+                            order.id,
+                            email_exc,
+                            exc_info=True,
+                        )
+
+                db_transaction.on_commit(_send_confirmation_email)
+
+        logger.info(
+            "[%s] Finalized transaction #%s as completed and order #%s as %s",
+            source,
+            transaction.id,
+            transaction.order_id,
+            transaction.order.status,
+        )
         return state
 
     if state in ['CANCELED', 'TIMEOUTED']:
         transaction.status = 'failed'
         transaction.provider_response = provider_response
         transaction.save(update_fields=['status', 'provider_response'])
+        logger.warning(
+            "[%s] Marked transaction #%s as failed due to GoPay state=%s",
+            source,
+            transaction.id,
+            state,
+        )
         return state
 
     if state == 'REFUNDED':
         with db_transaction.atomic():
             transaction.status = 'refunded'
-            transaction.order.status = 'refunded'
-            transaction.order.save(update_fields=['status'])
             transaction.provider_response = provider_response
             transaction.save(update_fields=['status', 'provider_response'])
+            if transaction.order.status != 'refunded':
+                transaction.order.status = 'refunded'
+                transaction.order.save(update_fields=['status'])
+        logger.info(
+            "[%s] Marked transaction #%s and order #%s as refunded",
+            source,
+            transaction.id,
+            transaction.order_id,
+        )
         return state
 
     transaction.provider_response = provider_response
     transaction.save(update_fields=['provider_response'])
+    logger.info(
+        "[%s] Stored provider response for transaction #%s without local status change",
+        source,
+        transaction.id,
+    )
     return state
 
 
