@@ -1,49 +1,79 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AuthService } from './auth.service';
 import { catchError, switchMap, throwError } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
+
+import { AuthService } from './auth.service';
+
+
+function isAuthRequest(url: string): boolean {
+  return url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/token/refresh');
+}
+
+function isPublicAnonymousSafeRequest(url: string, method: string): boolean {
+  if (method !== 'GET') {
+    return false;
+  }
+
+  return [
+    '/products/',
+    '/categories/',
+    '/colors/',
+    '/tickets/',
+    '/blog/',
+    '/events/',
+    '/settings/',
+  ].some((segment) => url.includes(segment));
+}
+
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.getAccessToken();
+  const hadAuthHeader = !!token && !isAuthRequest(req.url);
 
-  // Clone request and add authorization header if token exists
-  if (token && !req.url.includes('/auth/login') && !req.url.includes('/auth/register')) {
+  if (hadAuthHeader) {
     req = req.clone({
       setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
   }
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      // If 401 Unauthorized and not already trying to login/refresh
       const isRefreshRequest = req.url.includes('/auth/token/refresh');
-        if (error.status === 401 &&
-          !isRefreshRequest &&
-          !req.url.includes('/auth/login') &&
-          authService.getAccessToken()) {
+      if (
+        error.status === 401 &&
+        !isRefreshRequest &&
+        !req.url.includes('/auth/login') &&
+        authService.getAccessToken()
+      ) {
         return authService.refreshToken().pipe(
           switchMap(() => {
-            // Retry original request with new token
             const newToken = authService.getAccessToken();
             const clonedReq = req.clone({
               setHeaders: {
-                Authorization: `Bearer ${newToken}`
-              }
+                Authorization: `Bearer ${newToken}`,
+              },
             });
             return next(clonedReq);
           }),
           catchError((refreshError) => {
-            // Don't call logout here - just return error
-            // Let the component handle it
+            authService.clearAuthState();
+
+            if (hadAuthHeader && isPublicAnonymousSafeRequest(req.url, req.method)) {
+              const anonymousReq = req.clone({
+                headers: req.headers.delete('Authorization'),
+              });
+              return next(anonymousReq);
+            }
+
             return throwError(() => refreshError);
-          })
+          }),
         );
       }
+
       return throwError(() => error);
-    })
+    }),
   );
 };

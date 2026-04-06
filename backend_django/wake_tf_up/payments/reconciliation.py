@@ -151,7 +151,7 @@ def reconcile_pending_gopay_transactions(*, older_than_minutes=5, limit=50, sour
     )
 
     if not transactions:
-        logger.info("[%s] No pending GoPay transactions eligible for reconciliation", source)
+        logger.debug("[%s] No pending GoPay transactions eligible for reconciliation", source)
         return {
             'checked': 0,
             'updated': 0,

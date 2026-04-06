@@ -55,10 +55,7 @@ export class AuthService {
   }
 
   logout(): void {
-    this.clearProfileRetry();
-    this.clearTokens();
-    this.currentUser.set(null);
-    this.isAuthenticatedSubject.next(false);
+    this.clearAuthState();
     
     // Clear cart and checkout data for security (prevent data leaking to next user)
     // Use lazy injection to avoid circular dependency
@@ -69,6 +66,13 @@ export class AuthService {
     
     const lang = this.translocoService.getActiveLang();
     this.router.navigate([`/${lang}/auth/login`]);
+  }
+
+  clearAuthState(): void {
+    this.clearProfileRetry();
+    this.clearTokens();
+    this.currentUser.set(null);
+    this.isAuthenticatedSubject.next(false);
   }
 
   refreshToken(): Observable<TokenResponse> {
