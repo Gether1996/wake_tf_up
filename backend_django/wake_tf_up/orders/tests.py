@@ -4,6 +4,8 @@ from rest_framework.test import APIClient
 
 from .access import get_guest_order_access_token
 from .models import Order
+from settings.models import MainSettings
+from shop.models import Ticket
 
 
 User = get_user_model()
@@ -80,3 +82,45 @@ class OrderAccessTests(TestCase):
         response_data = response.json()
         self.assertEqual(response_data['id'], order.id)
         self.assertIsNone(response_data['guest_access_token'])
+
+
+class OrderCreateShippingAvailabilityTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.ticket = Ticket.objects.create(
+            name='Wake TF Up Ticket',
+            slug='wake-tf-up-ticket',
+            price='8.50',
+            total_quantity=10,
+            is_published=True,
+        )
+        self.settings = MainSettings.get_settings()
+
+    def test_disabled_shipping_method_is_rejected_by_order_create(self):
+        self.settings.digital_delivery_enabled = False
+        self.settings.save(update_fields=['digital_delivery_enabled'])
+
+        response = self.client.post(
+            '/api/v1/orders/create/',
+            {
+                'shipping_method': 'digital_delivery',
+                'payment_method': 'gopay',
+                'shipping_name': 'Guest Buyer',
+                'email': 'guest@example.com',
+                'shipping_address': 'Digital delivery',
+                'shipping_city': 'Bratislava',
+                'shipping_postal_code': '81101',
+                'shipping_country': 'SK',
+                'phone': '+421900000000',
+                'items': [
+                    {
+                        'ticket_id': self.ticket.id,
+                        'quantity': 1,
+                    }
+                ],
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('shipping_method', response.json())

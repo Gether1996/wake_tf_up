@@ -11,6 +11,16 @@ class MainSettingsAdmin(admin.ModelAdmin):
             'fields': ('free_shipping_threshold',),
             'description': 'Configure free shipping threshold and delivery method costs'
         }),
+        ('Shipping Method Availability', {
+            'fields': (
+                'pickup_enabled',
+                'dpd_courier_enabled',
+                'packeta_box_enabled',
+                'packeta_courier_enabled',
+                'digital_delivery_enabled',
+            ),
+            'description': 'Enable or disable specific shipping methods in checkout'
+        }),
         ('Shipping Method Costs', {
             'fields': (
                 'pickup_cost',

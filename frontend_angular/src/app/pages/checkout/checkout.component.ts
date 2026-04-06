@@ -16,6 +16,8 @@ import { PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+type ShippingMethod = 'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier' | 'digital_delivery';
+
 @Component({
   selector: 'app-checkout',
   imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, TranslocoModule, ButtonComponent],
@@ -117,6 +119,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                 <h2 class="text-xl font-bold mb-6">{{ 'checkout.shipping_method' | transloco }}</h2>
                 
                 <div class="space-y-3">
+                  @if (availableShippingMethods().length === 0) {
+                  <div class="border border-danger bg-danger/10 text-danger p-4">
+                    {{ 'checkout.order_failed' | transloco }}
+                  </div>
+                  }
+
+                  @if (pickupEnabled()) {
                   <!-- Personal Pickup -->
                   <label class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
                          [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'pickup'"
@@ -134,7 +143,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                       }
                     </div>
                   </label>
+                  }
 
+                  @if (packetaBoxEnabled()) {
                   <!-- Packeta Z-Box -->
                   <label class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
                          [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'packeta_box'"
@@ -169,7 +180,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                       </app-button>
                     </div>
                   }
+                  }
 
+                  @if (dpdCourierEnabled()) {
                   <!-- DPD Courier -->
                   <label class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
                          [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'dpd_courier'"
@@ -187,7 +200,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                       }
                     </div>
                   </label>
+                  }
 
+                  @if (packetaCourierEnabled()) {
                   <!-- Packeta Courier -->
                   <label class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
                          [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'packeta_courier'"
@@ -205,9 +220,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                       }
                     </div>
                   </label>
+                  }
 
                   <!-- Digital Delivery (tickets only — hidden when cart also has products) -->
-                  @if (isTicketOnlyCart()) {
+                  @if (isTicketOnlyCart() && digitalDeliveryEnabled()) {
                   <label class="flex items-center p-4 border border-border cursor-pointer hover:border-foreground transition-colors"
                          [class.border-foreground]="checkoutForm.get('shippingMethod')?.value === 'digital_delivery'"
                          [class.bg-muted]="checkoutForm.get('shippingMethod')?.value === 'digital_delivery'">
@@ -928,7 +944,7 @@ export class CheckoutComponent implements OnInit {
   error = signal('');
   currentStep = signal(1); // 1=shipping, 2=contact, 3=payment, 4=review
   isCompanyPurchase = signal(false);
-  selectedShippingMethod = signal<'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier' | 'digital_delivery'>('dpd_courier');
+  selectedShippingMethod = signal<ShippingMethod>('dpd_courier');
   selectedPacketaPoint = signal<{ id: string; name: string; address: string } | null>(null);
   selectedPaymentMethod = signal<'gopay' | 'cash_on_pickup'>('gopay');
 
@@ -967,6 +983,22 @@ export class CheckoutComponent implements OnInit {
   packetaCourierCost = computed(() => {
     const cost = this.settingsService.settings()?.packeta_courier_cost;
     return cost ? Number(cost) : 4.99;
+  });
+
+  pickupEnabled = computed(() => this.settingsService.settings()?.pickup_enabled ?? true);
+  dpdCourierEnabled = computed(() => this.settingsService.settings()?.dpd_courier_enabled ?? true);
+  packetaBoxEnabled = computed(() => this.settingsService.settings()?.packeta_box_enabled ?? true);
+  packetaCourierEnabled = computed(() => this.settingsService.settings()?.packeta_courier_enabled ?? true);
+  digitalDeliveryEnabled = computed(() => this.settingsService.settings()?.digital_delivery_enabled ?? true);
+
+  availableShippingMethods = computed<ShippingMethod[]>(() => {
+    const methods: ShippingMethod[] = [];
+    if (this.pickupEnabled()) methods.push('pickup');
+    if (this.packetaBoxEnabled()) methods.push('packeta_box');
+    if (this.dpdCourierEnabled()) methods.push('dpd_courier');
+    if (this.packetaCourierEnabled()) methods.push('packeta_courier');
+    if (this.isTicketOnlyCart() && this.digitalDeliveryEnabled()) methods.push('digital_delivery');
+    return methods;
   });
   
   selectedShippingCost = computed(() => {
@@ -1030,9 +1062,19 @@ export class CheckoutComponent implements OnInit {
 
     // If cart has products, digital_delivery is not allowed — reset to dpd_courier
     effect(() => {
-      if (!this.isTicketOnlyCart() && this.checkoutForm.get('shippingMethod')?.value === 'digital_delivery') {
-        this.checkoutForm.patchValue({ shippingMethod: 'dpd_courier' }, { emitEvent: false });
-        this.selectedShippingMethod.set('dpd_courier');
+      const availableMethods = this.availableShippingMethods();
+      const currentMethod = this.checkoutForm.get('shippingMethod')?.value as ShippingMethod | null;
+      const fallbackMethod = availableMethods[0];
+
+      if (fallbackMethod && (!currentMethod || !availableMethods.includes(currentMethod))) {
+        this.checkoutForm.patchValue({ shippingMethod: fallbackMethod }, { emitEvent: false });
+        this.selectedShippingMethod.set(fallbackMethod);
+        if (fallbackMethod !== 'packeta_box') {
+          this.selectedPacketaPoint.set(null);
+        }
+        if (fallbackMethod !== 'pickup') {
+          this.selectedPaymentMethod.set('gopay');
+        }
         this._updateAddressValidators();
       }
     });
@@ -1055,7 +1097,7 @@ export class CheckoutComponent implements OnInit {
       if (!value) {
         return;
       }
-      const method = value as 'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier' | 'digital_delivery';
+      const method = value as ShippingMethod;
       this.selectedShippingMethod.set(method);
       // Reset Packeta point when changing shipping method
       if (method !== 'packeta_box') {
@@ -1174,6 +1216,10 @@ export class CheckoutComponent implements OnInit {
   nextStep() {
     // Validate current step before proceeding
     if (this.currentStep() === 1) {
+      if (this.availableShippingMethods().length === 0) {
+        this.error.set(this.translocoService.translate('checkout.order_failed'));
+        return;
+      }
       // Validate shipping method and Packeta point if needed
       if (this.selectedShippingMethod() === 'packeta_box' && !this.selectedPacketaPoint()) {
         this.error.set(this.translocoService.translate('checkout.packeta_point_required'));

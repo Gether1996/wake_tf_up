@@ -94,7 +94,7 @@ export interface CartItem {
 export interface Order {
   id: number;
   status: string;
-  shipping_method: 'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier';
+  shipping_method: 'pickup' | 'dpd_courier' | 'packeta_box' | 'packeta_courier' | 'digital_delivery';
   payment_method?: 'gopay' | 'cash_on_pickup';
   shipping_cost: string;
   total_amount: string;

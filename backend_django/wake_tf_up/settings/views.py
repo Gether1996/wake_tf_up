@@ -80,10 +80,15 @@ class MainSettingsViewSet(viewsets.ModelViewSet):
         settings = MainSettings.get_settings()
         return Response({
             'free_shipping_threshold': settings.free_shipping_threshold,
+            'pickup_enabled': settings.pickup_enabled,
             'pickup_cost': settings.pickup_cost,
+            'dpd_courier_enabled': settings.dpd_courier_enabled,
             'dpd_courier_cost': settings.dpd_courier_cost,
+            'packeta_box_enabled': settings.packeta_box_enabled,
             'packeta_box_cost': settings.packeta_box_cost,
+            'packeta_courier_enabled': settings.packeta_courier_enabled,
             'packeta_courier_cost': settings.packeta_courier_cost,
+            'digital_delivery_enabled': settings.digital_delivery_enabled,
         })
     
     @action(detail=False, methods=['get'])

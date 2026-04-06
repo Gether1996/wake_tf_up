@@ -17,11 +17,19 @@ class MainSettings(models.Model):
     )
     
     # Shipping Method Costs
+    pickup_enabled = models.BooleanField(
+        default=True,
+        help_text="Enable personal pickup in checkout"
+    )
     pickup_cost = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=0.00,
         help_text="Personal pickup cost (EUR) - usually 0"
+    )
+    dpd_courier_enabled = models.BooleanField(
+        default=True,
+        help_text="Enable DPD courier delivery in checkout"
     )
     dpd_courier_cost = models.DecimalField(
         max_digits=10,
@@ -29,17 +37,29 @@ class MainSettings(models.Model):
         default=5.99,
         help_text="DPD courier delivery cost (EUR)"
     )
+    packeta_box_enabled = models.BooleanField(
+        default=True,
+        help_text="Enable Packeta Z-Box delivery in checkout"
+    )
     packeta_box_cost = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=3.99,
         help_text="Packeta box (Z-BOX) delivery cost (EUR)"
     )
+    packeta_courier_enabled = models.BooleanField(
+        default=True,
+        help_text="Enable Packeta courier delivery in checkout"
+    )
     packeta_courier_cost = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=4.99,
         help_text="Packeta courier delivery cost (EUR)"
+    )
+    digital_delivery_enabled = models.BooleanField(
+        default=True,
+        help_text="Enable digital delivery in checkout"
     )
     
     # Legacy field - kept for backwards compatibility, can be removed later
@@ -176,3 +196,13 @@ class MainSettings(models.Model):
     
     def __str__(self):
         return f"Main Settings (Updated: {self.updated_at.strftime('%Y-%m-%d %H:%M')})"
+
+    def is_shipping_method_enabled(self, shipping_method):
+        enabled_map = {
+            'pickup': self.pickup_enabled,
+            'dpd_courier': self.dpd_courier_enabled,
+            'packeta_box': self.packeta_box_enabled,
+            'packeta_courier': self.packeta_courier_enabled,
+            'digital_delivery': self.digital_delivery_enabled,
+        }
+        return enabled_map.get(shipping_method, False)

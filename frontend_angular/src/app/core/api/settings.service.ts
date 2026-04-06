@@ -7,10 +7,15 @@ import { interval, Subscription, takeUntil, Subject } from 'rxjs';
 export interface MainSettings {
   free_shipping_threshold: number;
   standard_shipping_cost: number; // Legacy
+  pickup_enabled: boolean;
   pickup_cost: number;
+  dpd_courier_enabled: boolean;
   dpd_courier_cost: number;
+  packeta_box_enabled: boolean;
   packeta_box_cost: number;
+  packeta_courier_enabled: boolean;
   packeta_courier_cost: number;
+  digital_delivery_enabled: boolean;
   tax_rate: number;
   site_name: string;
   owner_name: string;
@@ -100,10 +105,15 @@ export class SettingsService implements OnDestroy {
         this.settings.set({
           free_shipping_threshold: 50,
           standard_shipping_cost: 5.99,
+          pickup_enabled: true,
           pickup_cost: 0,
+          dpd_courier_enabled: true,
           dpd_courier_cost: 5.99,
+          packeta_box_enabled: true,
           packeta_box_cost: 3.99,
+          packeta_courier_enabled: true,
           packeta_courier_cost: 4.99,
+          digital_delivery_enabled: true,
           tax_rate: 20,
           site_name: 'Wake TF Up',
           owner_name: 'Patrik Bielčik',
@@ -134,7 +144,15 @@ export class SettingsService implements OnDestroy {
   getShippingSettings() {
     return this.http.get<{
       free_shipping_threshold: number;
-      standard_shipping_cost: number;
+      pickup_enabled: boolean;
+      pickup_cost: number;
+      dpd_courier_enabled: boolean;
+      dpd_courier_cost: number;
+      packeta_box_enabled: boolean;
+      packeta_box_cost: number;
+      packeta_courier_enabled: boolean;
+      packeta_courier_cost: number;
+      digital_delivery_enabled: boolean;
     }>(`${this.apiUrl}/shipping/`);
   }
 

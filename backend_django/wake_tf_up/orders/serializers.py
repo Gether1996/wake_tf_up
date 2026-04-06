@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Order, OrderItem
 from .access import build_frontend_order_url, get_guest_order_access_token
 from shop.serializers import ProductListSerializer, TicketListSerializer
+from settings.models import MainSettings
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -55,6 +56,12 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             'is_company_purchase', 'billing_company', 'billing_ico', 'billing_dic', 'billing_ic_dph',
             'payment_method', 'items', 'discount_code_str'
         )
+
+    def validate_shipping_method(self, value):
+        settings = MainSettings.get_settings()
+        if not settings.is_shipping_method_enabled(value):
+            raise serializers.ValidationError("Selected shipping method is currently unavailable.")
+        return value
     
     def create(self, validated_data):
         from .models import StockReservationService
