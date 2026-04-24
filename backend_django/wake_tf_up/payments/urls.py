@@ -1,9 +1,11 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import (
     CreatePaymentView,
     payment_return_view,
     payment_notification_view,
-    PaymentStatusView
+    PaymentStatusView,
+    PaymentAdminViewSet,
 )
 
 app_name = 'payments'
@@ -20,4 +22,11 @@ urlpatterns = [
     
     # Check payment status
     path('status/<int:order_id>/', PaymentStatusView.as_view(), name='payment-status'),
+]
+
+admin_router = DefaultRouter()
+admin_router.register(r'transactions', PaymentAdminViewSet, basename='admin-payment-transaction')
+
+urlpatterns += [
+    path('admin/', include(admin_router.urls)),
 ]

@@ -2,20 +2,74 @@ from django.contrib import admin
 from django.utils.html import format_html
 import logging
 from .models import PaymentTransaction
+from core.seller_access import (
+    filter_payment_transactions_for_user,
+    is_seller_user,
+    seller_can_access_payment_transaction,
+)
 
 
 logger = logging.getLogger(__name__)
 
 
+class PaymentSellerListFilter(admin.SimpleListFilter):
+    title = 'seller'
+    parameter_name = 'seller'
+
+    def lookups(self, request, model_admin):
+        sellers = model_admin.model.objects.exclude(
+            order__items__product__seller__isnull=True
+        ).values_list(
+            'order__items__product__seller__id',
+            'order__items__product__seller__email',
+        ).distinct()
+        return [(seller_id, email) for seller_id, email in sellers if seller_id]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(order__items__product__seller_id=self.value()).distinct()
+        return queryset
+
+
 @admin.register(PaymentTransaction)
 class PaymentTransactionAdmin(admin.ModelAdmin):
     list_display = ('id', 'order', 'amount_display', 'payment_method', 'status_badge', 'provider', 'created_at')
-    list_filter = ('status', 'payment_method', 'provider', 'created_at')
+    list_filter = (PaymentSellerListFilter, 'status', 'payment_method', 'provider', 'created_at')
     search_fields = ('order__id', 'provider_transaction_id', 'order__user__email')
     readonly_fields = ('created_at', 'updated_at', 'provider_response')
     date_hierarchy = 'created_at'
     list_per_page = 25
     actions = ['mark_as_completed', 'mark_as_failed']
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser or is_seller_user(request.user)
+
+    def has_view_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        if not is_seller_user(request.user):
+            return False
+        return obj is None or seller_can_access_payment_transaction(request.user, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request).select_related('order')
+        return filter_payment_transactions_for_user(queryset, request.user)
+
+    def get_list_filter(self, request):
+        if request.user.is_superuser:
+            return self.list_filter
+        return tuple(value for value in self.list_filter if value is not PaymentSellerListFilter)
+
+    def get_actions(self, request):
+        if request.user.is_superuser:
+            return super().get_actions(request)
+        return {}
     
     fieldsets = (
         ('Transaction Info', {

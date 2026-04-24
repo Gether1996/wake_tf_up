@@ -15,7 +15,8 @@ from .access import has_valid_guest_order_access
 logger = logging.getLogger(__name__)
 
 
-from core.permissions import IsSuperuser
+from core.permissions import IsSuperuserOrSeller
+from core.seller_access import filter_orders_for_user, is_seller_user, seller_can_manage_order
 
 
 class OrderCreateView(generics.CreateAPIView):
@@ -124,13 +125,32 @@ class OrderAdminViewSet(viewsets.ModelViewSet):
     Actions:
     POST /api/v1/orders/admin/orders/{id}/update_status/ - Update order status
     """
-    queryset = Order.objects.all().select_related('user').prefetch_related('items__product')
+    queryset = Order.objects.all().select_related('user').prefetch_related('items__product__seller', 'items__ticket')
     serializer_class = OrderDetailSerializer
-    permission_classes = [IsSuperuser]
+    permission_classes = [IsSuperuserOrSeller]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['id', 'user__email', 'shipping_name', 'phone']
     filterset_fields = ['status', 'created_at']
     ordering = ['-created_at']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return filter_orders_for_user(queryset, self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return Response({'error': 'Only superusers can edit full orders.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return Response({'error': 'Only superusers can edit full orders.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return Response({'error': 'Only superusers can delete orders.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
     
     @action(detail=True, methods=['post'])
     def update_status(self, request, pk=None):
@@ -141,6 +161,24 @@ class OrderAdminViewSet(viewsets.ModelViewSet):
         """
         order = self.get_object()
         new_status = request.data.get('status')
+
+        if is_seller_user(request.user) and not seller_can_manage_order(request.user, order):
+            return Response(
+                {
+                    'error': 'Seller can update status only for orders containing exclusively their own products.'
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if is_seller_user(request.user) and not request.user.is_superuser:
+            allowed_statuses = {'shipped', 'delivered'}
+            if new_status not in allowed_statuses:
+                return Response(
+                    {
+                        'error': 'Seller can update status only to shipped or delivered.'
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
         
         if not new_status:
             return Response(
@@ -159,6 +197,6 @@ class OrderAdminViewSet(viewsets.ModelViewSet):
         order.save(update_fields=['status'])
         
         return Response(
-            OrderDetailSerializer(order).data,
+            OrderDetailSerializer(order, context=self.get_serializer_context()).data,
             status=status.HTTP_200_OK
         )

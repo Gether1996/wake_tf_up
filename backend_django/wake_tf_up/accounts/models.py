@@ -95,6 +95,7 @@ class User(AbstractUser):
     USER_ROLE_CHOICES = [
         ('regular', 'Regular User'),
         ('staff', 'Staff'),
+        ('seller', 'Seller'),
     ]
     
     theme_preference = models.CharField(
@@ -124,3 +125,7 @@ class User(AbstractUser):
     
     def __str__(self):
         return self.email
+
+    @property
+    def is_seller(self):
+        return self.user_role == 'seller'

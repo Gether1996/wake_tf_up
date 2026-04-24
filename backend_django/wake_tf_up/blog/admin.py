@@ -15,6 +15,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import BlogPost, BlogImage
+from core.admin_mixins import SellerHiddenAdminMixin
 
 HTML_ANGULAR_HELP = (
     "<strong>⚠️ Angular HTML rules:</strong><br>"
@@ -32,7 +33,7 @@ HTML_ANGULAR_HELP = (
 
 
 @admin.register(BlogPost)
-class BlogPostAdmin(admin.ModelAdmin):
+class BlogPostAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     list_display = ('title', 'author', 'slug', 'status_badge', 'created_at', 'updated_at')
     list_filter = ('is_published', 'author', 'created_at', 'updated_at')
     search_fields = ('title', 'slug', 'content_html', 'excerpt', 'author')
@@ -78,7 +79,7 @@ class BlogPostAdmin(admin.ModelAdmin):
 
 
 @admin.register(BlogImage)
-class BlogImageAdmin(admin.ModelAdmin):
+class BlogImageAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     list_display = ('title', 'image_preview', 'image_url_display', 'filename_display', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('title', 'alt_text', 'caption')

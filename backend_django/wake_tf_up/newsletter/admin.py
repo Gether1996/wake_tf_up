@@ -8,6 +8,7 @@ from .email_utils import build_unsubscribe_url, get_frontend_base_url
 from datetime import datetime
 import re
 from django.template import Template, Context
+from core.admin_mixins import SellerHiddenAdminMixin
 
 
 class DiscountCodeChoiceField(forms.ModelChoiceField):
@@ -77,7 +78,7 @@ def get_newsletter_context(subscriber_email, base_url, language_code, **extra_co
 
 
 @admin.register(Subscriber)
-class SubscriberAdmin(admin.ModelAdmin):
+class SubscriberAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     list_display = ('email', 'status_badge', 'subscribed_at', 'unsubscribed_at')
     list_filter = ('is_active', 'subscribed_at')
     search_fields = ('email',)
@@ -445,7 +446,7 @@ Odhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscrib
 
 
 @admin.register(NewsletterPopupStat)
-class NewsletterPopupStatAdmin(admin.ModelAdmin):
+class NewsletterPopupStatAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     """Admin for newsletter popup statistics - READ ONLY view"""
     
     fieldsets = (
@@ -495,7 +496,7 @@ class NewsletterPopupStatAdmin(admin.ModelAdmin):
         return redirect('admin:newsletter_newsletterpopupstat_change', stats.pk)
 
 
-class SingletonModelAdmin(admin.ModelAdmin):
+class SingletonModelAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     """Base admin for singleton models - only one instance allowed"""
     
     def has_add_permission(self, request):
@@ -817,7 +818,7 @@ Odhlásiť sa: {base_url}/{language_code}/newsletter/unsubscribe?email={subscrib
 
 
 @admin.register(NewsletterImage)
-class NewsletterImageAdmin(admin.ModelAdmin):
+class NewsletterImageAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     list_display = ('title', 'image_preview', 'created_at', 'copy_url_button')
     list_filter = ('created_at',)
     search_fields = ('title', 'alt_text', 'caption')

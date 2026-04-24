@@ -61,9 +61,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'email', 'phone', 'first_name', 'last_name',
             'street', 'city', 'postal_code', 'country',
-            'theme_preference', 'is_staff', 'is_superuser'
+            'theme_preference', 'user_role', 'is_staff', 'is_superuser'
         )
-        read_only_fields = ('id', 'email', 'is_staff', 'is_superuser')
+        read_only_fields = ('id', 'email', 'user_role', 'is_staff', 'is_superuser')
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):

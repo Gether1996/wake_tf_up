@@ -17,6 +17,7 @@ from django.utils.html import format_html
 from django.db import models
 from django.forms import Textarea
 from .models import Event, EventImage
+from core.admin_mixins import SellerHiddenAdminMixin
 
 HTML_ANGULAR_HELP = (
     "<strong>⚠️ Angular HTML rules:</strong><br>"
@@ -34,7 +35,7 @@ HTML_ANGULAR_HELP = (
 
 
 @admin.register(Event)
-class EventAdmin(admin.ModelAdmin):
+class EventAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     list_display = ('title', 'author', 'datetime', 'place', 'slug', 'status_badge', 'created_at', 'updated_at')
     list_filter = ('is_published', 'author', 'datetime', 'created_at', 'updated_at')
     search_fields = ('title', 'slug', 'content_html', 'excerpt', 'author', 'place')
@@ -83,7 +84,7 @@ class EventAdmin(admin.ModelAdmin):
 
 
 @admin.register(EventImage)
-class EventImageAdmin(admin.ModelAdmin):
+class EventImageAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     list_display = ('title', 'image_preview', 'image_url_display', 'filename_display', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('title', 'alt_text', 'caption')

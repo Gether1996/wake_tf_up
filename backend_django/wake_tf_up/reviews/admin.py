@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from core.email_utils import get_email_language, send_localized_email
+from core.admin_mixins import SellerHiddenAdminMixin
 from .models import Review, ReviewToken
 
 
 @admin.register(Review)
-class ReviewAdmin(admin.ModelAdmin):
+class ReviewAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     list_display = ('id', 'product', 'display_name_col', 'rating_stars', 'text_preview', 'is_anonymous', 'created_at')
     list_display_links = ('id', 'product')
     list_filter = ('rating', 'is_anonymous', 'created_at', 'product')
@@ -72,7 +73,7 @@ class ReviewAdmin(admin.ModelAdmin):
 
 
 @admin.register(ReviewToken)
-class ReviewTokenAdmin(admin.ModelAdmin):
+class ReviewTokenAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     list_display = ('id', 'order_id', 'user_email', 'product_name', 'status_badge', 'expires_at', 'created_at')
     list_display_links = ('id', 'order_id')
     list_filter = ('is_used', 'expires_at', 'created_at')

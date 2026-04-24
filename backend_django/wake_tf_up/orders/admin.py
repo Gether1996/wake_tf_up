@@ -8,9 +8,35 @@ from datetime import datetime
 import logging
 from .models import Order, OrderItem, PurchasedTicket
 from .packeta_service import PacketaService, PacketaAPIError
+from core.admin_mixins import SellerHiddenAdminMixin
+from core.seller_access import (
+    filter_orders_for_user,
+    is_seller_user,
+    seller_can_access_order,
+    seller_can_manage_order,
+)
 
 
 logger = logging.getLogger(__name__)
+
+
+class OrderSellerListFilter(admin.SimpleListFilter):
+    title = 'seller'
+    parameter_name = 'seller'
+
+    def lookups(self, request, model_admin):
+        sellers = model_admin.model.objects.exclude(
+            items__product__seller__isnull=True
+        ).values_list(
+            'items__product__seller__id',
+            'items__product__seller__email',
+        ).distinct()
+        return [(seller_id, email) for seller_id, email in sellers if seller_id]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(items__product__seller_id=self.value()).distinct()
+        return queryset
 
 
 class OrderItemInline(admin.TabularInline):
@@ -23,6 +49,19 @@ class OrderItemInline(admin.TabularInline):
     def has_add_permission(self, request, obj=None):
         # Prevent adding items through admin - use API instead
         return False
+
+    def has_view_or_change_permission(self, request, obj=None):
+        return request.user.is_superuser or (
+            is_seller_user(request.user) and obj is not None and seller_can_access_order(request.user, obj)
+        )
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request).select_related('product__seller', 'ticket')
+        if request.user.is_superuser:
+            return queryset
+        if is_seller_user(request.user):
+            return queryset.filter(product__seller=request.user)
+        return queryset.none()
     
     def subtotal(self, obj):
         return f"€{obj.subtotal}"
@@ -32,7 +71,7 @@ class OrderItemInline(admin.TabularInline):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('order_number', 'user_email', 'shipping_name', 'payment_method', 'shipping_method', 'status', 'discount_display', 'total_amount_display', 'is_pre_order', 'delivered_status', 'created_at')
-    list_filter = ('status', 'payment_method', 'shipping_method', 'created_at', 'updated_at')
+    list_filter = (OrderSellerListFilter, 'status', 'payment_method', 'shipping_method', 'created_at', 'updated_at')
     search_fields = ('id', 'email', 'user__email', 'shipping_name', 'shipping_city', 'phone', 'packeta_point_name')
     readonly_fields = ('user', 'email', 'status', 'shipping_method', 'total_amount', 'discount_amount', 'discount_code', 'created_at', 'updated_at', 'delivered_at', 'review_request_sent_at', 'is_pre_order',
                       'shipping_name', 'shipping_address', 'shipping_city', 'shipping_postal_code', 'shipping_country', 'phone',
@@ -47,14 +86,45 @@ class OrderAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         # Orders can only be created through the frontend API
         return False
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser or is_seller_user(request.user)
+
+    def has_view_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        if not is_seller_user(request.user):
+            return False
+        return obj is None or seller_can_access_order(request.user, obj)
     
     def has_change_permission(self, request, obj=None):
-        # Orders cannot be edited in admin, only status can be changed via actions
-        return False
+        if request.user.is_superuser:
+            return True
+        if not is_seller_user(request.user):
+            return False
+        return obj is None or seller_can_access_order(request.user, obj)
     
     def has_delete_permission(self, request, obj=None):
         # Only superusers can delete orders
         return request.user.is_superuser
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request).select_related('user').prefetch_related('items__product__seller', 'items__ticket')
+        return filter_orders_for_user(queryset, request.user)
+
+    def get_list_filter(self, request):
+        if request.user.is_superuser:
+            return self.list_filter
+        return tuple(value for value in self.list_filter if value is not OrderSellerListFilter)
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if request.user.is_superuser:
+            return actions
+        if is_seller_user(request.user):
+            allowed = {'mark_as_shipped', 'mark_as_delivered'}
+            return {name: value for name, value in actions.items() if name in allowed}
+        return {}
     
     fieldsets = (
         ('Order Info', {
@@ -141,11 +211,49 @@ class OrderAdmin(admin.ModelAdmin):
     mark_as_paid.short_description = "Mark selected orders as Paid"
     
     def mark_as_shipped(self, request, queryset):
-        queryset.update(status='shipped')
+        allowed_queryset = queryset
+        blocked_count = 0
+        if is_seller_user(request.user) and not request.user.is_superuser:
+            allowed_ids = []
+            for order in queryset:
+                if seller_can_manage_order(request.user, order):
+                    allowed_ids.append(order.id)
+                else:
+                    blocked_count += 1
+            allowed_queryset = queryset.filter(id__in=allowed_ids)
+
+        updated = allowed_queryset.update(status='shipped')
+        if updated:
+            self.message_user(request, f"{updated} order(s) marked as Shipped.", level=messages.SUCCESS)
+        if blocked_count:
+            self.message_user(
+                request,
+                f"{blocked_count} order(s) skipped because seller can update only orders containing exclusively their own products.",
+                level=messages.WARNING
+            )
     mark_as_shipped.short_description = "Mark selected orders as Shipped"
     
     def mark_as_delivered(self, request, queryset):
-        queryset.update(status='delivered')
+        allowed_queryset = queryset
+        blocked_count = 0
+        if is_seller_user(request.user) and not request.user.is_superuser:
+            allowed_ids = []
+            for order in queryset:
+                if seller_can_manage_order(request.user, order):
+                    allowed_ids.append(order.id)
+                else:
+                    blocked_count += 1
+            allowed_queryset = queryset.filter(id__in=allowed_ids)
+
+        updated = allowed_queryset.update(status='delivered')
+        if updated:
+            self.message_user(request, f"{updated} order(s) marked as Delivered.", level=messages.SUCCESS)
+        if blocked_count:
+            self.message_user(
+                request,
+                f"{blocked_count} order(s) skipped because seller can update only orders containing exclusively their own products.",
+                level=messages.WARNING
+            )
     mark_as_delivered.short_description = "Mark selected orders as Delivered"
     
     def mark_as_cancelled(self, request, queryset):
@@ -233,7 +341,7 @@ class OrderAdmin(admin.ModelAdmin):
     create_packeta_shipment.short_description = "Create Packeta shipment for selected orders"
 
 @admin.register(PurchasedTicket)
-class PurchasedTicketAdmin(admin.ModelAdmin):
+class PurchasedTicketAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     list_display = ('code', 'ticket_name', 'order_link', 'user_email', 'toggle_used_button', 'used_at', 'created_at')
     list_filter = ('is_used', 'ticket', 'created_at')
     search_fields = ('code', 'order__id', 'order__user__email', 'ticket__name')

@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, viewsets, filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
@@ -19,6 +19,8 @@ from .serializers import (
     CreatePaymentSerializer,
     PaymentTransactionSerializer,
 )
+from core.permissions import IsSuperuserOrSeller
+from core.seller_access import filter_payment_transactions_for_user
 
 
 logger = logging.getLogger(__name__)
@@ -396,3 +398,22 @@ class PaymentStatusView(generics.RetrieveAPIView):
                 'order_status': order.status,
             }
         )
+
+
+class PaymentAdminViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Admin payment overview.
+    Superusers see everything, sellers only transactions tied to their products.
+    """
+
+    queryset = PaymentTransaction.objects.all().select_related('order')
+    serializer_class = PaymentTransactionSerializer
+    permission_classes = [IsSuperuserOrSeller]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['id', 'order__id', 'provider_transaction_id', 'order__email', 'order__user__email']
+    ordering_fields = ['created_at', 'amount', 'status']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return filter_payment_transactions_for_user(queryset, self.request.user)

@@ -1,9 +1,10 @@
 from django.contrib import admin
 from .models import MainSettings
+from core.admin_mixins import SellerHiddenAdminMixin
 
 
 @admin.register(MainSettings)
-class MainSettingsAdmin(admin.ModelAdmin):
+class MainSettingsAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     """Admin interface for MainSettings - single instance only"""
     
     fieldsets = (

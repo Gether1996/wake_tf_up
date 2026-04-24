@@ -1,5 +1,9 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from django.db.models import Q
 from .models import Product, Category, Color, ProductImage, ProductVideo, Ticket, TicketImage
+
+User = get_user_model()
 
 
 class TranslatableSerializerMixin:
@@ -207,8 +211,23 @@ class ColorAdminSerializer(serializers.ModelSerializer):
         read_only_fields = ('created_at', 'updated_at')
 
 
+class SellerSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'first_name', 'last_name', 'user_role')
+        read_only_fields = fields
+
+
 class ProductAdminSerializer(serializers.ModelSerializer):
     """Admin serializer for products - returns all language fields"""
+    seller = SellerSummarySerializer(read_only=True)
+    seller_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(Q(user_role='seller') | Q(is_superuser=True)),
+        source='seller',
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
     category = CategoryAdminSerializer(read_only=True)
     color = ColorAdminSerializer(read_only=True)
     category_id = serializers.PrimaryKeyRelatedField(
@@ -232,7 +251,7 @@ class ProductAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = (
-            'id', 'name', 'en_name', 'description', 'en_description', 'slug',
+            'id', 'seller', 'seller_id', 'name', 'en_name', 'description', 'en_description', 'slug',
             'category', 'category_id', 'color', 'color_id',
             'price', 'discount_price', 'total_stock', 'sold_quantity', 'available_stock',
             'is_in_stock', 'pre_order_enabled', 'is_limited_drop', 'is_recycled', 'is_published',

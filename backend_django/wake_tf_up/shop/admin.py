@@ -1,10 +1,12 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Category, Color, Product, ProductImage, ProductVideo, Ticket, TicketImage
+from core.admin_mixins import SellerHiddenAdminMixin, SellerReadOnlyAdminMixin
+from core.seller_access import is_seller_user, seller_can_access_product
 
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
+class CategoryAdmin(SellerReadOnlyAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'en_name', 'slug', 'product_count', 'created_at')
     search_fields = ('name', 'en_name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
@@ -21,7 +23,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 @admin.register(Color)
-class ColorAdmin(admin.ModelAdmin):
+class ColorAdmin(SellerReadOnlyAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'en_name', 'hex_code', 'color_preview', 'product_count', 'created_at')
     search_fields = ('name', 'en_name', 'hex_code')
     fields = ('name', 'en_name', 'hex_code')
@@ -45,6 +47,23 @@ class ProductImageInline(admin.TabularInline):
     extra = 1
     fields = ('image', 'order')
 
+    def _can_manage(self, request, obj=None):
+        return request.user.is_superuser or (
+            is_seller_user(request.user) and obj is not None and obj.seller_id == request.user.id
+        )
+
+    def has_view_or_change_permission(self, request, obj=None):
+        return self._can_manage(request, obj)
+
+    def has_add_permission(self, request, obj=None):
+        return self._can_manage(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return self._can_manage(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return self._can_manage(request, obj)
+
 
 class ProductVideoInline(admin.TabularInline):
     model = ProductVideo
@@ -53,19 +72,36 @@ class ProductVideoInline(admin.TabularInline):
     fields = ('video', 'thumbnail', 'order')
     ordering = ['order']
 
+    def _can_manage(self, request, obj=None):
+        return request.user.is_superuser or (
+            is_seller_user(request.user) and obj is not None and obj.seller_id == request.user.id
+        )
+
+    def has_view_or_change_permission(self, request, obj=None):
+        return self._can_manage(request, obj)
+
+    def has_add_permission(self, request, obj=None):
+        return self._can_manage(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return self._can_manage(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return self._can_manage(request, obj)
+
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
-        'name', 'category', 'color_badge', 'price_display', 
+        'name', 'seller_display', 'category', 'color_badge', 'price_display',
         'stock_status', 'available_stock', 'is_limited_drop', 'is_recycled',
         'is_published', 'pre_order_enabled', 'created_at'
     )
-    list_filter = ('is_published', 'pre_order_enabled', 'is_limited_drop', 'is_recycled', 'category', 'color', 'created_at')
+    list_filter = ('seller', 'is_published', 'pre_order_enabled', 'is_limited_drop', 'is_recycled', 'category', 'color', 'created_at')
     search_fields = ('name', 'slug', 'description')
     prepopulated_fields = {'slug': ('name',)}
     inlines = [ProductImageInline, ProductVideoInline]
-    readonly_fields = ('available_stock', 'sold_quantity', 'created_at', 'updated_at')
+    readonly_fields = ('seller', 'available_stock', 'sold_quantity', 'created_at', 'updated_at')
     date_hierarchy = 'created_at'
     list_per_page = 25
     actions = ['publish_products', 'unpublish_products', 'enable_preorder', 'disable_preorder', 
@@ -73,7 +109,7 @@ class ProductAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'en_name', 'description', 'en_description', 'slug', 'category', 'color')
+            'fields': ('seller', 'name', 'en_name', 'description', 'en_description', 'slug', 'category', 'color')
         }),
         ('Pricing & Stock', {
             'fields': ('price', 'discount_price', 'total_stock', 'available_stock', 'sold_quantity')
@@ -127,6 +163,87 @@ class ProductAdmin(admin.ModelAdmin):
     def sold_quantity(self, obj):
         return obj.sold_quantity
     sold_quantity.short_description = 'Sold'
+
+    def seller_display(self, obj):
+        if not obj.seller_id:
+            return '—'
+        return obj.seller.email
+    seller_display.short_description = 'Seller'
+    seller_display.admin_order_field = 'seller__email'
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request).select_related('seller', 'category', 'color')
+        if request.user.is_superuser:
+            return queryset
+        if is_seller_user(request.user):
+            return queryset.filter(seller=request.user)
+        return queryset.none()
+
+    def get_list_display(self, request):
+        if request.user.is_superuser:
+            return self.list_display
+        return tuple(value for value in self.list_display if value != 'seller_display')
+
+    def get_list_filter(self, request):
+        if request.user.is_superuser:
+            return self.list_filter
+        return tuple(value for value in self.list_filter if value != 'seller')
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if request.user.is_superuser:
+            return readonly
+        if 'seller' not in readonly:
+            readonly.append('seller')
+        return readonly
+
+    def get_fieldsets(self, request, obj=None):
+        if request.user.is_superuser:
+            return self.fieldsets
+
+        seller_hidden_fieldsets = []
+        for title, options in self.fieldsets:
+            fields = options.get('fields', ())
+            cleaned_fields = tuple(field for field in fields if field != 'seller')
+            seller_hidden_fieldsets.append((title, {**options, 'fields': cleaned_fields}))
+        return seller_hidden_fieldsets
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'seller' and not request.user.is_superuser:
+            kwargs['queryset'] = db_field.remote_field.model.objects.filter(pk=request.user.pk)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser or is_seller_user(request.user)
+
+    def has_view_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        if not is_seller_user(request.user):
+            return False
+        return obj is None or seller_can_access_product(request.user, obj)
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser or is_seller_user(request.user)
+
+    def has_change_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        if not is_seller_user(request.user):
+            return False
+        return obj is None or seller_can_access_product(request.user, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        if not is_seller_user(request.user):
+            return False
+        return obj is None or seller_can_access_product(request.user, obj)
+
+    def save_model(self, request, obj, form, change):
+        if not request.user.is_superuser:
+            obj.seller = request.user
+        super().save_model(request, obj, form, change)
     
     # Actions
     def publish_products(self, request, queryset):
@@ -169,7 +286,7 @@ class TicketImageInline(admin.TabularInline):
 
 
 @admin.register(Ticket)
-class TicketAdmin(admin.ModelAdmin):
+class TicketAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     list_display = (
         'name', 'price_display', 'event_date', 'event_location',
         'total_quantity', 'sold_quantity', 'is_published', 'created_at'

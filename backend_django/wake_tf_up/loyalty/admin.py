@@ -3,10 +3,11 @@ from django.utils.html import format_html
 from datetime import datetime, timedelta
 from decimal import Decimal
 from .models import DiscountCode, QRCode
+from core.admin_mixins import SellerHiddenAdminMixin
 
 
 @admin.register(DiscountCode)
-class DiscountCodeAdmin(admin.ModelAdmin):
+class DiscountCodeAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     list_display = ('code', 'user_email', 'discount_percentage', 'free_shipping_badge', 'minimum_order_value', 'code_type', 'usage_info', 'status_badge', 'valid_until')
     list_filter = ('code_type', 'is_active', 'is_used', 'is_free_shipping', 'created_at', 'user')
     search_fields = ('code', 'user__email', 'user__first_name', 'user__last_name')
@@ -159,7 +160,7 @@ class DiscountCodeAdmin(admin.ModelAdmin):
 
 
 @admin.register(QRCode)
-class QRCodeAdmin(admin.ModelAdmin):
+class QRCodeAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     list_display = ('title', 'code', 'qr_type', 'scan_count', 'status_badge', 'last_scanned_at', 'created_at')
     list_filter = ('qr_type', 'is_active', 'created_at')
     search_fields = ('title', 'code', 'target_url', 'description')

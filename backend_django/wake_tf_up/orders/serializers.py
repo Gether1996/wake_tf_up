@@ -3,6 +3,7 @@ from .models import Order, OrderItem
 from .access import build_frontend_order_url, get_guest_order_access_token
 from shop.serializers import ProductListSerializer, TicketListSerializer
 from settings.models import MainSettings
+from core.seller_access import is_seller_user
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -102,7 +103,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
 class OrderListSerializer(serializers.ModelSerializer):
     """Serializer for order list"""
-    items = OrderItemSerializer(many=True, read_only=True)
+    items = serializers.SerializerMethodField()
     items_count = serializers.SerializerMethodField()
     is_pre_order = serializers.ReadOnlyField()
     discount_code_display = serializers.CharField(source='discount_code.code', read_only=True)
@@ -116,12 +117,22 @@ class OrderListSerializer(serializers.ModelSerializer):
         )
     
     def get_items_count(self, obj):
+        request = self.context.get('request')
+        if request and is_seller_user(request.user) and not request.user.is_superuser:
+            return obj.items.filter(product__seller=request.user).count()
         return obj.items.count()
+
+    def get_items(self, obj):
+        items = obj.items.all()
+        request = self.context.get('request')
+        if request and is_seller_user(request.user) and not request.user.is_superuser:
+            items = items.filter(product__seller=request.user)
+        return OrderItemSerializer(items, many=True, context=self.context).data
 
 
 class OrderDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for order detail"""
-    items = OrderItemSerializer(many=True, read_only=True)
+    items = serializers.SerializerMethodField()
     is_pre_order = serializers.ReadOnlyField()
     discount_code_display = serializers.CharField(source='discount_code.code', read_only=True)
     guest_access_token = serializers.SerializerMethodField()
@@ -142,7 +153,26 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         )
 
     def get_guest_access_token(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            if request.user.is_superuser or is_seller_user(request.user):
+                return None
+            if obj.user_id != request.user.id:
+                return None
         return get_guest_order_access_token(obj)
 
     def get_frontend_order_url(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            if request.user.is_superuser or is_seller_user(request.user):
+                return None
+            if obj.user_id != request.user.id:
+                return None
         return build_frontend_order_url(obj)
+
+    def get_items(self, obj):
+        items = obj.items.all()
+        request = self.context.get('request')
+        if request and is_seller_user(request.user) and not request.user.is_superuser:
+            items = items.filter(product__seller=request.user)
+        return OrderItemSerializer(items, many=True, context=self.context).data

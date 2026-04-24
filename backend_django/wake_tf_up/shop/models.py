@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
 from decimal import Decimal
@@ -47,6 +48,14 @@ class Color(models.Model):
 
 class Product(models.Model):
     """Main product model for clothing items"""
+    seller = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='owned_products',
+        null=True,
+        blank=True,
+        help_text="Seller responsible for this product"
+    )
     name = models.CharField(max_length=200)
     en_name = models.CharField(max_length=200, blank=True, help_text="English name", default="")
     description = models.TextField(blank=True, help_text="Product description")
@@ -116,8 +125,10 @@ class Product(models.Model):
         verbose_name_plural = 'Produkty'
         ordering = ['-created_at']
         indexes = [
+            models.Index(fields=['seller']),
             models.Index(fields=['slug']),
             models.Index(fields=['is_published']),
+            models.Index(fields=['seller', 'is_published']),
             models.Index(fields=['category', 'is_published']),
             models.Index(fields=['is_limited_drop']),
         ]

@@ -9,6 +9,7 @@ export interface User {
   postal_code?: string;
   country?: string;
   theme_preference?: 'light' | 'dark' | 'auto';
+  user_role?: 'regular' | 'staff' | 'seller';
   is_staff?: boolean;
   is_superuser?: boolean;
 }

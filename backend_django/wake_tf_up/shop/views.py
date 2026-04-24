@@ -17,7 +17,8 @@ from .serializers import (
 )
 
 
-from core.permissions import IsSuperuser
+from core.permissions import IsSuperuser, IsSuperuserOrSeller
+from core.seller_access import filter_products_for_user, seller_can_access_product
 
 
 class ProductListView(generics.ListAPIView):
@@ -144,14 +145,36 @@ class ProductAdminViewSet(viewsets.ModelViewSet):
     PATCH  /api/v1/admin/products/{id}/  - Partial update
     DELETE /api/v1/admin/products/{id}/  - Delete product
     """
-    queryset = Product.objects.all().select_related('category', 'color')
+    queryset = Product.objects.all().select_related('seller', 'category', 'color')
     serializer_class = ProductAdminSerializer
-    permission_classes = [IsSuperuser]
+    permission_classes = [IsSuperuserOrSeller]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'slug', 'description']
-    filterset_fields = ['category', 'color', 'is_published', 'pre_order_enabled']
+    filterset_fields = ['seller', 'category', 'color', 'is_published', 'pre_order_enabled']
     ordering_fields = ['price', 'created_at', 'name']
     ordering = ['-created_at']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return filter_products_for_user(queryset, self.request.user)
+
+    def perform_create(self, serializer):
+        if self.request.user.is_superuser:
+            serializer.save()
+            return
+        serializer.save(seller=self.request.user)
+
+    def perform_update(self, serializer):
+        if self.request.user.is_superuser:
+            serializer.save()
+            return
+        serializer.save(seller=self.request.user)
+
+    def get_object(self):
+        obj = super().get_object()
+        if not seller_can_access_product(self.request.user, obj):
+            self.permission_denied(self.request)
+        return obj
 
 
 class CategoryAdminViewSet(viewsets.ModelViewSet):

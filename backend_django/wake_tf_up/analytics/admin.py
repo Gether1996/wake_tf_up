@@ -1,9 +1,10 @@
 from django.contrib import admin
 from .models import ProductEvent, ProductEventStat
+from core.admin_mixins import SellerHiddenAdminMixin
 
 
 @admin.register(ProductEventStat)
-class ProductEventStatAdmin(admin.ModelAdmin):
+class ProductEventStatAdmin(SellerHiddenAdminMixin, admin.ModelAdmin):
     """Show aggregated statistics of product events"""
     list_display = ('product', 'event_type', 'count', 'last_recorded_at', 'days_tracked')
     list_filter = ('event_type', 'last_recorded_at')
