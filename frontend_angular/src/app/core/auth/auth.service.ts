@@ -23,6 +23,10 @@ export class AuthService {
   readonly isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
   readonly isSeller = computed(() => this.currentUser()?.user_role === 'seller');
+  readonly canAccessAdminPanel = computed(() => {
+    const user = this.currentUser();
+    return user?.is_staff === true || user?.is_superuser === true;
+  });
   readonly isSuperuser = computed(() => this.currentUser()?.is_superuser === true);
 
   constructor(

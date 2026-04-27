@@ -94,7 +94,7 @@ import { LanguageService } from '../../core/services/language.service';
                     <a [routerLink]="ordersLink()" (click)="closeUserMenu()" class="block px-4 py-2 hover:bg-muted font-mono text-sm">
                       {{ 'nav.orders' | transloco }}
                     </a>
-                    @if (isSuperuser()) {
+                    @if (canAccessAdminPanel()) {
                       <a href="/admin/" target="_blank" class="block px-4 py-2 hover:bg-muted font-mono text-sm text-accent">
                         Admin Panel
                       </a>
@@ -149,7 +149,7 @@ import { LanguageService } from '../../core/services/language.service';
               <a [routerLink]="ordersLink()" (click)="closeMobileMenu()" class="block text-base uppercase tracking-wide hover:text-accent transition-colors py-2">
                 {{ 'nav.orders' | transloco }}
               </a>
-              @if (isSuperuser()) {
+              @if (canAccessAdminPanel()) {
                 <a href="/admin/" target="_blank" class="block text-base uppercase tracking-wide text-accent hover:opacity-80 transition-colors py-2">
                   Admin Panel
                 </a>
@@ -213,6 +213,7 @@ export class HeaderComponent {
   private elementRef = inject(ElementRef);
 
   isAuthenticated = this.authService.isAuthenticated;
+  canAccessAdminPanel = this.authService.canAccessAdminPanel;
   isSuperuser = this.authService.isSuperuser;
   cartItemCount = this.cartService.itemCount;
   isDark = this.themeService.isDark;
