@@ -36,6 +36,12 @@ def send_verification_email(user, language='sk'):
     }
     
     try:
+        logger.info(
+            "Sending verification email to %s (language=%s, token=%s)",
+            user.email,
+            language,
+            user.email_verification_token,
+        )
         send_localized_email(
             subject_sk='WAKE TF UP - Overenie emailu',
             subject_en='WAKE TF UP - Email Verification',
@@ -47,7 +53,8 @@ def send_verification_email(user, language='sk'):
         
         # Update sent time
         user.email_verification_sent_at = datetime.now()
-        user.save()
+        user.save(update_fields=['email_verification_sent_at'])
+        logger.info("Verification email sent successfully to %s", user.email)
         
         return True
     except Exception as e:
@@ -134,13 +141,24 @@ class RegisterView(generics.CreateAPIView):
         # Get language from request data
         language = serializer.validated_data.pop('language', 'sk')
         user = serializer.save()
+        logger.info("User registration created account for %s", user.email)
         
         # Send verification email in user's language
-        send_verification_email(user, language=language)
+        email_sent = send_verification_email(user, language=language)
+        if not email_sent:
+            logger.warning(
+                "Registration for %s completed, but verification email could not be sent",
+                user.email,
+            )
         
         return Response({
-            'message': 'Registration successful. Please check your email to verify your account.',
+            'message': (
+                'Registration successful. Please check your email to verify your account.'
+                if email_sent
+                else 'Registration successful, but we could not send the verification email right now. Please use resend verification from the login page.'
+            ),
             'email': user.email,
+            'email_sent': email_sent,
         }, status=status.HTTP_201_CREATED)
 
 
@@ -215,6 +233,7 @@ class ResendVerificationEmailView(APIView):
     def post(self, request):
         email = request.data.get('email')
         language = request.data.get('language', 'sk')  # Get language from request, default to 'sk'
+        logger.info("Verification email resend requested for %s", email or '<missing>')
         
         if not email:
             return Response(
@@ -244,6 +263,7 @@ class ResendVerificationEmailView(APIView):
             # Rotate the verification token so old links are invalidated
             user.email_verification_token = uuid.uuid4()
             user.save(update_fields=['email_verification_token'])
+            logger.info("Rotated verification token for %s", user.email)
             
             # Send verification email
             success = send_verification_email(user, language)

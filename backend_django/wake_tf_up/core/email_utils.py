@@ -2,7 +2,8 @@
 Utility functions for email handling across the application.
 Provides language-aware template selection and email sending helpers.
 """
-from django.template.loader import render_to_string
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template, render_to_string
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 import logging
@@ -58,23 +59,45 @@ def get_localized_template(base_template, language='sk'):
         >>> get_localized_template('emails/verification_sk.html', 'en')
         'emails/verification_en.html'
     """
-    # If template already has language suffix (_sk, _en), replace it
-    if base_template.endswith('_sk.html'):
-        return base_template.replace('_sk.html', f'_{language}.html')
-    if base_template.endswith('_en.html'):
-        return base_template.replace('_en.html', f'_{language}.html')
-    
-    # If template has .sk.html or .en.html pattern, replace it
-    if '.sk.html' in base_template:
-        return base_template.replace('.sk.html', f'.{language}.html')
-    if '.en.html' in base_template:
-        return base_template.replace('.en.html', f'.{language}.html')
-    
-    # Otherwise, insert language code before .html
-    if base_template.endswith('.html'):
-        return base_template.replace('.html', f'.{language}.html')
-    
-    return base_template
+    candidates = []
+
+    if base_template.endswith('_sk.html') or base_template.endswith('_en.html'):
+        for source_language in ('sk', 'en'):
+            suffix = f'_{source_language}.html'
+            if base_template.endswith(suffix):
+                stem = base_template[:-len(suffix)]
+                candidates.extend([
+                    f'{stem}_{language}.html',
+                    f'{stem}.{language}.html',
+                ])
+                break
+    elif '.sk.html' in base_template or '.en.html' in base_template:
+        for source_language in ('sk', 'en'):
+            suffix = f'.{source_language}.html'
+            if suffix in base_template:
+                stem = base_template.replace(suffix, '')
+                candidates.extend([
+                    f'{stem}.{language}.html',
+                    f'{stem}_{language}.html',
+                ])
+                break
+    elif base_template.endswith('.html'):
+        stem = base_template[:-5]
+        candidates.extend([
+            f'{stem}_{language}.html',
+            f'{stem}.{language}.html',
+        ])
+    else:
+        candidates.append(base_template)
+
+    for candidate in dict.fromkeys(candidates):
+        try:
+            get_template(candidate)
+            return candidate
+        except TemplateDoesNotExist:
+            continue
+
+    return candidates[0]
 
 
 def send_localized_email(

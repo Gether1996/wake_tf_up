@@ -1,6 +1,9 @@
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
+from unittest.mock import patch
+
+from rest_framework.test import APIClient
 
 from .admin import UserAdmin
 
@@ -49,3 +52,65 @@ class UserAdminRoleSyncTests(TestCase):
 
         user.refresh_from_db()
         self.assertFalse(user.is_staff)
+
+
+class RegistrationEmailFlowTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    @patch('accounts.views.send_verification_email', return_value=True)
+    def test_register_returns_email_sent_true_when_verification_email_succeeds(self, mock_send_verification_email):
+        response = self.client.post(
+            '/api/v1/auth/register/',
+            {
+                'email': 'verify-success@example.com',
+                'password': 'StrongPass123!',
+                'password2': 'StrongPass123!',
+                'language': 'en',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(response.json()['email_sent'])
+        created_user = User.objects.get(email='verify-success@example.com')
+        mock_send_verification_email.assert_called_once_with(created_user, language='en')
+
+    @patch('accounts.views.send_verification_email', return_value=False)
+    def test_register_returns_email_sent_false_when_verification_email_fails(self, mock_send_verification_email):
+        response = self.client.post(
+            '/api/v1/auth/register/',
+            {
+                'email': 'verify-fail@example.com',
+                'password': 'StrongPass123!',
+                'password2': 'StrongPass123!',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertFalse(response.json()['email_sent'])
+        self.assertIn('could not send the verification email', response.json()['message'].lower())
+        created_user = User.objects.get(email='verify-fail@example.com')
+        mock_send_verification_email.assert_called_once_with(created_user, language='sk')
+
+    @patch('accounts.views.send_verification_email', return_value=False)
+    def test_resend_verification_returns_500_when_email_send_fails(self, mock_send_verification_email):
+        user = User.objects.create_user(
+            email='resend-fail@example.com',
+            password='StrongPass123!',
+            is_email_verified=False,
+        )
+
+        response = self.client.post(
+            '/api/v1/auth/resend-verification/',
+            {
+                'email': user.email,
+                'language': 'sk',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 500)
+        user.refresh_from_db()
+        self.assertEqual(mock_send_verification_email.call_count, 1)

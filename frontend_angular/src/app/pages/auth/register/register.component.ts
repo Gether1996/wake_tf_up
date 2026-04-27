@@ -27,9 +27,21 @@ import { ButtonComponent } from '../../../shared/button/button.component';
               </svg>
             </div>
             <h2 class="text-2xl font-bold mb-4">{{ 'auth.register.success_title' | transloco }}</h2>
-            <p class="text-muted-foreground mb-2">{{ 'auth.register.success_message' | transloco }}</p>
+            <p class="text-muted-foreground mb-2">
+              @if (verificationEmailSent()) {
+                {{ 'auth.register.success_message' | transloco }}
+              } @else {
+                Verification email could not be sent right now. Try the resend option from login.
+              }
+            </p>
             <p class="font-mono text-sm mb-6">{{ registeredEmail() }}</p>
-            <p class="text-sm text-muted-foreground mb-8">{{ 'auth.register.success_instructions' | transloco }}</p>
+            <p class="text-sm text-muted-foreground mb-8">
+              @if (verificationEmailSent()) {
+                {{ 'auth.register.success_instructions' | transloco }}
+              } @else {
+                Your account was created, but the verification email was not confirmed as sent by the server.
+              }
+            </p>
             <a 
               [routerLink]="loginLink()" 
               style="font-family: 'Shlop', sans-serif;"
@@ -287,6 +299,7 @@ export class RegisterComponent {
   error = signal('');
   success = signal(false);
   registeredEmail = signal('');
+  verificationEmailSent = signal(true);
 
   registerForm: FormGroup;
   showPassword = signal(false);
@@ -345,6 +358,7 @@ export class RegisterComponent {
       next: (response: any) => {
         this.success.set(true);
         this.registeredEmail.set(formValue.email);
+        this.verificationEmailSent.set(response?.email_sent !== false);
         this.loading.set(false);
       },
       error: (err) => {
