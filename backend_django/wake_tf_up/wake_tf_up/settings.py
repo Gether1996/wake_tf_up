@@ -33,7 +33,20 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,wake-tf-up.eu,backend,wake-tf-up.eu').split(',')
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv(
+        'ALLOWED_HOSTS',
+        'localhost,127.0.0.1,wake-tf-up.eu,www.wake-tf-up.eu,backend',
+    ).split(',')
+    if host.strip()
+]
+
+# Keep request-size limits explicit so large product galleries do not fail on
+# default framework thresholds before the request reaches application code.
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(
+    os.getenv('DATA_UPLOAD_MAX_MEMORY_SIZE', str(50 * 1024 * 1024))
+)
 
 # Application definition
 
