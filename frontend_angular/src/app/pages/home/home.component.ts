@@ -159,8 +159,9 @@ import { ButtonComponent } from '../../shared/button/button.component';
                  class="group block bg-background rounded-lg overflow-hidden transition-transform hover:scale-105 cursor-pointer">
                 <div class="aspect-square bg-muted relative overflow-hidden">
                   @if (review.product.image_url) {
-                    <img [src]="review.product.image_url" 
+                    <img [src]="review.product.image_url"
                          [alt]="review.product.name"
+                         width="300" height="300" loading="lazy"
                          class="w-full h-full object-cover">
                   }
                   <div class="absolute top-2 right-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1">

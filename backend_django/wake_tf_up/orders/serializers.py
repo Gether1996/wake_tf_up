@@ -120,7 +120,9 @@ class OrderListSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and is_seller_user(request.user) and not request.user.is_superuser:
             return obj.items.filter(product__seller=request.user).count()
-        return obj.items.count()
+        # obj.items.count() would issue a fresh COUNT query per order even though
+        # the view already prefetches items — len() reuses the prefetched cache.
+        return len(obj.items.all())
 
     def get_items(self, obj):
         items = obj.items.all()

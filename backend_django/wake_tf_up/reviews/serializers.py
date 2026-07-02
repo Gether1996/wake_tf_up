@@ -24,7 +24,7 @@ class ProductBasicSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         first_image = obj.images.order_by('order').first()
         if first_image:
-            return first_image.image.url
+            return first_image.thumbnail.url if first_image.thumbnail else first_image.image.url
         return None
 
 

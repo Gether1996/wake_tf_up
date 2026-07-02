@@ -79,10 +79,11 @@ class ColorSerializer(TranslatableSerializerMixin, serializers.ModelSerializer):
 class ProductImageSerializer(serializers.ModelSerializer):
     """Serializer for product images"""
     image = RelativeImageField()
-    
+    thumbnail = RelativeImageField()
+
     class Meta:
         model = ProductImage
-        fields = ('id', 'image', 'order')
+        fields = ('id', 'image', 'thumbnail', 'order')
 
 
 class ProductVideoSerializer(serializers.ModelSerializer):
@@ -138,12 +139,12 @@ class ProductListSerializer(TranslatableSerializerMixin, serializers.ModelSerial
         return ColorSerializer(obj.color, context=self.context).data
 
     def get_primary_image(self, obj):
-        """Get the first image as primary"""
+        """Get the first image's thumbnail as primary (list views only need a small image)"""
         image = obj.images.first()
         if image:
             # Return relative URL path instead of absolute URL
             # Nginx reverse proxy will handle proper domain
-            return image.image.url
+            return image.thumbnail.url if image.thumbnail else image.image.url
         return None
 
 
@@ -265,10 +266,11 @@ class ProductAdminSerializer(serializers.ModelSerializer):
 class TicketImageSerializer(serializers.ModelSerializer):
     """Serializer for ticket images — returns relative URLs (nginx handles the domain)"""
     image = RelativeImageField()
+    thumbnail = RelativeImageField()
 
     class Meta:
         model = TicketImage
-        fields = ('id', 'image', 'order')
+        fields = ('id', 'image', 'thumbnail', 'order')
 
 
 class TicketListSerializer(TranslatableSerializerMixin, serializers.ModelSerializer):
@@ -301,7 +303,7 @@ class TicketListSerializer(TranslatableSerializerMixin, serializers.ModelSeriali
     def get_primary_image(self, obj):
         image = obj.images.first()
         if image:
-            return image.image.url
+            return image.thumbnail.url if image.thumbnail else image.image.url
         return None
 
 

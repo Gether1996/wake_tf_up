@@ -12,14 +12,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Copy and set entrypoint script
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+# Unprivileged user the app actually runs as (see entrypoint.sh)
+RUN useradd --create-home --shell /bin/bash appuser
 
-# Change to Django project directory
-WORKDIR /app/wake_tf_up
+# Copy and set entrypoint scripts
+COPY entrypoint.sh /app/entrypoint.sh
+COPY app-entrypoint.sh /app/app-entrypoint.sh
+RUN chmod +x /app/entrypoint.sh /app/app-entrypoint.sh
 
 EXPOSE 8000
 
-# Run with entrypoint that handles migrations
+# entrypoint.sh starts as root only to fix ownership of bind-mounted
+# volumes, then drops to `appuser` for collectstatic/migrate/gunicorn.
 ENTRYPOINT ["/app/entrypoint.sh"]

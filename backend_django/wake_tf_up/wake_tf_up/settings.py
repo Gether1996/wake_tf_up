@@ -205,13 +205,19 @@ AUTH_USER_MODEL = 'accounts.User'
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'accounts.cookie_auth.CookieJWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    # Scoped throttles applied explicitly per-view (see accounts.views) rather than
+    # as a DEFAULT_THROTTLE_CLASSES blanket, so only the email-sending endpoints
+    # that are cheap to abuse (verification/password-reset emails) are limited.
+    'DEFAULT_THROTTLE_RATES': {
+        'email_request': '5/hour',
+    },
 }
 
 # JWT Configuration
@@ -227,6 +233,16 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': False,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# Cookie-based JWT delivery (see accounts/cookie_auth.py, accounts/cookie_views.py).
+# Tokens live in httpOnly cookies instead of the response body/localStorage.
+JWT_AUTH_COOKIE = 'access_token'
+JWT_REFRESH_COOKIE = 'refresh_token'
+# SECURITY WARNING: only set JWT_COOKIE_SECURE=False if production is
+# genuinely served over plain HTTP (no TLS anywhere in front of it) — with
+# Secure=True and no HTTPS, the browser will silently refuse to store/send
+# the auth cookies and login will appear to fail with no clear error.
+JWT_COOKIE_SECURE = os.getenv('JWT_COOKIE_SECURE', 'False' if DEBUG else 'True') == 'True'
 
 # CORS Configuration for Angular
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:4200,http://localhost:9006,https://wake-tf-up.eu,https://www.wake-tf-up.eu').split(',')

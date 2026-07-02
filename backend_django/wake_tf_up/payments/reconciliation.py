@@ -44,15 +44,37 @@ def apply_gopay_status_to_transaction(transaction, status_result, source='GoPay'
             return state
 
         with db_transaction.atomic():
+            # Lock the order row and re-check status inside the transaction.
+            # GoPay can deliver the same webhook more than once, and the
+            # reconciliation loop can overlap with a live webhook for the
+            # same transaction — without this lock both callers can read
+            # was_already_paid=False above and both apply the "first paid"
+            # side effects (order update, confirmation email).
+            order = transaction.order.__class__.objects.select_for_update().get(
+                pk=transaction.order_id
+            )
+            transaction.refresh_from_db(fields=['status'])
+            was_already_paid = order.status == 'paid'
+
+            if was_already_paid and transaction.status == 'completed':
+                if transaction.provider_response != provider_response:
+                    transaction.provider_response = provider_response
+                    transaction.save(update_fields=['provider_response'])
+                logger.info(
+                    "[%s] Transaction #%s already finalized as completed for paid order #%s (race avoided)",
+                    source,
+                    transaction.id,
+                    transaction.order_id,
+                )
+                return state
+
             transaction.status = 'completed'
             transaction.provider_response = provider_response
             transaction.save(update_fields=['status', 'provider_response'])
+            transaction.order = order
             if not was_already_paid:
-                transaction.order.status = 'paid'
-                transaction.order.save(update_fields=['status'])
-
-            if not was_already_paid:
-                order = transaction.order
+                order.status = 'paid'
+                order.save(update_fields=['status'])
 
                 def _send_confirmation_email():
                     try:

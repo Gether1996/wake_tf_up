@@ -2,6 +2,8 @@ from django.db import models
 from django.utils.text import slugify
 import os
 
+from core.validators import validate_image_extension, validate_image_file_size
+
 
 class BlogPost(models.Model):
     """Blog posts with HTML content"""
@@ -49,7 +51,8 @@ class BlogImage(models.Model):
     )
     image = models.ImageField(
         upload_to='blog/images/%Y/%m/',
-        help_text="Upload image"
+        help_text="Upload image",
+        validators=[validate_image_extension, validate_image_file_size],
     )
     alt_text = models.CharField(
         max_length=200,

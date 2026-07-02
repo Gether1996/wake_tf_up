@@ -76,7 +76,7 @@ import { CapitalizeFirstPipe } from '../../../shared/pipes/capitalize-first.pipe
                       (click)="activeImageIndex.set($index)"
                       [class]="'flex-shrink-0 w-20 h-20 overflow-hidden border-2 transition-all ' +
                         (activeImageIndex() === $index ? 'border-foreground' : 'border-border hover:border-foreground/50')">
-                      <img [src]="img.image" [alt]="ticket()!.name" class="w-full h-full object-cover">
+                      <img [src]="img.thumbnail || img.image" [alt]="ticket()!.name" loading="lazy" class="w-full h-full object-cover">
                     </button>
                   }
                 </div>

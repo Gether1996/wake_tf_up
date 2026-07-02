@@ -1,6 +1,7 @@
 from datetime import datetime
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
@@ -229,7 +230,9 @@ class ResendVerificationEmailView(APIView):
     Body: {"email": "user@example.com"}
     """
     permission_classes = (permissions.AllowAny,)
-    
+    throttle_classes = (ScopedRateThrottle,)
+    throttle_scope = 'email_request'
+
     def post(self, request):
         email = request.data.get('email')
         language = request.data.get('language', 'sk')  # Get language from request, default to 'sk'
@@ -294,20 +297,22 @@ class RequestPasswordResetView(APIView):
     Body: {"email": "user@example.com"}
     """
     permission_classes = (permissions.AllowAny,)
-    
+    throttle_classes = (ScopedRateThrottle,)
+    throttle_scope = 'email_request'
+
     def post(self, request):
         email = request.data.get('email')
         language = request.data.get('language', 'sk')  # Get language from request, default to 'sk'
-        
+
         if not email:
             return Response(
                 {'error': 'Email is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         try:
             user = User.objects.get(email=email)
-            
+
             # Check if email was sent recently (prevent spam)
             if user.password_reset_sent_at:
                 from datetime import timedelta

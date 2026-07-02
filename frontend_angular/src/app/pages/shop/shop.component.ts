@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -253,6 +254,7 @@ export class ShopComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private languageService = inject(LanguageService);
+  private destroyRef = inject(DestroyRef);
 
   readonly TICKET_SLUG = TICKET_CATEGORY_SLUG;
 
@@ -372,7 +374,7 @@ export class ShopComponent implements OnInit {
     this.loadColors();
     
     // Load filters from query params
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       this.selectedCategory.set(params['category'] || '');
       this.selectedColor.set(params['color'] ? +params['color'] : null);
       this.showInStock.set(params['in_stock'] === 'true');

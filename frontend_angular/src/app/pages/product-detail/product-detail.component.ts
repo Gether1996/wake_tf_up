@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal, computed, OnDestroy, HostListener, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, OnDestroy, HostListener, effect, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -68,10 +69,13 @@ import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
                   Your browser does not support the video tag.
                 </video>
               } @else if (product()!.images && product()!.images.length > 0) {
-                <img 
-                  [src]="selectedImage() | mediaUrl" 
+                <img
+                  [src]="selectedImage() | mediaUrl"
                   [alt]="product()!.name"
                   (click)="openLightbox()"
+                  width="800"
+                  height="800"
+                  fetchpriority="high"
                   class="w-full h-auto block cursor-pointer hover:opacity-90 transition-opacity">
                 <!-- Zoom hint -->
                 <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-black bg-opacity-20">
@@ -97,7 +101,7 @@ import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
                   <button
                     (click)="selectImage(image.image, false)"
                     [class]="'aspect-square overflow-hidden border-2 transition-all ' + (selectedImage() === image.image && !isVideoSelected() ? 'border-foreground' : 'border-border')">
-                    <img [src]="image.image | mediaUrl" [alt]="product()!.name" class="w-full h-full object-cover">
+                    <img [src]="(image.thumbnail || image.image) | mediaUrl" [alt]="product()!.name" width="150" height="150" loading="lazy" class="w-full h-full object-cover">
                   </button>
                 }
                 <!-- Video Thumbnails -->
@@ -106,7 +110,7 @@ import { MediaUrlPipe } from '../../core/pipes/media-url.pipe';
                     <button
                       (click)="selectImage(video.video, true)"
                       [class]="'aspect-square overflow-hidden border-2 transition-all relative ' + (selectedImage() === video.video && isVideoSelected() ? 'border-foreground' : 'border-border')">
-                      <img [src]="video.thumbnail | mediaUrl" [alt]="product()!.name + ' video ' + (video.order + 1)" class="w-full h-full object-cover">
+                      <img [src]="video.thumbnail | mediaUrl" [alt]="product()!.name + ' video ' + (video.order + 1)" width="150" height="150" loading="lazy" class="w-full h-full object-cover">
                       <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
                         <span class="text-white text-3xl">▶</span>
                       </div>
@@ -340,6 +344,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private languageService = inject(LanguageService);
   private settingsService = inject(SettingsService);
+  private destroyRef = inject(DestroyRef);
 
   currentLang = this.languageService.currentLang;
   homeLink = computed(() => `/${this.currentLang()}`);
@@ -385,7 +390,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.route.params.subscribe(params => {
+    this.route.params.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       const slug = params['slug'];
       if (slug) {
         this.currentSlug.set(slug);
@@ -428,7 +433,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         retry({
           count: 3,
           delay: (error, retryCount) => timer(Math.min(1000 * Math.pow(2, retryCount - 1), 5000))
-        })
+        }),
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
         next: (product) => {

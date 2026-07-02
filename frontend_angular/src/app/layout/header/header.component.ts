@@ -17,7 +17,7 @@ import { LanguageService } from '../../core/services/language.service';
         <div class="flex items-center justify-between py-5">
           <!-- Logo -->
           <a [routerLink]="homeLink()" class="flex items-center hover:opacity-80 transition-opacity">
-            <img src="/logo.png" alt="WAKE TF UP" class="h-12 w-auto">
+            <img src="/logo.png" alt="WAKE TF UP" width="1024" height="272" class="h-12 w-auto">
           </a>
 
           <!-- Desktop Navigation -->

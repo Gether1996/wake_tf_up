@@ -5,6 +5,8 @@ import os
 import re
 import unicodedata
 
+from core.validators import validate_image_extension, validate_image_file_size
+
 User = get_user_model()
 
 
@@ -215,7 +217,8 @@ class NewsletterImage(models.Model):
     )
     image = models.ImageField(
         upload_to='newsletter/images/%Y/%m/',
-        help_text="Upload image for newsletter"
+        help_text="Upload image for newsletter",
+        validators=[validate_image_extension, validate_image_file_size],
     )
     alt_text = models.CharField(
         max_length=200,

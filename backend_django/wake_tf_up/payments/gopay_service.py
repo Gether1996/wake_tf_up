@@ -19,6 +19,8 @@ from .reconciliation import apply_gopay_status_to_transaction
 
 logger = logging.getLogger(__name__)
 
+GOPAY_REQUEST_TIMEOUT = 10  # seconds; prevents hung GoPay calls from exhausting gunicorn workers
+
 
 class GoPayService:
     """
@@ -59,6 +61,7 @@ class GoPayService:
                 data={'grant_type': 'client_credentials', 'scope': 'payment-all'},
                 auth=(self.client_id, self.client_secret),
                 headers={'Accept': 'application/json'},
+                timeout=GOPAY_REQUEST_TIMEOUT,
             )
             logger.debug("[GoPay OAuth2] Response status: %s", response.status_code)
 
@@ -154,6 +157,7 @@ class GoPayService:
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },
+                timeout=GOPAY_REQUEST_TIMEOUT,
             )
             logger.debug("[GoPay Payment] Response status: %s", response.status_code)
 
@@ -219,6 +223,7 @@ class GoPayService:
                     'Authorization': f'Bearer {token}',
                     'Accept': 'application/json',
                 },
+                timeout=GOPAY_REQUEST_TIMEOUT,
             )
             logger.debug("[GoPay Status] Response status: %s", response.status_code)
 
@@ -309,6 +314,7 @@ class GoPayService:
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },
+                timeout=GOPAY_REQUEST_TIMEOUT,
             )
 
             if response.status_code in [200, 201]:

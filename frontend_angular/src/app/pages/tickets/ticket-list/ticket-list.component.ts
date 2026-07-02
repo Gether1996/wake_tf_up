@@ -50,7 +50,7 @@ import { CapitalizeFirstPipe } from '../../../shared/pipes/capitalize-first.pipe
                   <a [routerLink]="[ticket.slug]" class="flex-shrink-0">
                     <div class="w-24 h-32 md:w-32 md:h-40 bg-muted overflow-hidden">
                       @if (ticket.primary_image) {
-                        <img [src]="ticket.primary_image" [alt]="ticket.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <img [src]="ticket.primary_image" [alt]="ticket.name" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                       } @else {
                         <div class="w-full h-full flex items-center justify-center text-muted-foreground">
                           <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">

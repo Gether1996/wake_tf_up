@@ -1,24 +1,23 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework_simplejwt.views import TokenObtainPairView
 from .views import (
-    RegisterView, ProfileView, VerifyEmailView, 
+    RegisterView, ProfileView, VerifyEmailView,
     ResendVerificationEmailView, RequestPasswordResetView, ResetPasswordView
 )
-from .jwt_serializers import EmailTokenObtainPairSerializer
-
-
-class EmailTokenObtainPairView(TokenObtainPairView):
-    serializer_class = EmailTokenObtainPairSerializer
+from .cookie_views import (
+    CookieTokenObtainPairView, CookieTokenRefreshView, LogoutView, CsrfCookieView,
+)
 
 
 app_name = 'accounts'
 
 urlpatterns = [
-    # JWT Token endpoints - LOGIN VIA EMAIL
-    path('login/', EmailTokenObtainPairView.as_view(), name='login'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    
+    # JWT Token endpoints - LOGIN VIA EMAIL. Tokens are set as httpOnly
+    # cookies (see cookie_views.py) rather than returned in the response body.
+    path('login/', CookieTokenObtainPairView.as_view(), name='login'),
+    path('token/refresh/', CookieTokenRefreshView.as_view(), name='token_refresh'),
+    path('logout/', LogoutView.as_view(), name='logout'),
+    path('csrf/', CsrfCookieView.as_view(), name='csrf'),
+
     # User management
     path('register/', RegisterView.as_view(), name='register'),
     path('verify-email/', VerifyEmailView.as_view(), name='verify_email'),

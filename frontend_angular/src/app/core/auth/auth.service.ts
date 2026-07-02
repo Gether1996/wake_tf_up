@@ -2,8 +2,8 @@ import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, BehaviorSubject } from 'rxjs';
-import { User, LoginRequest, RegisterRequest, TokenResponse } from '../api/api.models';
+import { Observable, tap, catchError, filter, take, map, of, BehaviorSubject } from 'rxjs';
+import { User, LoginRequest, RegisterRequest, AuthActionResponse } from '../api/api.models';
 import { environment } from '../../../environments/environment';
 import { TranslocoService } from '@jsverse/transloco';
 
@@ -12,12 +12,14 @@ import { TranslocoService } from '@jsverse/transloco';
 })
 export class AuthService {
   private platformId = inject(PLATFORM_ID);
-  private readonly TOKEN_KEY = 'access_token';
-  private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private profileRetryTimeout: ReturnType<typeof setTimeout> | null = null;
-  
+
   private currentUser = signal<User | null>(null);
-  private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
+  private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
+  // Flips to true once the first profile check (success or definitive
+  // 401/403) has resolved — lets guards wait out the async cookie-based
+  // auth check on page reload instead of reading a synchronous token.
+  private authReadySubject = new BehaviorSubject<boolean>(false);
 
   readonly user = this.currentUser.asReadonly();
   readonly isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
@@ -34,18 +36,20 @@ export class AuthService {
     private router: Router,
     private translocoService: TranslocoService
   ) {
-    // Delay loading user to avoid circular dependency
-    if (isPlatformBrowser(this.platformId) && this.hasToken()) {
-      // Use setTimeout to break circular dependency
+    if (isPlatformBrowser(this.platformId)) {
+      // Auth now lives in an httpOnly cookie, invisible to JS, so we can't
+      // check "is there a token" synchronously like before — just prime the
+      // CSRF cookie and ask the backend whether we're logged in.
+      this.http.get(`${environment.apiUrl}/auth/csrf/`).subscribe({ error: () => {} });
       setTimeout(() => this.loadCurrentUser(), 0);
     }
   }
 
-  login(credentials: LoginRequest): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${environment.apiUrl}/auth/login/`, credentials)
+  login(credentials: LoginRequest): Observable<AuthActionResponse> {
+    return this.http.post<AuthActionResponse>(`${environment.apiUrl}/auth/login/`, credentials)
       .pipe(
-        tap(response => {
-          this.storeTokens(response);
+        tap(() => {
+          this.isAuthenticatedSubject.next(true);
           this.loadCurrentUser();
         })
       );
@@ -60,67 +64,44 @@ export class AuthService {
   }
 
   logout(): void {
-    this.clearAuthState();
-    
-    // Clear cart and checkout data for security (prevent data leaking to next user)
-    // Use lazy injection to avoid circular dependency
-    if (isPlatformBrowser(this.platformId)) {
-      sessionStorage.removeItem('checkout_data');
-      localStorage.removeItem('cart'); // Clear cart directly to avoid circular dependency
-    }
-    
-    const lang = this.translocoService.getActiveLang();
-    this.router.navigate([`/${lang}/auth/login`]);
+    this.clearAuthState().subscribe(() => {
+      // Clear cart and checkout data for security (prevent data leaking to next user)
+      if (isPlatformBrowser(this.platformId)) {
+        sessionStorage.removeItem('checkout_data');
+        localStorage.removeItem('cart'); // Clear cart directly to avoid circular dependency
+      }
+
+      const lang = this.translocoService.getActiveLang();
+      this.router.navigate([`/${lang}/auth/login`]);
+    });
   }
 
-  clearAuthState(): void {
+  /**
+   * Clears local auth state and asks the backend to drop the httpOnly
+   * cookies (JS can't clear them itself). Returns an Observable so callers
+   * (e.g. the auth interceptor) can wait for the cookies to actually be
+   * cleared before retrying a request — otherwise a stale cookie would just
+   * cause the same 401 again.
+   */
+  clearAuthState(): Observable<unknown> {
     this.clearProfileRetry();
-    this.clearTokens();
     this.currentUser.set(null);
     this.isAuthenticatedSubject.next(false);
-  }
 
-  refreshToken(): Observable<TokenResponse> {
-    const refresh = this.getRefreshToken();
-    return this.http.post<TokenResponse>(`${environment.apiUrl}/auth/token/refresh/`, { refresh })
-      .pipe(
-        tap(response => {
-          this.storeTokens(response);
-        })
-      );
-  }
-
-  getAccessToken(): string | null {
-    if (!isPlatformBrowser(this.platformId)) return null;
-    return localStorage.getItem(this.TOKEN_KEY);
-  }
-
-  private getRefreshToken(): string | null {
-    if (!isPlatformBrowser(this.platformId)) return null;
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
-  }
-
-  private storeTokens(tokens: TokenResponse): void {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem(this.TOKEN_KEY, tokens.access);
-      localStorage.setItem(this.REFRESH_TOKEN_KEY, tokens.refresh);
+    if (!isPlatformBrowser(this.platformId)) {
+      return of(null);
     }
-    this.isAuthenticatedSubject.next(true);
+    return this.http.post(`${environment.apiUrl}/auth/logout/`, {}).pipe(
+      catchError(() => of(null))
+    );
   }
 
-  private clearTokens(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem(this.TOKEN_KEY);
-      localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    }
-  }
-
-  private hasToken(): boolean {
-    return !!this.getAccessToken();
+  refreshToken(): Observable<AuthActionResponse> {
+    return this.http.post<AuthActionResponse>(`${environment.apiUrl}/auth/token/refresh/`, {});
   }
 
   private scheduleProfileRetry(): void {
-    if (!this.hasToken() || this.profileRetryTimeout) {
+    if (this.profileRetryTimeout) {
       return;
     }
 
@@ -143,20 +124,37 @@ export class AuthService {
         next: (user) => {
           this.currentUser.set(user);
           this.isAuthenticatedSubject.next(true);
+          this.authReadySubject.next(true);
           this.clearProfileRetry();
         },
         error: (err) => {
           if (err.status === 401 || err.status === 403) {
-            this.clearTokens();
             this.currentUser.set(null);
             this.isAuthenticatedSubject.next(false);
+            this.authReadySubject.next(true);
           } else {
-            // Keep tokens for transient errors and retry later
-            this.isAuthenticatedSubject.next(this.hasToken());
+            // Transient error (network/server) — we don't know the real auth
+            // state yet, so retry rather than assuming logged-out.
             this.scheduleProfileRetry();
           }
         }
       });
+  }
+
+  /**
+   * Resolves once the initial (or a since-triggered) auth check has
+   * settled. Route guards use this instead of reading state synchronously,
+   * since a cookie-based session can't be checked without a round trip.
+   */
+  waitUntilAuthChecked(): Observable<boolean> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return of(this.isAuthenticated());
+    }
+    return this.authReadySubject.pipe(
+      filter((ready) => ready),
+      take(1),
+      map(() => this.isAuthenticated())
+    );
   }
 
   updateProfile(data: Partial<User>): Observable<User> {

@@ -1,20 +1,11 @@
 #!/bin/bash
+set -euo pipefail
 
-mkdir -p /app/logs
+# Runs as root only to fix ownership of bind-mounted volumes (media/
+# staticfiles/logs are host directories in production and may be owned by
+# root or an arbitrary host UID). Everything else runs as the unprivileged
+# `appuser` via app-entrypoint.sh.
+mkdir -p /app/logs /app/wake_tf_up/media /app/wake_tf_up/staticfiles
+chown -R appuser:appuser /app/logs /app/wake_tf_up/media /app/wake_tf_up/staticfiles
 
-echo "Collecting static files..."
-python manage.py collectstatic --noinput
-
-echo "Running migrations..."
-python manage.py migrate --noinput
-
-echo "Starting pending payment reconciliation loop..."
-(
-  while true; do
-    python manage.py reconcile_pending_payments --older-than-minutes=2 --limit=50
-    sleep 120
-  done
-) &
-
-echo "Starting Gunicorn..."
-exec gunicorn --bind 0.0.0.0:8000 --workers 8 --threads 2 --timeout 120 --max-requests 1000 --max-requests-jitter 50 wake_tf_up.wsgi:application
+exec su appuser -s /bin/bash -c /app/app-entrypoint.sh

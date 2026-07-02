@@ -4,6 +4,8 @@ from django.utils.text import slugify
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 
+from core.validators import validate_image_extension, validate_image_file_size
+
 
 class Category(models.Model):
     """Product categories (e.g., T-shirts, Hoodies, Jackets)"""
@@ -188,18 +190,39 @@ class ProductImage(models.Model):
         on_delete=models.CASCADE,
         related_name='images'
     )
-    image = models.ImageField(upload_to='products/%Y/%m/')
+    image = models.ImageField(
+        upload_to='products/%Y/%m/',
+        validators=[validate_image_extension, validate_image_file_size],
+    )
+    thumbnail = models.ImageField(
+        upload_to='products/thumbnails/%Y/%m/',
+        blank=True,
+        null=True,
+        editable=False,
+        help_text="Auto-generated on save from `image`; do not upload directly.",
+    )
     order = models.PositiveIntegerField(default=0, help_text="Display order")
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         db_table = 'product_images'
         ordering = ['order', 'created_at']
         verbose_name = 'Obrázok produktu'
         verbose_name_plural = 'Obrázky produktov'
-    
+
     def __str__(self):
         return f"Image for {self.product.name}"
+
+    def save(self, *args, **kwargs):
+        needs_thumbnail = bool(self.image) and not self.thumbnail
+        super().save(*args, **kwargs)
+        if needs_thumbnail:
+            from core.image_processing import make_thumbnail
+
+            thumb = make_thumbnail(self.image)
+            if thumb:
+                self.thumbnail.save(thumb.name, thumb, save=False)
+                super().save(update_fields=['thumbnail'])
 
 
 class ProductVideo(models.Model):
@@ -213,7 +236,8 @@ class ProductVideo(models.Model):
     thumbnail = models.ImageField(
         upload_to='products/video_thumbnails/%Y/%m/',
         blank=True,
-        null=True
+        null=True,
+        validators=[validate_image_extension, validate_image_file_size],
     )
     order = models.PositiveIntegerField(default=0, help_text="Display order")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -307,7 +331,17 @@ class TicketImage(models.Model):
         on_delete=models.CASCADE,
         related_name='images'
     )
-    image = models.ImageField(upload_to='tickets/%Y/%m/')
+    image = models.ImageField(
+        upload_to='tickets/%Y/%m/',
+        validators=[validate_image_extension, validate_image_file_size],
+    )
+    thumbnail = models.ImageField(
+        upload_to='tickets/thumbnails/%Y/%m/',
+        blank=True,
+        null=True,
+        editable=False,
+        help_text="Auto-generated on save from `image`; do not upload directly.",
+    )
     order = models.PositiveIntegerField(default=0, help_text="Display order")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -319,3 +353,14 @@ class TicketImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.ticket.name}"
+
+    def save(self, *args, **kwargs):
+        needs_thumbnail = bool(self.image) and not self.thumbnail
+        super().save(*args, **kwargs)
+        if needs_thumbnail:
+            from core.image_processing import make_thumbnail
+
+            thumb = make_thumbnail(self.image)
+            if thumb:
+                self.thumbnail.save(thumb.name, thumb, save=False)
+                super().save(update_fields=['thumbnail'])

@@ -33,9 +33,10 @@ export interface RegisterRequest {
   language?: string;
 }
 
-export interface TokenResponse {
-  access: string;
-  refresh: string;
+// Login/refresh no longer return tokens in the body — they're set as
+// httpOnly cookies by the backend (see accounts/cookie_views.py).
+export interface AuthActionResponse {
+  detail: string;
 }
 
 export interface Product {
@@ -77,6 +78,7 @@ export interface Color {
 export interface ProductImage {
   id: number;
   image: string;
+  thumbnail?: string | null;
   order: number;
 }
 
@@ -157,6 +159,7 @@ export interface Ticket {
 export interface TicketImage {
   id: number;
   image: string;
+  thumbnail?: string | null;
   order: number;
 }
 

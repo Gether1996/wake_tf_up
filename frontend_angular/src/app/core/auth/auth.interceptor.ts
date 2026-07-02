@@ -25,18 +25,35 @@ function isPublicAnonymousSafeRequest(url: string, method: string): boolean {
   ].some((segment) => url.includes(segment));
 }
 
+const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const token = authService.getAccessToken();
-  const hadAuthHeader = !!token && !isAuthRequest(req.url);
 
-  if (hadAuthHeader) {
-    req = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  // Auth now lives in httpOnly cookies (see AuthService) rather than a
+  // Bearer header, so the browser attaches it automatically — we just need
+  // to make sure cookies are actually sent/received on API requests.
+  const isApiRequest = req.url.includes('/api/');
+  if (isApiRequest) {
+    req = req.clone({ withCredentials: true });
+
+    // Angular's built-in XSRF interceptor skips absolute URLs (dev mode's
+    // environment.apiUrl is absolute, e.g. http://localhost:8000/...), so it
+    // never attaches X-CSRFToken there. Attach it ourselves so CSRF-checked
+    // mutating requests work in both dev (absolute URL) and prod (relative).
+    if (UNSAFE_METHODS.has(req.method) && !req.headers.has('X-CSRFToken')) {
+      const csrfToken = readCookie('csrftoken');
+      if (csrfToken) {
+        req = req.clone({ setHeaders: { 'X-CSRFToken': csrfToken } });
+      }
+    }
   }
 
   return next(req).pipe(
@@ -44,31 +61,24 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       const isRefreshRequest = req.url.includes('/auth/token/refresh');
       if (
         error.status === 401 &&
+        isApiRequest &&
         !isRefreshRequest &&
-        !req.url.includes('/auth/login') &&
-        authService.getAccessToken()
+        !isAuthRequest(req.url)
       ) {
         return authService.refreshToken().pipe(
-          switchMap(() => {
-            const newToken = authService.getAccessToken();
-            const clonedReq = req.clone({
-              setHeaders: {
-                Authorization: `Bearer ${newToken}`,
-              },
-            });
-            return next(clonedReq);
-          }),
+          switchMap(() => next(req)),
           catchError((refreshError) => {
-            authService.clearAuthState();
-
-            if (hadAuthHeader && isPublicAnonymousSafeRequest(req.url, req.method)) {
-              const anonymousReq = req.clone({
-                headers: req.headers.delete('Authorization'),
-              });
-              return next(anonymousReq);
-            }
-
-            return throwError(() => refreshError);
+            // Wait for the backend to actually drop the (invalid) cookies
+            // before retrying — otherwise the retry would just send the
+            // same stale cookie and 401 again.
+            return authService.clearAuthState().pipe(
+              switchMap(() => {
+                if (isPublicAnonymousSafeRequest(req.url, req.method)) {
+                  return next(req);
+                }
+                return throwError(() => refreshError);
+              }),
+            );
           }),
         );
       }

@@ -1,5 +1,5 @@
-import { Component, signal, inject, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, inject, effect, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { NewsletterService } from '../../core/api/newsletter.service';
@@ -19,16 +19,33 @@ export class NewsletterPopupComponent {
   private settingsService = inject(SettingsService);
   private notificationService = inject(NotificationService);
   private translocoService = inject(TranslocoService);
-  
+  private platformId = inject(PLATFORM_ID);
+
   isVisible = signal(false);
   isSubmitting = signal(false);
-  
+
   subscribeForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]]
   });
-  
+
   private readonly STORAGE_KEY = 'newsletterPopupShown';
   private popupTimerStarted = false;
+
+  // "Shown this session" used to be sessionStorage, which is scoped to a
+  // single tab — a user with several tabs open, or who reopens the site in
+  // a new tab, would get the popup again even though they just saw it. A
+  // session cookie (no Max-Age/Expires) is shared across all tabs of the
+  // browser and clears when the browser itself closes, which matches "once
+  // per session" as actually experienced by a visitor.
+  private hasSessionCookie(name: string): boolean {
+    if (!isPlatformBrowser(this.platformId)) return false;
+    return document.cookie.split('; ').some((c) => c.startsWith(`${name}=`));
+  }
+
+  private setSessionCookie(name: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    document.cookie = `${name}=true; path=/; SameSite=Lax`;
+  }
 
   constructor() {
     // Watch for settings changes and show popup when ready
@@ -42,21 +59,24 @@ export class NewsletterPopupComponent {
   }
 
   private checkAndShowPopup() {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     const settings = this.settingsService.settings();
-    
+
     // Check if settings are loaded
     if (!settings) {
       return;
     }
-    
+
     // Check if popup is enabled (default to true if not set)
     if (settings.newsletter_popup_enabled === false) {
       return;
     }
 
-    // Check if popup was already shown in this session
-    const popupShown = sessionStorage.getItem(this.STORAGE_KEY);
-    if (popupShown) {
+    // Check if popup was already shown this browser session (any tab)
+    if (this.hasSessionCookie(this.STORAGE_KEY)) {
       return;
     }
 
@@ -73,8 +93,8 @@ export class NewsletterPopupComponent {
     // Show popup after delay
     setTimeout(() => {
       this.isVisible.set(true);
-      sessionStorage.setItem(this.STORAGE_KEY, 'true');
-      
+      this.setSessionCookie(this.STORAGE_KEY);
+
       // Track that popup was shown
       this.newsletterService.trackPopupInteraction({
         action: 'shown'

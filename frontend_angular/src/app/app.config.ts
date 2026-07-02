@@ -20,6 +20,9 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([authInterceptor]),
       withFetch()
+      // CSRF header (X-CSRFToken) is attached manually in authInterceptor —
+      // Angular's built-in withXsrfConfiguration skips absolute URLs, which
+      // dev mode's environment.apiUrl uses, so it can't be relied on here.
     ),
     provideTransloco({
       config: {

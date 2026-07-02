@@ -16,7 +16,7 @@ def get_frontend_base_url(base_url=None):
 def generate_unsubscribe_token(email: str) -> str:
     """Generate a stable HMAC token for unsubscribe links."""
     key = settings.SECRET_KEY.encode()
-    return hmac.new(key, email.encode(), hashlib.sha256).hexdigest()[:32]
+    return hmac.new(key, email.encode(), hashlib.sha256).hexdigest()
 
 
 def build_unsubscribe_url(email: str, language_code='sk', base_url=None) -> str:
