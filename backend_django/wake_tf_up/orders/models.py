@@ -180,6 +180,17 @@ class Order(models.Model):
                 raise ValidationError(
                     "Packeta pickup point must be selected for packeta_box shipping method"
                 )
+            # Packeta pickup-point IDs are numeric. We can't cheaply verify
+            # the ID exists in Packeta's live directory without adding an
+            # external API call (and its latency/failure modes) to checkout
+            # — the widget already only lets a real customer pick a valid
+            # point — but a request bypassing the widget with a garbage
+            # value should still be rejected here rather than only failing
+            # later at fulfillment.
+            if not self.packeta_point_id.strip().isdigit():
+                raise ValidationError(
+                    "Packeta pickup point ID is invalid."
+                )
     
     @property
     def is_pre_order(self):
@@ -223,24 +234,45 @@ class Order(models.Model):
         if result['valid']:
             self.discount_code = discount_code_obj
             self.discount_amount = result['discount_amount']
-            
+
             # Apply free shipping if code provides it
             # Update the actual shipping_cost field in database to 0
             if result.get('is_free_shipping', False):
                 self.shipping_cost = Decimal('0')
-            
+
             # Recalculate total with discount and updated shipping cost
             self.total_amount = subtotal - self.discount_amount + self.shipping_cost
             self.save()
-            
-            # Increment usage count
+
+            # usage_count is intentionally NOT incremented here. Counting it
+            # at order-creation time meant an abandoned/failed payment
+            # permanently burned a single-use code. It's counted once, in
+            # mark_paid_discount_usage(), the first time the order actually
+            # transitions to 'paid'.
+
+            return True
+        return False
+
+    def mark_paid_discount_usage(self):
+        """
+        Count this order's applied discount code as used.
+
+        Must be called exactly once, at the moment an order first
+        transitions to 'paid' (guarded by the caller's own was_already_paid
+        check) — not at order creation, so a discount code isn't consumed by
+        an order whose payment never completes.
+        """
+        if not self.discount_code_id:
+            return
+
+        from loyalty.models import DiscountCode
+
+        with transaction.atomic():
+            discount_code_obj = DiscountCode.objects.select_for_update().get(pk=self.discount_code_id)
             discount_code_obj.usage_count += 1
             if discount_code_obj.max_uses is not None and discount_code_obj.usage_count >= discount_code_obj.max_uses:
                 discount_code_obj.is_used = True
-            discount_code_obj.save()
-            
-            return True
-        return False
+            discount_code_obj.save(update_fields=['usage_count', 'is_used'])
     
     def remove_discount(self):
         """
@@ -250,13 +282,17 @@ class Order(models.Model):
         if self.discount_code:
             # Store whether the code provided free shipping
             had_free_shipping = self.discount_code.is_free_shipping
-            
-            # Decrement usage count
-            self.discount_code.usage_count = max(0, self.discount_code.usage_count - 1)
-            if self.discount_code.max_uses is not None and self.discount_code.usage_count < self.discount_code.max_uses:
-                self.discount_code.is_used = False
-            self.discount_code.save()
-            
+
+            # usage_count is only incremented on payment success (see
+            # mark_paid_discount_usage), so there's nothing to decrement here
+            # unless this order had already been paid. Only roll back a
+            # counted usage if removal happens after the order was paid.
+            if self.status == 'paid':
+                self.discount_code.usage_count = max(0, self.discount_code.usage_count - 1)
+                if self.discount_code.max_uses is not None and self.discount_code.usage_count < self.discount_code.max_uses:
+                    self.discount_code.is_used = False
+                self.discount_code.save(update_fields=['usage_count', 'is_used'])
+
             # Remove discount
             self.discount_code = None
             self.discount_amount = 0
@@ -445,11 +481,13 @@ class StockReservationService:
         from settings.models import MainSettings
         from decimal import Decimal
         
-        # Create order
-        order = Order.objects.create(
-            user=user,
-            **shipping_data
-        )
+        # Create order. clean() is called explicitly (not full_clean()) since
+        # Order.objects.create() doesn't run model validation on its own —
+        # this is what actually enforces the packeta_box pickup-point checks
+        # in Order.clean() above.
+        order = Order(user=user, **shipping_data)
+        order.clean()
+        order.save()
         
         subtotal = Decimal('0.00')
         

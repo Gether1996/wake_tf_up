@@ -149,6 +149,13 @@ class OrderAdminViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         if not request.user.is_superuser:
+            order = self.get_object()
+            logger.warning(
+                "Non-superuser %s (id=%s) denied deleting order #%s",
+                request.user.email,
+                request.user.id,
+                order.id,
+            )
             return Response({'error': 'Only superusers can delete orders.'}, status=status.HTTP_403_FORBIDDEN)
         return super().destroy(request, *args, **kwargs)
     
@@ -193,9 +200,12 @@ class OrderAdminViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        was_already_paid = order.status == 'paid'
         order.status = new_status
         order.save(update_fields=['status'])
-        
+        if new_status == 'paid' and not was_already_paid:
+            order.mark_paid_discount_usage()
+
         return Response(
             OrderDetailSerializer(order, context=self.get_serializer_context()).data,
             status=status.HTTP_200_OK

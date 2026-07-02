@@ -205,6 +205,7 @@ class OrderAdmin(admin.ModelAdmin):
                 logger.info("Admin user %s marked order #%s as paid from admin action", request.user.pk, order.id)
                 order.status = 'paid'
                 order.save()  # Triggers post_save signal → generates ticket codes + sends ticket email
+                order.mark_paid_discount_usage()
                 transaction.on_commit(lambda order=order: send_payment_confirmation_email(order))
                 count += 1
         self.message_user(request, f"{count} order(s) marked as paid and emails sent.", level=messages.SUCCESS)

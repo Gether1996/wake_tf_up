@@ -2,6 +2,7 @@ import logging
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.db import transaction as db_transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status, viewsets, filters
@@ -89,102 +90,111 @@ class CreatePaymentView(generics.CreateAPIView):
             logger.info("[Payment API] GOPAY_DISABLE_PAYMENTS=True - simulating payment")
             return self._simulate_payment_success(order, language)
 
-        existing_payment = (
-            PaymentTransaction.objects.filter(order=order, status='pending').first()
-        )
+        # Lock the order row for the rest of this request. Two simultaneous
+        # first-time payment requests for the same order would otherwise
+        # both see no existing_payment and both create a separate GoPay
+        # payment session. The lock is held across the GoPay HTTP call
+        # (bounded by GOPAY_REQUEST_TIMEOUT) but only blocks other requests
+        # for this same order, not unrelated orders.
+        with db_transaction.atomic():
+            order = Order.objects.select_for_update().get(pk=order.pk)
 
-        if existing_payment:
-            logger.info(
-                "[Payment API] Found existing pending payment transaction #%s for order #%s",
-                existing_payment.id,
-                order.id,
+            existing_payment = (
+                PaymentTransaction.objects.filter(order=order, status='pending').first()
             )
-            gopay = GoPayService()
-            status_result = gopay.check_payment_status(existing_payment.provider_transaction_id)
 
-            if status_result.get('success'):
-                state = status_result.get('state')
-                if state == 'PAID':
-                    logger.info(
-                        "[Payment API] Existing GoPay payment %s is already PAID",
+            if existing_payment:
+                logger.info(
+                    "[Payment API] Found existing pending payment transaction #%s for order #%s",
+                    existing_payment.id,
+                    order.id,
+                )
+                gopay = GoPayService()
+                status_result = gopay.check_payment_status(existing_payment.provider_transaction_id)
+
+                if status_result.get('success'):
+                    state = status_result.get('state')
+                    if state == 'PAID':
+                        logger.info(
+                            "[Payment API] Existing GoPay payment %s is already PAID",
+                            existing_payment.provider_transaction_id,
+                        )
+                        apply_gopay_status_to_transaction(
+                            existing_payment,
+                            status_result,
+                            source='Payment API Existing Payment',
+                        )
+                        return Response(
+                            {'error': 'Order is already paid'},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    if state in ['CREATED', 'PAYMENT_METHOD_CHOSEN']:
+                        logger.info(
+                            "[Payment API] Existing payment still active (state=%s), returning current gateway URL",
+                            state,
+                        )
+                        gopay_response = existing_payment.provider_response or {}
+                        return Response(
+                            {
+                                'success': True,
+                                'payment_url': gopay_response.get('gw_url'),
+                                'transaction_id': existing_payment.provider_transaction_id,
+                                'transaction': PaymentTransactionSerializer(existing_payment).data,
+                            },
+                            status=status.HTTP_200_OK,
+                        )
+
+                    logger.warning(
+                        "[Payment API] Existing payment %s ended in state=%s, marking failed before creating new one",
                         existing_payment.provider_transaction_id,
-                    )
-                    apply_gopay_status_to_transaction(
-                        existing_payment,
-                        status_result,
-                        source='Payment API Existing Payment',
-                    )
-                    return Response(
-                        {'error': 'Order is already paid'},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                if state in ['CREATED', 'PAYMENT_METHOD_CHOSEN']:
-                    logger.info(
-                        "[Payment API] Existing payment still active (state=%s), returning current gateway URL",
                         state,
                     )
-                    gopay_response = existing_payment.provider_response or {}
-                    return Response(
-                        {
-                            'success': True,
-                            'payment_url': gopay_response.get('gw_url'),
-                            'transaction_id': existing_payment.provider_transaction_id,
-                            'transaction': PaymentTransactionSerializer(existing_payment).data,
-                        },
-                        status=status.HTTP_200_OK,
-                    )
+                    existing_payment.status = 'failed'
+                    existing_payment.save(update_fields=['status'])
 
-                logger.warning(
-                    "[Payment API] Existing payment %s ended in state=%s, marking failed before creating new one",
-                    existing_payment.provider_transaction_id,
-                    state,
+            PaymentTransaction.objects.filter(
+                order=order,
+                status__in=['failed', 'pending'],
+            ).exclude(
+                id=existing_payment.id if existing_payment and existing_payment.status != 'failed' else None
+            ).update(status='failed')
+
+            base_url = settings.GOPAY_CALLBACK_BASE_URL.rstrip('/')
+            return_url = f"{base_url}/api/v1/payments/return/?lang={language}"
+            notify_url = f"{base_url}/api/v1/payments/notification/"
+
+            logger.info("[Payment API] Creating new GoPay payment for order #%s", order.id)
+            logger.info("[Payment API] Return URL: %s", return_url)
+            logger.info("[Payment API] Notify URL: %s", notify_url)
+
+            gopay = GoPayService()
+            result = gopay.create_payment(order=order, return_url=return_url, notify_url=notify_url)
+
+            if result.get('success'):
+                logger.info(
+                    "[Payment API] Payment created successfully for order #%s with provider_id=%s",
+                    order.id,
+                    result.get('transaction_id'),
                 )
-                existing_payment.status = 'failed'
-                existing_payment.save(update_fields=['status'])
+                return Response(
+                    {
+                        'success': True,
+                        'payment_url': result.get('payment_url'),
+                        'transaction_id': result.get('transaction_id'),
+                        'transaction': PaymentTransactionSerializer(result.get('transaction')).data,
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
 
-        PaymentTransaction.objects.filter(
-            order=order,
-            status__in=['failed', 'pending'],
-        ).exclude(
-            id=existing_payment.id if existing_payment and existing_payment.status != 'failed' else None
-        ).update(status='failed')
-
-        base_url = settings.GOPAY_CALLBACK_BASE_URL.rstrip('/')
-        return_url = f"{base_url}/api/v1/payments/return/?lang={language}"
-        notify_url = f"{base_url}/api/v1/payments/notification/"
-
-        logger.info("[Payment API] Creating new GoPay payment for order #%s", order.id)
-        logger.info("[Payment API] Return URL: %s", return_url)
-        logger.info("[Payment API] Notify URL: %s", notify_url)
-
-        gopay = GoPayService()
-        result = gopay.create_payment(order=order, return_url=return_url, notify_url=notify_url)
-
-        if result.get('success'):
-            logger.info(
-                "[Payment API] Payment created successfully for order #%s with provider_id=%s",
+            logger.error(
+                "[Payment API] Payment creation failed for order #%s: %s",
                 order.id,
-                result.get('transaction_id'),
+                result.get('error'),
             )
             return Response(
-                {
-                    'success': True,
-                    'payment_url': result.get('payment_url'),
-                    'transaction_id': result.get('transaction_id'),
-                    'transaction': PaymentTransactionSerializer(result.get('transaction')).data,
-                },
-                status=status.HTTP_201_CREATED,
+                {'error': result.get('error', 'Payment creation failed')},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-
-        logger.error(
-            "[Payment API] Payment creation failed for order #%s: %s",
-            order.id,
-            result.get('error'),
-        )
-        return Response(
-            {'error': result.get('error', 'Payment creation failed')},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
 
     def _simulate_payment_success(self, order, language='sk'):
         """Skip real GoPay call and mark the order as paid in test environments."""
@@ -195,6 +205,7 @@ class CreatePaymentView(generics.CreateAPIView):
         order.save(update_fields=['status'])
 
         if not was_already_paid:
+            order.mark_paid_discount_usage()
             try:
                 logger.info(
                     "[Payment API] Sending payment confirmation email for order #%s (test mode, language=%s)",

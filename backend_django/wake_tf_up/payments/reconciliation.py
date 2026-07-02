@@ -30,6 +30,27 @@ def apply_gopay_status_to_transaction(transaction, status_result, source='GoPay'
     )
 
     if state == 'PAID':
+        # Defensive sanity check: the amount is set by our own server when
+        # creating the GoPay session, so a mismatch here shouldn't be
+        # reachable via customer action — but if it ever happens (stale
+        # order total, a bug in create_payment, manual GoPay dashboard
+        # tinkering), don't silently auto-fulfil for the wrong amount.
+        expected_amount_cents = int(transaction.amount * 100)
+        actual_amount_cents = status_result.get('amount')
+        if actual_amount_cents is not None and actual_amount_cents != expected_amount_cents:
+            logger.error(
+                "[%s] Amount mismatch for transaction #%s (order #%s): expected %s cents, "
+                "GoPay reports %s cents paid. Refusing to auto-mark as paid — needs manual review.",
+                source,
+                transaction.id,
+                transaction.order_id,
+                expected_amount_cents,
+                actual_amount_cents,
+            )
+            transaction.provider_response = provider_response
+            transaction.save(update_fields=['provider_response'])
+            return state
+
         was_already_paid = transaction.order.status == 'paid'
         if was_already_paid and transaction.status == 'completed':
             if transaction.provider_response != provider_response:
@@ -75,6 +96,7 @@ def apply_gopay_status_to_transaction(transaction, status_result, source='GoPay'
             if not was_already_paid:
                 order.status = 'paid'
                 order.save(update_fields=['status'])
+                order.mark_paid_discount_usage()
 
                 def _send_confirmation_email():
                     try:

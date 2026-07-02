@@ -12,6 +12,7 @@ from datetime import datetime
 from django.utils.html import strip_tags
 from rest_framework import generics, permissions, status, filters
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from core.permissions import IsSuperuser
@@ -80,6 +81,8 @@ class SubscribeView(generics.CreateAPIView):
     """
     serializer_class = SubscriberSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'newsletter_subscribe'
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from django.core.exceptions import ValidationError
 from .models import Review, ReviewToken
@@ -64,7 +65,9 @@ class ReviewViaTokenView(APIView):
     }
     """
     permission_classes = [permissions.AllowAny]
-    
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'review_via_token'
+
     def post(self, request):
         token_string = request.data.get('token')
         rating = request.data.get('rating')

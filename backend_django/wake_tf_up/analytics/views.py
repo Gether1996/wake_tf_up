@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from .models import ProductEvent
 from .serializers import ProductEventSerializer
 
@@ -19,7 +20,9 @@ class ProductEventCreateView(generics.CreateAPIView):
     """
     serializer_class = ProductEventSerializer
     permission_classes = [permissions.AllowAny]
-    
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'analytics_event'
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

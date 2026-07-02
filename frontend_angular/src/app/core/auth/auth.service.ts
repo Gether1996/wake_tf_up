@@ -6,6 +6,7 @@ import { Observable, tap, catchError, filter, take, map, of, BehaviorSubject } f
 import { User, LoginRequest, RegisterRequest, AuthActionResponse } from '../api/api.models';
 import { environment } from '../../../environments/environment';
 import { TranslocoService } from '@jsverse/transloco';
+import { CartService } from '../api/cart.service';
 
 @Injectable({
   providedIn: 'root'
@@ -34,7 +35,8 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private translocoService: TranslocoService
+    private translocoService: TranslocoService,
+    private cartService: CartService
   ) {
     if (isPlatformBrowser(this.platformId)) {
       // Auth now lives in an httpOnly cookie, invisible to JS, so we can't
@@ -65,10 +67,14 @@ export class AuthService {
 
   logout(): void {
     this.clearAuthState().subscribe(() => {
-      // Clear cart and checkout data for security (prevent data leaking to next user)
+      // Clear cart and checkout data so they don't leak to the next user on
+      // a shared browser. Going through CartService.clearCart() (rather
+      // than poking localStorage directly) also resets its in-memory
+      // signals — otherwise the old cart would reappear the moment
+      // anything re-triggered CartService's own localStorage-persist effect.
       if (isPlatformBrowser(this.platformId)) {
         sessionStorage.removeItem('checkout_data');
-        localStorage.removeItem('cart'); // Clear cart directly to avoid circular dependency
+        this.cartService.clearCart();
       }
 
       const lang = this.translocoService.getActiveLang();

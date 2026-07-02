@@ -151,6 +151,10 @@ class Subscriber(models.Model):
         verbose_name = 'Odberateľ'
         verbose_name_plural = 'Odberatelia'
         ordering = ['-subscribed_at']
+        indexes = [
+            # Every newsletter send filters Subscriber.objects.filter(is_active=True)
+            models.Index(fields=['is_active'], name='sub_is_active_idx'),
+        ]
     
     def __str__(self):
         return self.email

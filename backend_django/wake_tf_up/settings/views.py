@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -21,11 +23,19 @@ class IsAdminUser(permissions.BasePermission):
         return bool(request.user and request.user.is_authenticated and request.user.is_superuser)
 
 
+@method_decorator(cache_page(60), name='list')
+@method_decorator(cache_page(60), name='retrieve')
 class MainSettingsViewSet(viewsets.ModelViewSet):
     """
     ViewSet for MainSettings.
     GET: Public access to all settings (no authentication required)
     PUT/PATCH: Admin only - update settings
+
+    list/retrieve are cached for 60s — this is hit on essentially every page
+    load. packeta_key is deliberately NOT cached here since it's permission
+    -gated (superuser only) and caching it could serve a cached response to
+    a user who shouldn't see it; shipping/cart sub-actions are also left
+    uncached for now since they're lower-traffic than list/retrieve.
     """
     queryset = MainSettings.objects.all()
     serializer_class = MainSettingsSerializer

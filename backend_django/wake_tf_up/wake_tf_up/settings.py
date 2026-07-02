@@ -202,6 +202,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
 
+# Local-memory cache for cheap, high-traffic, low-churn public read endpoints
+# (categories, colors, site settings — see cache_page usage in shop/views.py
+# and settings/views.py). Note this cache is per-gunicorn-worker-process, not
+# shared across workers — still a real reduction in repeated DB hits, but a
+# shared cache (e.g. Redis via django-redis) would do better if this ever
+# needs to scale beyond a single backend container.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'wake-tf-up-locmem',
+    }
+}
+
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -212,11 +225,17 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    # Scoped throttles applied explicitly per-view (see accounts.views) rather than
-    # as a DEFAULT_THROTTLE_CLASSES blanket, so only the email-sending endpoints
-    # that are cheap to abuse (verification/password-reset emails) are limited.
+    # Scoped throttles applied explicitly per-view (see accounts.views and
+    # others) rather than a DEFAULT_THROTTLE_CLASSES blanket — a blanket
+    # anon throttle would also catch legitimate product-browsing/filtering
+    # traffic, so only the specific endpoints that are cheap to abuse and
+    # not meant to be called at high frequency are limited.
     'DEFAULT_THROTTLE_RATES': {
         'email_request': '5/hour',
+        'newsletter_subscribe': '10/hour',
+        'discount_code_validate': '20/hour',
+        'review_via_token': '20/hour',
+        'analytics_event': '300/hour',
     },
 }
 

@@ -48,5 +48,16 @@ echo "Starting pending payment reconciliation loop..."
   done
 ) &
 
+echo "Starting stale order cancellation loop..."
+(
+  set +e
+  while true; do
+    if ! python manage.py cancel_stale_orders --older-than-hours=24 --limit=200; then
+      echo "[cancel_stale_orders] iteration failed, retrying after backoff" >&2
+    fi
+    sleep 1800
+  done
+) &
+
 echo "Starting Gunicorn..."
 exec gunicorn --bind 0.0.0.0:8000 --workers 8 --threads 2 --timeout 120 --max-requests 1000 --max-requests-jitter 50 wake_tf_up.wsgi:application

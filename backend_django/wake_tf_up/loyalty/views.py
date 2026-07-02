@@ -1,5 +1,6 @@
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -67,7 +68,9 @@ class ValidateDiscountCodeView(APIView):
     }
     """
     permission_classes = [permissions.AllowAny]
-    
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'discount_code_validate'
+
     def post(self, request):
         serializer = ValidateDiscountCodeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

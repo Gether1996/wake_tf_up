@@ -63,6 +63,12 @@ class PaymentTransaction(models.Model):
         verbose_name = 'Platobná transakcia'
         verbose_name_plural = 'Platobné transakcie'
         ordering = ['-created_at']
+        indexes = [
+            # Matches reconcile_pending_gopay_transactions' filter exactly
+            # (provider='gopay', status='pending', created_at__lte=cutoff),
+            # run every 2 minutes by the background reconciliation loop.
+            models.Index(fields=['provider', 'status', 'created_at'], name='pmt_tx_provider_status_idx'),
+        ]
     
     def __str__(self):
         return f"Transaction #{self.id} - {self.order} - {self.status}"

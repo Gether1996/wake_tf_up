@@ -295,8 +295,27 @@ class GoPayService:
             logger.error("[GoPay Webhook] Exception: %s", exc, exc_info=True)
             return {'success': False, 'error': str(exc)}
 
-    def refund_payment(self, gopay_transaction_id: str, amount: Optional[Decimal] = None) -> Dict:
-        """Request a refund from GoPay."""
+    def refund_payment(self, transaction: PaymentTransaction, amount: Optional[Decimal] = None) -> Dict:
+        """
+        Request a refund from GoPay for a completed transaction.
+
+        `amount` is optional (omit for a full refund of `transaction.amount`);
+        if provided it must not exceed what was actually paid — there is
+        nothing at the GoPay-API level to stop us requesting a refund larger
+        than the original payment, so it's validated here instead.
+        """
+        if amount is not None and (amount <= 0 or amount > transaction.amount):
+            logger.error(
+                "[GoPay Refund] Rejecting invalid refund amount %s for transaction #%s (paid %s)",
+                amount,
+                transaction.id,
+                transaction.amount,
+            )
+            return {
+                'success': False,
+                'error': f'Refund amount {amount} is invalid for a transaction of {transaction.amount}',
+            }
+
         token = self._get_access_token()
         if not token:
             raise Exception("Failed to authenticate with GoPay")
@@ -307,7 +326,7 @@ class GoPayService:
 
         try:
             response = requests.post(
-                f"{self.api_url}/payments/payment/{gopay_transaction_id}/refund",
+                f"{self.api_url}/payments/payment/{transaction.provider_transaction_id}/refund",
                 json=refund_data,
                 headers={
                     'Authorization': f'Bearer {token}',

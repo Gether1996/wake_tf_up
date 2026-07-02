@@ -1,6 +1,8 @@
 from rest_framework import generics, filters, viewsets, permissions
 from django.db.models import Sum, Q, Value
 from django.db.models.functions import Coalesce
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Product, Category, Color, Ticket
 from .serializers import (
@@ -39,9 +41,9 @@ class ProductListView(generics.ListAPIView):
             self.request.user.is_authenticated and self.request.user.is_superuser
         )
         if is_superadmin:
-            queryset = Product.objects.all().select_related('category', 'color')
+            queryset = Product.objects.all().select_related('category', 'color').prefetch_related('images')
         else:
-            queryset = Product.objects.filter(is_published=True).select_related('category', 'color')
+            queryset = Product.objects.filter(is_published=True).select_related('category', 'color').prefetch_related('images')
 
         # Annotate reserved quantity to avoid N+1 queries for available_stock
         queryset = queryset.annotate(
@@ -108,21 +110,27 @@ class ProductDetailView(generics.RetrieveAPIView):
         is_superadmin = (
             self.request.user.is_authenticated and self.request.user.is_superuser
         )
+        base = Product.objects.select_related('category', 'color').prefetch_related('images', 'videos')
         if is_superadmin:
-            return Product.objects.all().select_related('category', 'color')
-        return Product.objects.filter(is_published=True).select_related('category', 'color')
+            return base
+        return base.filter(is_published=True)
 
 
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class CategoryListView(generics.ListAPIView):
     """
     List all categories.
     GET /api/v1/categories/
+
+    Cached for 5 minutes — categories/colors change rarely but this is one
+    of the most frequently-hit endpoints on the site (every shop page load).
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = None
 
 
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class ColorListView(generics.ListAPIView):
     """
     List all colors.
@@ -214,9 +222,10 @@ class TicketListView(generics.ListAPIView):
         is_superadmin = (
             self.request.user.is_authenticated and self.request.user.is_superuser
         )
+        base = Ticket.objects.prefetch_related('images')
         if is_superadmin:
-            return Ticket.objects.all()
-        return Ticket.objects.filter(is_published=True)
+            return base
+        return base.filter(is_published=True)
 
 
 class TicketDetailView(generics.RetrieveAPIView):
@@ -231,9 +240,10 @@ class TicketDetailView(generics.RetrieveAPIView):
         is_superadmin = (
             self.request.user.is_authenticated and self.request.user.is_superuser
         )
+        base = Ticket.objects.prefetch_related('images')
         if is_superadmin:
-            return Ticket.objects.all()
-        return Ticket.objects.filter(is_published=True)
+            return base
+        return base.filter(is_published=True)
 
 
 class TicketAdminViewSet(viewsets.ModelViewSet):

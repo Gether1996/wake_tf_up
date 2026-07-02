@@ -66,6 +66,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         from .models import StockReservationService
+        from django.core.exceptions import ValidationError
         from rest_framework.exceptions import ValidationError as DRFValidationError
 
         items_data = validated_data.pop('items')
@@ -76,18 +77,23 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         # Auto-fill email from authenticated user if not supplied by frontend
         if not validated_data.get('email') and user and user.email:
             validated_data['email'] = user.email
-        
-        # Use the stock reservation service
-        order = StockReservationService.create_order_with_items(
-            user=user,
-            items_data=items_data,
-            shipping_data=validated_data
-        )
-        
+
+        # Use the stock reservation service. create_order_with_items can
+        # raise Django's ValidationError (stock unavailable, invalid Packeta
+        # point, etc.) — without this catch it would surface as an
+        # unhandled 500 instead of a clean 400 response.
+        try:
+            order = StockReservationService.create_order_with_items(
+                user=user,
+                items_data=items_data,
+                shipping_data=validated_data
+            )
+        except ValidationError as e:
+            raise DRFValidationError({'detail': e.messages if hasattr(e, 'messages') else str(e)})
+
         # Apply discount code if provided
         if discount_code_str:
             from loyalty.models import DiscountCode
-            from django.core.exceptions import ValidationError
             try:
                 discount_code = DiscountCode.objects.get(code=discount_code_str)
                 order.apply_discount(discount_code)
